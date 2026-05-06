@@ -27,6 +27,7 @@ import {
   $isListNode,
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
+  INSERT_CHECK_LIST_COMMAND,
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { $isLinkNode } from "@lexical/link";
@@ -48,6 +49,7 @@ import {
   QuoteIcon,
   ListBulletIcon,
   ListOrderedIcon,
+  ListCheckIcon,
   LinkIcon,
   UndoIcon,
   RedoIcon,
@@ -82,6 +84,7 @@ export type RichTextToolbarFeature =
   | "quote"
   | "bulletList"
   | "orderedList"
+  | "checkList"
   | "link"
   | "textColor"
   | "backgroundColor"
@@ -110,6 +113,7 @@ const DEFAULT_FEATURES: RichTextToolbarFeature[] = [
   "separator",
   "bulletList",
   "orderedList",
+  "checkList",
   "separator",
   "alignment",
   "separator",
@@ -128,7 +132,7 @@ export interface RichTextToolbarProps
   insertItems?: InsertMenuItem[];
 }
 
-type BlockType = "paragraph" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "quote" | "ul" | "ol" | "code" | "other";
+type BlockType = "paragraph" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "quote" | "ul" | "ol" | "check" | "code" | "other";
 
 type ActiveState = {
   bold: boolean;
@@ -172,7 +176,10 @@ function getBlockType(selection: RangeSelection): BlockType {
   }
   if ($isQuoteNode(element)) return "quote";
   if ($isListNode(element)) {
-    return element.getListType() === "number" ? "ol" : "ul";
+    const listType = element.getListType();
+    if (listType === "number") return "ol";
+    if (listType === "check") return "check";
+    return "ul";
   }
   return "paragraph";
 }
@@ -458,6 +465,18 @@ function renderFeature(
           onClick={() => toggleList(editor, "ol", active.blockType === "ol")}
         />
       );
+    case "checkList":
+      return (
+        <ToolbarButton
+          key={key}
+          label="Check list"
+          icon={<ListCheckIcon className="size-4" />}
+          active={active.blockType === "check"}
+          onClick={() =>
+            toggleList(editor, "check", active.blockType === "check")
+          }
+        />
+      );
 
     case "link":
       return <LinkButton key={key} active={active.link} />;
@@ -532,15 +551,19 @@ function formatBlock(
 
 function toggleList(
   editor: LexicalEditor,
-  type: "ul" | "ol",
+  type: "ul" | "ol" | "check",
   isActive: boolean,
 ) {
   if (isActive) {
     editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-  } else if (type === "ul") {
+    return;
+  }
+  if (type === "ul") {
     editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-  } else {
+  } else if (type === "ol") {
     editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+  } else {
+    editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
   }
 }
 

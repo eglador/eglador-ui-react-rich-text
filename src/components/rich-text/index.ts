@@ -5,6 +5,7 @@ export { RichTextFloatingToolbar } from "./floating-toolbar";
 export { RichTextDraggableBlock } from "./draggable-plugin";
 export { RichTextTableActions } from "./table-actions";
 export { RichTextLinkEditor } from "./link-editor";
+export { RichTextSlashCommands } from "./slash-commands";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";

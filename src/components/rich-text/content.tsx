@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { cn } from "../../lib/utils";
@@ -22,6 +23,9 @@ export interface RichTextContentProps {
   draggable?: boolean;
   /** Enable floating format toolbar that appears on text selection (default `false`) */
   floatingToolbar?: boolean;
+  /** Editor mode (default `"rich"`). `"plain"` swaps RichTextPlugin for
+   *  PlainTextPlugin — text only, no inline/block formatting commands. */
+  mode?: "rich" | "plain";
 }
 
 export function RichTextContent({
@@ -32,6 +36,7 @@ export function RichTextContent({
   minHeight = "min-h-32",
   draggable = false,
   floatingToolbar = false,
+  mode = "rich",
 }: RichTextContentProps) {
   const [anchorElem, setAnchorElem] = React.useState<HTMLDivElement | null>(
     null,
@@ -52,33 +57,38 @@ export function RichTextContent({
         size.width !== null ? { maxWidth: size.width } : undefined
       }
     >
-      <RichTextPlugin
-        contentEditable={
-          <div ref={onAnchorRef} className="relative">
-            <ContentEditable
-              className={cn(
-                "outline-none px-4 py-3 prose prose-zinc max-w-none",
-                draggable && "pl-14",
-                minHeight,
-                contentClassName,
-              )}
-              aria-label="Rich text editor"
-            />
-          </div>
-        }
-        placeholder={
-          <div
-            className={cn(
-              "absolute top-3 pointer-events-none select-none text-zinc-400",
-              draggable ? "left-14" : "left-4",
-              placeholderClassName,
-            )}
-          >
-            {placeholder}
-          </div>
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
+      {(() => {
+        const Plugin = mode === "plain" ? PlainTextPlugin : RichTextPlugin;
+        return (
+          <Plugin
+            contentEditable={
+              <div ref={onAnchorRef} className="relative">
+                <ContentEditable
+                  className={cn(
+                    "outline-none px-4 py-3 prose prose-zinc max-w-none",
+                    draggable && "pl-14",
+                    minHeight,
+                    contentClassName,
+                  )}
+                  aria-label="Rich text editor"
+                />
+              </div>
+            }
+            placeholder={
+              <div
+                className={cn(
+                  "absolute top-3 pointer-events-none select-none text-zinc-400",
+                  draggable ? "left-14" : "left-4",
+                  placeholderClassName,
+                )}
+              >
+                {placeholder}
+              </div>
+            }
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+        );
+      })()}
       {anchorElem !== null && draggable && (
         <RichTextDraggableBlock anchorElem={anchorElem} />
       )}

@@ -13,10 +13,14 @@ import {
 } from "@lexical/html";
 import {
   $getRoot,
+  $getSelection,
+  $setSelection,
   $isElementNode,
+  $isRangeSelection,
   $createParagraphNode,
   type LexicalEditor,
 } from "lexical";
+import { $createOffsetView } from "@lexical/offset";
 
 export type RichTextEditorApi = {
   /** Underlying Lexical editor instance — for advanced commands */
@@ -39,6 +43,11 @@ export type RichTextEditorApi = {
   clear: () => void;
   /** Move browser focus into the editor */
   focus: () => void;
+  /** Get cursor position as a character offset from document start.
+   *  Returns `null` when there is no range selection. */
+  getCursorOffset: () => number | null;
+  /** Place the cursor at a character offset from document start. */
+  setCursorOffset: (offset: number) => void;
 };
 
 /**
@@ -113,6 +122,26 @@ export function useRichTextEditor(): RichTextEditorApi {
 
       focus: () => {
         editor.focus();
+      },
+
+      getCursorOffset: () => {
+        let result: number | null = null;
+        editor.read(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) return;
+          const view = $createOffsetView(editor);
+          const [start] = view.getOffsetsFromSelection(selection);
+          result = start;
+        });
+        return result;
+      },
+
+      setCursorOffset: (offset: number) => {
+        editor.update(() => {
+          const view = $createOffsetView(editor);
+          const selection = view.createSelectionFromOffsets(offset, offset);
+          if (selection) $setSelection(selection);
+        });
       },
     }),
     [editor],
