@@ -20,6 +20,7 @@ import { SelectionAlwaysOnDisplay } from "@lexical/react/LexicalSelectionAlwaysO
 import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
+import { CharacterCount } from "./character-count";
 import {
   TRANSFORMERS,
   $convertFromMarkdownString,
@@ -195,7 +196,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "rounded-lg border border-zinc-200 bg-white text-zinc-900 overflow-hidden",
+        "relative rounded-lg border border-zinc-200 bg-white text-zinc-900 overflow-hidden",
         className,
       )}
       {...props}
@@ -217,7 +218,16 @@ export function RichTextEditor({
         <DragonSupportPlugin />
         <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
         {maxLength != null && (
-          <CharacterLimitPlugin maxLength={maxLength} charset={charset} />
+          <CharacterLimitPlugin
+            maxLength={maxLength}
+            charset={charset}
+            renderer={({ remainingCharacters }) => (
+              <CharacterCount
+                remaining={remainingCharacters}
+                max={maxLength}
+              />
+            )}
+          />
         )}
         {autoFocus && <AutoFocusPlugin />}
         {onChange && <OnChangePlugin onChange={handleChange} />}
