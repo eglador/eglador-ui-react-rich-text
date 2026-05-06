@@ -2,7 +2,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Welcome" />
 
-<img src="eglador-logo.svg" alt="eglador-ui-react-rich-text" width="160" style={{ marginBottom: 24 }} />
+<img src=".github/eglador-logo.svg" alt="eglador-ui-react-rich-text" width="160" style={{ marginBottom: 24 }} />
 
 # eglador-ui-react-rich-text
 
@@ -16,46 +16,125 @@ import { Meta } from "@storybook/addon-docs/blocks";
   <img src="https://img.shields.io/badge/typescript-ready-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="typescript" />
 </div>
 
-A modern rich text editor library built on **Lexical** and **Tailwind CSS v4** for React-based projects.
-
-> **Status:** Setup complete — components in development. Use this page to verify Storybook configuration. Stories will appear in the sidebar as components are added.
+A modern, compound-component rich text editor for React — built on **Lexical** and styled with **Tailwind CSS v4**.
 
 ---
 
-## Stack
+## Installation
 
-- **React** 18+ (peer)
-- **Lexical** 0.44+ (Meta's extensible editor framework)
-- **Tailwind CSS** v4 (peer)
-- **TypeScript**
-- **tsup** (CJS + ESM bundle)
-- **Storybook** 10 (Vite + addon-docs/a11y/vitest)
+```bash
+npm install eglador-ui-react-rich-text
+```
+
+## Setup
+
+Add the following to your global stylesheet (e.g. `app/globals.css`):
+
+```css
+@import "tailwindcss";
+@source "../node_modules/eglador-ui-react-rich-text";
+```
+
+## Quick Start
+
+```tsx
+import {
+  RichTextEditor,
+  RichTextToolbar,
+  RichTextContent,
+  RichTextPageSize,
+} from "eglador-ui-react-rich-text";
+
+<RichTextEditor>
+  <RichTextToolbar />
+  <RichTextContent draggable floatingToolbar />
+  <RichTextPageSize />
+</RichTextEditor>
+```
+
+---
+
+## Components
+
+<table>
+  <thead>
+    <tr>
+      <th align="left">Component</th>
+      <th align="left">Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RichTextEditor</code></td>
+      <td>Root provider — Lexical composer + theme + nodes + plugins</td>
+    </tr>
+    <tr>
+      <td><code>RichTextToolbar</code></td>
+      <td>Top formatting bar (20+ features, fully customizable via <code>features</code> prop)</td>
+    </tr>
+    <tr>
+      <td><code>RichTextContent</code></td>
+      <td>Content area — placeholder, draggable handles, floating toolbar opt-ins</td>
+    </tr>
+    <tr>
+      <td><code>RichTextPageSize</code></td>
+      <td>Bottom DevTools-style device toolbar (Full / Desktop / Tablet / Mobile + custom)</td>
+    </tr>
+    <tr>
+      <td><code>RichTextDraggableBlock</code></td>
+      <td>Notion-style drag handle + (+) insert menu (auto-rendered when <code>draggable</code> is on)</td>
+    </tr>
+    <tr>
+      <td><code>RichTextFloatingToolbar</code></td>
+      <td>Selection-anchored mini formatting bar</td>
+    </tr>
+    <tr>
+      <td><code>RichTextLinkEditor</code></td>
+      <td>Auto-opening link edit form when cursor enters a link</td>
+    </tr>
+    <tr>
+      <td><code>RichTextTableActions</code></td>
+      <td>Cell-anchored chevron with insert/delete/merge/unmerge actions</td>
+    </tr>
+    <tr>
+      <td><code>useRichTextEditor()</code></td>
+      <td>Hook for imperative API (getJson/setJson, focus, clear, etc.)</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## Features
+
+- **Compound API** — root + toolbar + content slots, composition over configuration
+- **20+ toolbar features** — undo/redo, headings (h1–h6), bold/italic/underline/strikethrough/code, text transform (case + sub/super/highlight), text & background color, lists, alignment (LTR/RTL + indent/outdent), quote, link, insert (HR/page break/table)
+- **Notion-style drag handle** — block reorder + (+) insert menu
+- **Floating selection toolbar** — Medium/Notion pattern
+- **Auto-opening link editor** — cursor enters link → form appears with `url`/`target`/`rel`
+- **Table support** — grid picker insert + cell-anchored action menu (insert/delete row/col, merge cells, delete table)
+- **Page size simulator** — DevTools-style bottom bar with auto-flip viewport-aware popovers
+- **Custom nodes** — official `HorizontalRuleNode` + custom `PageBreakNode` decorator
+- **HTML / JSON / Markdown** — round-trip serialization on `onChange` and via `initial*` props
+- **TypeScript-first** — full type safety + exported feature unions
 
 ---
 
 ## Lexical packages bundled
 
-The following Lexical packages ship as direct dependencies — you don't need to install them separately:
+The following Lexical packages ship as direct dependencies — no separate install:
 
 - `lexical` — core editor
 - `@lexical/react` — React bindings
 - `@lexical/rich-text` — heading, quote, paragraph
 - `@lexical/list` — bullet, numbered, check lists
 - `@lexical/link` — links and auto-links
-- `@lexical/selection` — selection helpers
-- `@lexical/utils` — utility functions
-
----
-
-## Roadmap
-
-- `RichTextEditor` — full WYSIWYG with toolbar
-- `Toolbar` — formatting controls (bold, italic, headings, lists, links)
-- `MarkdownShortcuts` — `**bold**`, `*italic*`, `# heading` etc.
-- Custom node plugins (image, table, code block)
-- Read-only viewer
-- Initial state via JSON / HTML / Markdown
-- Output serialization
+- `@lexical/code` — code blocks
+- `@lexical/table` — tables with cell selection + merge
+- `@lexical/markdown` — markdown shortcuts + transformers
+- `@lexical/html` — HTML import/export
+- `@lexical/selection` — selection helpers, color/style patches
+- `@lexical/utils` — `mergeRegister` and helpers
 
 ---
 

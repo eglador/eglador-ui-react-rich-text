@@ -1,0 +1,161 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Installation" />
+
+# Installation
+
+Package installation, peer dependencies, and Tailwind v4 integration.
+
+---
+
+## 1. Install the package
+
+```bash
+npm install eglador-ui-react-rich-text
+```
+
+```bash
+yarn add eglador-ui-react-rich-text
+```
+
+```bash
+pnpm add eglador-ui-react-rich-text
+```
+
+---
+
+## 2. Peer dependencies
+
+The following peer dependencies must be present in your project:
+
+<table>
+  <thead>
+    <tr>
+      <th align="left">Package</th>
+      <th align="left">Version</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>react</code></td>
+      <td><code>{">= 18"}</code></td>
+    </tr>
+    <tr>
+      <td><code>react-dom</code></td>
+      <td><code>{">= 18"}</code></td>
+    </tr>
+    <tr>
+      <td><code>tailwindcss</code></td>
+      <td><code>^4.0.0</code></td>
+    </tr>
+  </tbody>
+</table>
+
+These are typically already present in modern React projects (Next.js, Vite, Remix).
+
+---
+
+## 3. Bundled Lexical packages
+
+All Lexical packages ship as **direct dependencies** — you don't need to install them separately:
+
+- `lexical` (core)
+- `@lexical/react` (React bindings + plugins)
+- `@lexical/rich-text` · `@lexical/list` · `@lexical/link` · `@lexical/code` · `@lexical/table`
+- `@lexical/markdown` · `@lexical/html` · `@lexical/selection` · `@lexical/utils`
+
+If you need a custom Lexical version, add it as a peer dependency in your own project — npm will resolve to your version.
+
+---
+
+## 4. Add `@source` for Tailwind v4
+
+Tailwind needs to scan classes inside the package. Add the `@source` directive to your global stylesheet:
+
+```css
+@import "tailwindcss";
+
+@source "../node_modules/eglador-ui-react-rich-text";
+```
+
+The `@source` path varies based on your CSS file location:
+
+<table>
+  <thead>
+    <tr>
+      <th align="left">Framework</th>
+      <th align="left">CSS file</th>
+      <th align="left"><code>@source</code> path</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Next.js (App Router)</td>
+      <td><code>app/globals.css</code></td>
+      <td><code>../node_modules/eglador-ui-react-rich-text</code></td>
+    </tr>
+    <tr>
+      <td>Next.js (<code>src/</code>)</td>
+      <td><code>src/app/globals.css</code></td>
+      <td><code>../../node_modules/eglador-ui-react-rich-text</code></td>
+    </tr>
+    <tr>
+      <td>Vite + React</td>
+      <td><code>src/index.css</code></td>
+      <td><code>../node_modules/eglador-ui-react-rich-text</code></td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## 5. Server components note (Next.js)
+
+All editor components are marked `"use client"` (Lexical requires the DOM). Render them inside client components:
+
+```tsx
+// app/editor/page.tsx
+import { MyEditor } from "./editor";
+
+export default function Page() {
+  return <MyEditor />;
+}
+```
+
+```tsx
+// app/editor/editor.tsx
+"use client";
+
+import {
+  RichTextEditor,
+  RichTextToolbar,
+  RichTextContent,
+} from "eglador-ui-react-rich-text";
+
+export function MyEditor() {
+  return (
+    <RichTextEditor>
+      <RichTextToolbar />
+      <RichTextContent />
+    </RichTextEditor>
+  );
+}
+```
+
+---
+
+## 6. Verify
+
+Import a component — TypeScript should autocomplete:
+
+```tsx
+import { RichTextEditor } from "eglador-ui-react-rich-text";
+```
+
+Continue with **Getting Started** to build your first editor.
+
+---
+
+## Issues?
+
+Open an [issue on GitHub](https://github.com/eglador/eglador-ui-react-rich-text/issues).

@@ -488,41 +488,54 @@ export function MyEditor() {
   },
   render: () => {
     const [value, setValue] = React.useState<RichTextValue>();
+    const [tab, setTab] = React.useState<
+      "html" | "markdown" | "json" | "text"
+    >("html");
+
+    const content =
+      !value || value[tab] === undefined
+        ? "—"
+        : tab === "json"
+          ? JSON.stringify(JSON.parse(value.json), null, 2)
+          : value[tab];
+
+    const tabs: Array<{
+      key: "html" | "markdown" | "json" | "text";
+      label: string;
+    }> = [
+      { key: "html", label: "HTML" },
+      { key: "markdown", label: "Markdown" },
+      { key: "json", label: "JSON" },
+      { key: "text", label: "Text" },
+    ];
 
     return (
-      <div className="max-w-2xl space-y-4">
+      <div className="max-w-3xl space-y-4">
         <RichTextEditor onChange={setValue}>
           <RichTextToolbar />
           <RichTextContent placeholder="Type to see live output below..." />
         </RichTextEditor>
 
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-mono text-zinc-500 mb-1">text</h3>
-            <pre className="text-xs bg-zinc-50 border border-zinc-200 rounded p-3 max-h-32 overflow-auto whitespace-pre-wrap">
-              {value?.text || "—"}
-            </pre>
+        <div className="rounded-lg border border-zinc-200 overflow-hidden">
+          <div className="flex border-b border-zinc-200 bg-zinc-50">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={
+                  tab === t.key
+                    ? "px-4 py-2 text-xs font-medium bg-white text-zinc-900 border-b-2 border-blue-500 -mb-px cursor-pointer"
+                    : "px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
+                }
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
-          <div>
-            <h3 className="text-sm font-mono text-zinc-500 mb-1">markdown</h3>
-            <pre className="text-xs bg-zinc-50 border border-zinc-200 rounded p-3 max-h-40 overflow-auto whitespace-pre-wrap">
-              {value?.markdown || "—"}
-            </pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-mono text-zinc-500 mb-1">html</h3>
-            <pre className="text-xs bg-zinc-50 border border-zinc-200 rounded p-3 max-h-40 overflow-auto whitespace-pre-wrap">
-              {value?.html || "—"}
-            </pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-mono text-zinc-500 mb-1">json</h3>
-            <pre className="text-xs bg-zinc-50 border border-zinc-200 rounded p-3 max-h-40 overflow-auto">
-              {value?.json
-                ? JSON.stringify(JSON.parse(value.json), null, 2)
-                : "—"}
-            </pre>
-          </div>
+          <pre className="p-4 text-xs font-mono text-zinc-700 max-h-72 overflow-auto whitespace-pre-wrap break-all">
+            {content}
+          </pre>
         </div>
       </div>
     );

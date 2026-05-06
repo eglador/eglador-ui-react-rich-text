@@ -18,6 +18,14 @@ import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
 
 type InsertView = "main" | "table";
 
+export type InsertMenuItem = "horizontalRule" | "pageBreak" | "table";
+
+export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
+  "horizontalRule",
+  "pageBreak",
+  "table",
+];
+
 interface InsertMenuProps {
   /** Tailwind size class for the trigger button (default `size-8`) */
   sizeClass?: string;
@@ -25,6 +33,9 @@ interface InsertMenuProps {
   tableMaxRows?: number;
   /** Maximum columns in the table size picker (default `8`) */
   tableMaxCols?: number;
+  /** Items shown in the dropdown (default: all). Designed to grow as
+   *  more block-level inserts (image, embed, callout, ...) are added. */
+  items?: InsertMenuItem[];
 }
 
 /**
@@ -38,6 +49,7 @@ export function InsertMenu({
   sizeClass = "size-8",
   tableMaxRows = 8,
   tableMaxCols = 8,
+  items = DEFAULT_INSERT_ITEMS,
 }: InsertMenuProps) {
   const [editor] = useLexicalComposerContext();
   const [open, setOpen] = React.useState(false);
@@ -91,21 +103,27 @@ export function InsertMenu({
     >
       {view === "main" ? (
         <div className="w-48">
-          <MenuOption
-            label="Horizontal rule"
-            icon={<HorizontalRuleIcon className="size-4" />}
-            onClick={() => dispatch(INSERT_HORIZONTAL_RULE_COMMAND)}
-          />
-          <MenuOption
-            label="Page break"
-            icon={<PageBreakIcon className="size-4" />}
-            onClick={() => dispatch(INSERT_PAGE_BREAK_COMMAND)}
-          />
-          <MenuOption
-            label="Table"
-            icon={<TableIcon className="size-4" />}
-            onClick={() => setView("table")}
-          />
+          {items.includes("horizontalRule") && (
+            <MenuOption
+              label="Horizontal rule"
+              icon={<HorizontalRuleIcon className="size-4" />}
+              onClick={() => dispatch(INSERT_HORIZONTAL_RULE_COMMAND)}
+            />
+          )}
+          {items.includes("pageBreak") && (
+            <MenuOption
+              label="Page break"
+              icon={<PageBreakIcon className="size-4" />}
+              onClick={() => dispatch(INSERT_PAGE_BREAK_COMMAND)}
+            />
+          )}
+          {items.includes("table") && (
+            <MenuOption
+              label="Table"
+              icon={<TableIcon className="size-4" />}
+              onClick={() => setView("table")}
+            />
+          )}
         </div>
       ) : (
         <TableSizePicker

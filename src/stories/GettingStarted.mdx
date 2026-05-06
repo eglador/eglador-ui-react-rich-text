@@ -1,0 +1,249 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Getting Started" />
+
+# Getting Started
+
+Build your first editor in a few lines.
+
+> If you haven't installed the package yet, see the **Installation** page.
+
+---
+
+## 1. Import the components
+
+```tsx
+import {
+  RichTextEditor,
+  RichTextToolbar,
+  RichTextContent,
+} from "eglador-ui-react-rich-text";
+```
+
+The editor uses a **compound component** pattern — `RichTextEditor` is the root provider, `RichTextToolbar` is the formatting bar, `RichTextContent` is the editable area.
+
+---
+
+## 2. Compose them
+
+```tsx
+<RichTextEditor>
+  <RichTextToolbar />
+  <RichTextContent placeholder="Start writing..." />
+</RichTextEditor>
+```
+
+That's a fully functional WYSIWYG editor with all formatting features and markdown shortcuts (`**bold**`, `# heading`, `- list`, etc.).
+
+---
+
+## 3. Initial content
+
+Initialize from Markdown, HTML, or JSON:
+
+```tsx
+<RichTextEditor
+  initialMarkdown={`# Welcome\n\nStart writing **bold** text...`}
+>
+  <RichTextToolbar />
+  <RichTextContent />
+</RichTextEditor>
+```
+
+```tsx
+<RichTextEditor initialHtml="<h1>Welcome</h1><p>Hello <strong>world</strong>!</p>">
+  ...
+</RichTextEditor>
+```
+
+```tsx
+<RichTextEditor initialJson={savedEditorStateJson}>
+  ...
+</RichTextEditor>
+```
+
+Priority: `initialMarkdown` > `initialHtml` > `initialJson`.
+
+---
+
+## 4. Read content via `onChange`
+
+Get HTML / Markdown / JSON / plain text on every update:
+
+```tsx
+import { type RichTextValue } from "eglador-ui-react-rich-text";
+
+const [value, setValue] = useState<RichTextValue>();
+
+<RichTextEditor onChange={setValue}>
+  <RichTextToolbar />
+  <RichTextContent />
+</RichTextEditor>
+
+{/* value.html, value.markdown, value.json, value.text */}
+```
+
+---
+
+## 5. Customize the toolbar
+
+Pass a `features` array to choose which buttons show. Default = all features:
+
+```tsx
+<RichTextToolbar
+  features={[
+    "undo", "redo", "separator",
+    "heading", "separator",
+    "bold", "italic", "underline", "separator",
+    "link",
+  ]}
+/>
+```
+
+The full feature list:
+
+```ts
+type RichTextToolbarFeature =
+  | "undo" | "redo"
+  | "heading" | "paragraph"
+  | "heading1" | "heading2" | "heading3"
+  | "heading4" | "heading5" | "heading6"
+  | "bold" | "italic" | "underline" | "strikethrough" | "code"
+  | "textTransform"
+  | "textColor" | "backgroundColor"
+  | "bulletList" | "orderedList"
+  | "alignment"
+  | "quote" | "link"
+  | "insert"
+  | "separator";
+```
+
+You can also customize the heading and insert dropdown contents:
+
+```tsx
+<RichTextToolbar
+  headingItems={["paragraph", "h1", "h2", "h3"]}
+  insertItems={["horizontalRule", "table"]}
+/>
+```
+
+---
+
+## 6. Notion-style drag handle
+
+Pass `draggable` to `RichTextContent` for hover-to-reveal drag handle and (+) insert menu:
+
+```tsx
+<RichTextContent draggable />
+```
+
+Hover any block → grip and (+) icons appear on the left. Drag the grip to reorder. Click (+) to insert a new block (heading, list, quote, code...) below.
+
+---
+
+## 7. Floating selection toolbar
+
+Pass `floatingToolbar` for a Medium/Notion-style mini toolbar that floats above selected text:
+
+```tsx
+<RichTextContent floatingToolbar />
+```
+
+Select any text → a popover appears with format buttons (bold, italic, underline, strikethrough, code, color, highlight, link).
+
+---
+
+## 8. Page size simulator
+
+Add `<RichTextPageSize />` after the content for a DevTools-style bottom bar that constrains the editor width to common viewports:
+
+```tsx
+<RichTextEditor>
+  <RichTextToolbar />
+  <RichTextContent draggable floatingToolbar />
+  <RichTextPageSize />
+</RichTextEditor>
+```
+
+Switch between **Full** / **Desktop** (1280) / **Tablet** (768) / **Mobile** (375), or use the **custom** input for any width.
+
+---
+
+## 9. Read-only mode
+
+Pass `editable={false}` to render as a viewer:
+
+```tsx
+<RichTextEditor editable={false} initialJson={json}>
+  <RichTextContent />
+</RichTextEditor>
+```
+
+The toolbar can still be rendered but commands won't mutate the read-only state.
+
+---
+
+## 10. Imperative API with `useRichTextEditor`
+
+Reach into the editor from outside (e.g. external Save button):
+
+```tsx
+import { useRichTextEditor } from "eglador-ui-react-rich-text";
+
+const editorRef = useRichTextEditor();
+
+<RichTextEditor editorRef={editorRef}>
+  <RichTextToolbar />
+  <RichTextContent />
+</RichTextEditor>
+
+<button onClick={() => console.log(editorRef.current?.getHtml())}>
+  Save
+</button>
+<button onClick={() => editorRef.current?.clear()}>Clear</button>
+<button onClick={() => editorRef.current?.focus()}>Focus</button>
+```
+
+`editorRef.current` exposes: `getJson` / `setJson`, `getHtml` / `setHtml`, `getMarkdown` / `setMarkdown`, `getText`, `clear`, `focus`, plus the underlying Lexical `editor` instance.
+
+---
+
+## Result
+
+A full-featured editor in ~20 lines:
+
+```tsx
+"use client";
+
+import {
+  RichTextEditor,
+  RichTextToolbar,
+  RichTextContent,
+  RichTextPageSize,
+} from "eglador-ui-react-rich-text";
+
+export function MyEditor() {
+  return (
+    <RichTextEditor
+      initialMarkdown="# Hello world\n\nStart **typing**..."
+      onChange={(value) => console.log(value.html)}
+    >
+      <RichTextToolbar />
+      <RichTextContent draggable floatingToolbar />
+      <RichTextPageSize />
+    </RichTextEditor>
+  );
+}
+```
+
+---
+
+## Next Steps
+
+- Open the **Rich Text/Playground** story → toggle every feature live in the Controls panel
+- Browse **Rich Text/Editor** stories for focused examples (Draggable, FloatingToolbar, PageSize, ReadOnly, WithOutput, ...)
+- Click **Show code** in any story → copy-paste-ready usage examples
+
+---
+
+For bugs or suggestions, open an [issue on GitHub](https://github.com/eglador/eglador-ui-react-rich-text/issues).
