@@ -1,0 +1,98 @@
+"use client";
+
+import * as React from "react";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { cn } from "../../lib/utils";
+import { RichTextDraggableBlock } from "./draggable-plugin";
+import { RichTextFloatingToolbar } from "./floating-toolbar";
+import { RichTextTableActions } from "./table-actions";
+import { RichTextLinkEditor } from "./link-editor";
+import { usePageSize } from "./page-size-context";
+
+export interface RichTextContentProps {
+  placeholder?: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
+  placeholderClassName?: string;
+  /** Minimum editor height (Tailwind class). Default `min-h-32` */
+  minHeight?: string;
+  /** Enable Notion-style drag handle + "+" insert menu (default `false`) */
+  draggable?: boolean;
+  /** Enable floating format toolbar that appears on text selection (default `false`) */
+  floatingToolbar?: boolean;
+}
+
+export function RichTextContent({
+  placeholder = "Start writing...",
+  className,
+  contentClassName,
+  placeholderClassName,
+  minHeight = "min-h-32",
+  draggable = false,
+  floatingToolbar = false,
+}: RichTextContentProps) {
+  const [anchorElem, setAnchorElem] = React.useState<HTMLDivElement | null>(
+    null,
+  );
+  const { size } = usePageSize();
+
+  const onAnchorRef = React.useCallback((el: HTMLDivElement | null) => {
+    if (el !== null) setAnchorElem(el);
+  }, []);
+
+  return (
+    <div
+      className={cn(
+        "relative mx-auto transition-[max-width] duration-200",
+        className,
+      )}
+      style={
+        size.width !== null ? { maxWidth: size.width } : undefined
+      }
+    >
+      <RichTextPlugin
+        contentEditable={
+          <div ref={onAnchorRef} className="relative">
+            <ContentEditable
+              className={cn(
+                "outline-none px-4 py-3 prose prose-zinc max-w-none",
+                draggable && "pl-14",
+                minHeight,
+                contentClassName,
+              )}
+              aria-label="Rich text editor"
+            />
+          </div>
+        }
+        placeholder={
+          <div
+            className={cn(
+              "absolute top-3 pointer-events-none select-none text-zinc-400",
+              draggable ? "left-14" : "left-4",
+              placeholderClassName,
+            )}
+          >
+            {placeholder}
+          </div>
+        }
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+      {anchorElem !== null && draggable && (
+        <RichTextDraggableBlock anchorElem={anchorElem} />
+      )}
+      {anchorElem !== null && floatingToolbar && (
+        <RichTextFloatingToolbar anchorElem={anchorElem} />
+      )}
+      {anchorElem !== null && (
+        <RichTextTableActions anchorElem={anchorElem} />
+      )}
+      {anchorElem !== null && (
+        <RichTextLinkEditor anchorElem={anchorElem} />
+      )}
+    </div>
+  );
+}
+
+RichTextContent.displayName = "RichTextContent";
