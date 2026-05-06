@@ -1,0 +1,1 @@
+<img src=".github/eglador-logo.svg" alt="eglador-ui-react-chart" width="200" />

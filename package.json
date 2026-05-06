@@ -1,0 +1,117 @@
+{
+  "name": "eglador-ui-react-rich-text",
+  "version": "1.0.0-alpha.1",
+  "description": "React Rich Text component for Eglador UI",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eglador/eglador-ui-react-rich-text.git"
+  },
+  "keywords": [
+    "eglador",
+    "components",
+    "react",
+    "ui",
+    "lexical",
+    "rich-text",
+    "editor",
+    "wysiwyg",
+    "tailwindcss",
+    "tailwindcss-v4",
+    "nextjs",
+    "vite",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "author": {
+    "name": "Kenan Gündoğan",
+    "email": "kenangundogann@gmail.com",
+    "url": "https://github.com/kenangundogan"
+  },
+  "contributors": [
+    {
+      "name": "Eglador",
+      "url": "https://github.com/eglador"
+    }
+  ],
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/eglador/eglador-ui-react-rich-text/issues"
+  },
+  "homepage": "https://github.com/eglador/eglador-ui-react-rich-text#readme",
+  "dependencies": {
+    "@lexical/clipboard": "^0.44.0",
+    "@lexical/code": "^0.44.0",
+    "@lexical/dragon": "^0.44.0",
+    "@lexical/hashtag": "^0.44.0",
+    "@lexical/history": "^0.44.0",
+    "@lexical/html": "^0.44.0",
+    "@lexical/link": "^0.44.0",
+    "@lexical/list": "^0.44.0",
+    "@lexical/markdown": "^0.44.0",
+    "@lexical/offset": "^0.44.0",
+    "@lexical/overflow": "^0.44.0",
+    "@lexical/plain-text": "^0.44.0",
+    "@lexical/react": "^0.44.0",
+    "@lexical/rich-text": "^0.44.0",
+    "@lexical/selection": "^0.44.0",
+    "@lexical/table": "^0.44.0",
+    "@lexical/text": "^0.44.0",
+    "@lexical/utils": "^0.44.0",
+    "lexical": "^0.44.0"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^5.1.2",
+    "@storybook/addon-a11y": "^10.3.6",
+    "@storybook/addon-docs": "^10.3.6",
+    "@storybook/addon-vitest": "^10.3.6",
+    "@storybook/react-vite": "^10.3.6",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/browser-playwright": "^4.1.5",
+    "@vitest/coverage-v8": "^4.1.5",
+    "clsx": "^2.1.1",
+    "playwright": "^1.59.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "storybook": "^10.3.6",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.4",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  }
+}
