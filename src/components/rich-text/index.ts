@@ -29,4 +29,6 @@ export type {
   RichTextToolbarProps,
   RichTextToolbarFeature,
 } from "./toolbar";
+export type { HeadingMenuItem } from "./heading-menu";
+export type { InsertMenuItem } from "./insert-menu";
 export type { RichTextEditorApi } from "./hook";

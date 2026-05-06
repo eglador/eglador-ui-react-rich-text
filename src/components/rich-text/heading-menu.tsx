@@ -25,15 +25,22 @@ import {
   Heading6Icon,
 } from "../../lib/icons";
 
-type HeadingValue = "paragraph" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+export type HeadingMenuItem =
+  | "paragraph"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6";
 
 type Option = {
-  value: HeadingValue;
+  value: HeadingMenuItem;
   label: string;
   icon: React.ReactNode;
 };
 
-const OPTIONS: Option[] = [
+const ALL_OPTIONS: Option[] = [
   { value: "paragraph", label: "Paragraph", icon: <PilcrowIcon className="size-4" /> },
   { value: "h1", label: "Heading 1", icon: <Heading1Icon className="size-4" /> },
   { value: "h2", label: "Heading 2", icon: <Heading2Icon className="size-4" /> },
@@ -43,7 +50,11 @@ const OPTIONS: Option[] = [
   { value: "h6", label: "Heading 6", icon: <Heading6Icon className="size-4" /> },
 ];
 
-const ICON_BY_VALUE: Record<HeadingValue, React.ReactNode> = {
+export const DEFAULT_HEADING_ITEMS: HeadingMenuItem[] = ALL_OPTIONS.map(
+  (o) => o.value,
+);
+
+const ICON_BY_VALUE: Record<HeadingMenuItem, React.ReactNode> = {
   paragraph: <PilcrowIcon className="size-4" />,
   h1: <Heading1Icon className="size-4" />,
   h2: <Heading2Icon className="size-4" />,
@@ -56,17 +67,26 @@ const ICON_BY_VALUE: Record<HeadingValue, React.ReactNode> = {
 interface HeadingMenuProps {
   /** Tailwind size class for the trigger button (default `size-8`) */
   sizeClass?: string;
+  /** Items shown in the dropdown (default: paragraph + h1–h6) */
+  items?: HeadingMenuItem[];
 }
 
 /**
  * Dropdown menu for paragraph / heading block selection.
- * Trigger shows the current block's icon, dropdown lists all options
+ * Trigger shows the current block's icon, dropdown lists `items`
  * with the active one highlighted.
  */
-export function HeadingMenu({ sizeClass = "size-8" }: HeadingMenuProps) {
+export function HeadingMenu({
+  sizeClass = "size-8",
+  items = DEFAULT_HEADING_ITEMS,
+}: HeadingMenuProps) {
   const [editor] = useLexicalComposerContext();
   const [open, setOpen] = React.useState(false);
-  const [current, setCurrent] = React.useState<HeadingValue>("paragraph");
+  const [current, setCurrent] = React.useState<HeadingMenuItem>("paragraph");
+  const visibleOptions = React.useMemo(
+    () => ALL_OPTIONS.filter((o) => items.includes(o.value)),
+    [items],
+  );
 
   const updateCurrent = React.useCallback(() => {
     editor.read(() => {
@@ -101,7 +121,7 @@ export function HeadingMenu({ sizeClass = "size-8" }: HeadingMenuProps) {
     });
   }, [editor, updateCurrent]);
 
-  const apply = (value: HeadingValue) => {
+  const apply = (value: HeadingMenuItem) => {
     editor.update(() => {
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
@@ -145,7 +165,7 @@ export function HeadingMenu({ sizeClass = "size-8" }: HeadingMenuProps) {
       }
       contentClassName="w-44 rounded-lg border border-zinc-200 bg-white shadow-lg p-1"
     >
-      {OPTIONS.map((opt) => (
+      {visibleOptions.map((opt) => (
         <button
           key={opt.value}
           type="button"

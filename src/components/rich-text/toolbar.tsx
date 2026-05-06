@@ -60,8 +60,8 @@ import {
   BG_COLOR_PRESETS,
 } from "./color-picker";
 import { AlignmentMenu } from "./alignment-menu";
-import { HeadingMenu } from "./heading-menu";
-import { InsertMenu } from "./insert-menu";
+import { HeadingMenu, type HeadingMenuItem } from "./heading-menu";
+import { InsertMenu, type InsertMenuItem } from "./insert-menu";
 import { LinkEditPopover } from "./link-edit-popover";
 import { TextTransformMenu } from "./text-transform-menu";
 
@@ -122,6 +122,10 @@ const DEFAULT_FEATURES: RichTextToolbarFeature[] = [
 export interface RichTextToolbarProps
   extends React.HTMLAttributes<HTMLDivElement> {
   features?: RichTextToolbarFeature[];
+  /** Items shown inside the heading dropdown (default: paragraph + h1–h6) */
+  headingItems?: HeadingMenuItem[];
+  /** Items shown inside the insert dropdown (default: all available) */
+  insertItems?: InsertMenuItem[];
 }
 
 type BlockType = "paragraph" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "quote" | "ul" | "ol" | "code" | "other";
@@ -181,6 +185,8 @@ function isLinkSelection(selection: RangeSelection): boolean {
 
 export function RichTextToolbar({
   features = DEFAULT_FEATURES,
+  headingItems,
+  insertItems,
   className,
   ...props
 }: RichTextToolbarProps) {
@@ -245,7 +251,12 @@ export function RichTextToolbar({
       aria-label="Formatting toolbar"
       {...props}
     >
-      {features.map((feature, i) => renderFeature(feature, i, editor, active))}
+      {features.map((feature, i) =>
+        renderFeature(feature, i, editor, active, {
+          headingItems,
+          insertItems,
+        }),
+      )}
     </div>
   );
 }
@@ -254,11 +265,17 @@ RichTextToolbar.displayName = "RichTextToolbar";
 
 // ─── Helpers ────────────────────────────────
 
+interface RenderOptions {
+  headingItems?: HeadingMenuItem[];
+  insertItems?: InsertMenuItem[];
+}
+
 function renderFeature(
   feature: RichTextToolbarFeature,
   index: number,
   editor: LexicalEditor,
   active: ActiveState,
+  options: RenderOptions,
 ) {
   const key = `${feature}-${index}`;
 
@@ -470,10 +487,10 @@ function renderFeature(
       return <AlignmentMenu key={key} />;
 
     case "heading":
-      return <HeadingMenu key={key} />;
+      return <HeadingMenu key={key} items={options.headingItems} />;
 
     case "insert":
-      return <InsertMenu key={key} />;
+      return <InsertMenu key={key} items={options.insertItems} />;
 
     case "textTransform":
       return (

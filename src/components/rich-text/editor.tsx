@@ -82,6 +82,19 @@ function EditorRefPlugin({
   return null;
 }
 
+/**
+ * Syncs the `editable` prop after mount. `initialConfig.editable` only
+ * applies once at mount, so toggling the prop later requires the imperative
+ * `editor.setEditable()` API.
+ */
+function EditableSyncPlugin({ editable }: { editable: boolean }) {
+  const [editor] = useLexicalComposerContext();
+  React.useEffect(() => {
+    editor.setEditable(editable);
+  }, [editor, editable]);
+  return null;
+}
+
 export function RichTextEditor({
   initialJson,
   initialHtml,
@@ -149,6 +162,7 @@ export function RichTextEditor({
         {autoFocus && <AutoFocusPlugin />}
         {onChange && <OnChangePlugin onChange={handleChange} />}
         {editorRef && <EditorRefPlugin editorRef={editorRef} />}
+        <EditableSyncPlugin editable={editable} />
       </LexicalComposer>
     </div>
   );
