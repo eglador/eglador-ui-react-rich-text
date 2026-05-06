@@ -21,6 +21,11 @@ export const defaultTheme: EditorThemeClasses = {
     nested: {
       listitem: "list-none",
     },
+    checklist: "list-none pl-0 mb-2",
+    listitemChecked:
+      "relative pl-7 mb-1 line-through text-zinc-500 before:absolute before:left-0 before:top-1 before:size-4 before:rounded before:border before:border-blue-500 before:bg-blue-500 before:bg-[url('data:image/svg+xml;utf8,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22><polyline%20points=%2220%206%209%2017%204%2012%22/></svg>')] before:bg-no-repeat before:bg-center before:bg-[length:14px_14px] before:cursor-pointer",
+    listitemUnchecked:
+      "relative pl-7 mb-1 before:absolute before:left-0 before:top-1 before:size-4 before:rounded before:border before:border-zinc-300 before:bg-white before:cursor-pointer hover:before:border-zinc-400",
   },
   quote:
     "border-l-4 border-zinc-300 pl-4 italic text-zinc-700 my-2",
@@ -45,4 +50,7 @@ export const defaultTheme: EditorThemeClasses = {
     "border border-zinc-300 px-3 py-2 align-top relative min-w-[80px] bg-zinc-50 font-semibold",
   tableSelected: "outline outline-2 outline-blue-500",
   tableCellSelected: "bg-blue-100",
+  hashtag:
+    "text-blue-600 bg-blue-50 px-1 py-0.5 rounded font-medium hover:bg-blue-100 cursor-pointer",
+  characterLimit: "bg-red-100",
 };

@@ -198,6 +198,17 @@ export const ListOrderedIcon = icon(
   </>,
 );
 
+export const ListCheckIcon = icon(
+  "ListCheckIcon",
+  2,
+  <>
+    <path d="M11 18H3" />
+    <path d="m15 18 2 2 4-4" />
+    <path d="M16 12H3" />
+    <path d="M16 6H3" />
+  </>,
+);
+
 // ── Link ────────────────────────────────────
 
 export const LinkIcon = icon(

@@ -28,6 +28,12 @@ export interface RichTextEditorProps
   autoFocus?: boolean;
   /** Lexical namespace (default "eglador-rich-text") */
   namespace?: string;
+  /** Maximum character count. When set, content past the limit is wrapped
+   *  in an `OverflowNode` and visually marked. */
+  maxLength?: number;
+  /** Charset for character counting (default `"UTF-16"`). UTF-8 counts
+   *  emoji and CJK characters as multiple bytes; UTF-16 matches `String.length`. */
+  charset?: "UTF-8" | "UTF-16";
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>

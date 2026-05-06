@@ -5,6 +5,7 @@ import {
   RichTextContent,
   RichTextToolbar,
   RichTextPageSize,
+  RichTextSlashCommands,
   type RichTextToolbarFeature,
   type RichTextValue,
   type HeadingMenuItem,
@@ -41,6 +42,7 @@ const FEATURE_OPTIONS: RichTextToolbarFeature[] = [
   "backgroundColor",
   "bulletList",
   "orderedList",
+  "checkList",
   "alignment",
   "quote",
   "link",
@@ -53,7 +55,7 @@ const FEATURE_GROUPS: RichTextToolbarFeature[][] = [
   ["bold", "italic", "underline", "strikethrough", "code"],
   ["textTransform"],
   ["textColor", "backgroundColor"],
-  ["bulletList", "orderedList"],
+  ["bulletList", "orderedList", "checkList"],
   ["alignment"],
   ["quote", "link"],
   ["insert"],
@@ -79,11 +81,16 @@ type PlaygroundArgs = {
   // Editor
   editable: boolean;
   autoFocus: boolean;
+  // Limit
+  maxLength: number;
+  charset: "UTF-8" | "UTF-16";
   // Slots
   showToolbar: boolean;
   showPageSize: boolean;
   showOutput: boolean;
+  showSlashCommands: boolean;
   // Content
+  mode: "rich" | "plain";
   placeholder: string;
   minHeight: string;
   draggable: boolean;
@@ -202,10 +209,14 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     editable: true,
     autoFocus: false,
+    maxLength: 0,
+    charset: "UTF-16",
     showToolbar: true,
     showPageSize: true,
     showOutput: false,
-    placeholder: "Start writing...",
+    showSlashCommands: true,
+    mode: "rich",
+    placeholder: "Start writing... or press / for commands",
     minHeight: "min-h-32",
     draggable: true,
     floatingToolbar: true,
@@ -218,6 +229,21 @@ const meta: Meta<PlaygroundArgs> = {
     // ── Editor ───────────────────────────
     editable: { control: "boolean", table: { category: "Editor" } },
     autoFocus: { control: "boolean", table: { category: "Editor" } },
+    // ── Limit ────────────────────────────
+    maxLength: {
+      control: { type: "number", min: 0, max: 10000, step: 50 },
+      table: { category: "Limit" },
+      description:
+        "Karakter limiti. `0` = limitsiz. Limit aşıldığında metin kırmızı arka planlı OverflowNode'a sarılır.",
+    },
+    charset: {
+      control: "radio",
+      options: ["UTF-8", "UTF-16"],
+      table: { category: "Limit" },
+      description:
+        "Karakter sayım modu. UTF-16 = `String.length`. UTF-8 = emoji/CJK için multi-byte.",
+      if: { arg: "maxLength", neq: 0 },
+    },
     // ── Slots ────────────────────────────
     showToolbar: {
       control: "boolean",
@@ -236,7 +262,21 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Editör altında canlı HTML/Markdown/JSON/Text output paneli (onChange ile)",
     },
+    showSlashCommands: {
+      control: "boolean",
+      name: "Slash commands",
+      table: { category: "Slots" },
+      description:
+        "`/` yazınca açılan Notion-style komut menüsü (block ekleme).",
+    },
     // ── Content ──────────────────────────
+    mode: {
+      control: "radio",
+      options: ["rich", "plain"],
+      table: { category: "Content" },
+      description:
+        "`plain` = sadece düz metin (PlainTextPlugin). Toolbar render olmaya devam ederken format komutları etkisiz olur.",
+    },
     placeholder: { control: "text", table: { category: "Content" } },
     minHeight: {
       control: "text",
@@ -321,9 +361,11 @@ function PlaygroundDemo(args: PlaygroundArgs) {
         editable={args.editable}
         autoFocus={args.autoFocus}
         initialHtml={args.initialHtml}
+        maxLength={args.maxLength > 0 ? args.maxLength : undefined}
+        charset={args.charset}
         onChange={args.showOutput ? setValue : undefined}
-        // Re-mount when initial content changes so editor reflects the new value
-        key={args.initialHtml}
+        // Re-mount when initial content or mode changes so editor reflects the new value
+        key={`${args.initialHtml}-${args.mode}`}
       >
         {args.showToolbar && (
           <RichTextToolbar
@@ -333,11 +375,13 @@ function PlaygroundDemo(args: PlaygroundArgs) {
           />
         )}
         <RichTextContent
+          mode={args.mode}
           placeholder={args.placeholder}
           minHeight={args.minHeight}
           draggable={args.draggable}
           floatingToolbar={args.floatingToolbar}
         />
+        {args.showSlashCommands && <RichTextSlashCommands />}
         {args.showPageSize && <RichTextPageSize />}
       </RichTextEditor>
 

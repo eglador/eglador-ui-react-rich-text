@@ -11,6 +11,14 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { HorizontalRulePlugin } from "@lexical/react/LexicalHorizontalRulePlugin";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
+import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin";
+import { ClickableLinkPlugin } from "@lexical/react/LexicalClickableLinkPlugin";
+import { HashtagPlugin } from "@lexical/react/LexicalHashtagPlugin";
+import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
+import { SelectionAlwaysOnDisplay } from "@lexical/react/LexicalSelectionAlwaysOnDisplay";
+import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
+import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
 import {
   TRANSFORMERS,
@@ -95,6 +103,46 @@ function EditableSyncPlugin({ editable }: { editable: boolean }) {
   return null;
 }
 
+/**
+ * Registers `@lexical/dragon` keyboard-driven drag handlers — improves a11y
+ * for screen readers (e.g. ChromeVox) by enabling text-selection commands
+ * the regular DOM Range API doesn't expose.
+ */
+function DragonSupportPlugin(): null {
+  const [editor] = useLexicalComposerContext();
+  React.useEffect(() => registerDragonSupport(editor), [editor]);
+  return null;
+}
+
+const URL_REGEX =
+  /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/;
+const EMAIL_REGEX =
+  /(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+
+const AUTO_LINK_MATCHERS = [
+  (text: string) => {
+    const match = URL_REGEX.exec(text);
+    if (match === null) return null;
+    const fullMatch = match[0];
+    return {
+      index: match.index,
+      length: fullMatch.length,
+      text: fullMatch,
+      url: fullMatch.startsWith("http") ? fullMatch : `https://${fullMatch}`,
+    };
+  },
+  (text: string) => {
+    const match = EMAIL_REGEX.exec(text);
+    if (match === null) return null;
+    return {
+      index: match.index,
+      length: match[0].length,
+      text: match[0],
+      url: `mailto:${match[0]}`,
+    };
+  },
+];
+
 export function RichTextEditor({
   initialJson,
   initialHtml,
@@ -103,6 +151,8 @@ export function RichTextEditor({
   editable = true,
   autoFocus = false,
   namespace = "eglador-rich-text",
+  maxLength,
+  charset = "UTF-16",
   editorRef,
   className,
   children,
@@ -154,11 +204,21 @@ export function RichTextEditor({
         <PageSizeProvider>{children}</PageSizeProvider>
         <HistoryPlugin />
         <ListPlugin />
+        <CheckListPlugin />
         <LinkPlugin />
+        <AutoLinkPlugin matchers={AUTO_LINK_MATCHERS} />
+        <ClickableLinkPlugin />
         <HorizontalRulePlugin />
         <TablePlugin hasCellMerge hasCellBackgroundColor hasTabHandler />
         <PageBreakPlugin />
+        <HashtagPlugin />
+        <TabIndentationPlugin />
+        <SelectionAlwaysOnDisplay />
+        <DragonSupportPlugin />
         <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+        {maxLength != null && (
+          <CharacterLimitPlugin maxLength={maxLength} charset={charset} />
+        )}
         {autoFocus && <AutoFocusPlugin />}
         {onChange && <OnChangePlugin onChange={handleChange} />}
         {editorRef && <EditorRefPlugin editorRef={editorRef} />}
