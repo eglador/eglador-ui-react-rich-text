@@ -11,6 +11,8 @@ import { PageBreakNode } from "./page-break";
 import { YouTubeNode } from "./youtube-node";
 import { AudioNode } from "./audio-node";
 import { VideoNode } from "./video-node";
+import { ImageNode } from "./image-node";
+import { IframeNode } from "./iframe-node";
 
 /**
  * Default Lexical nodes registered with the composer.
@@ -35,5 +37,7 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   YouTubeNode,
   AudioNode,
   VideoNode,
+  ImageNode,
+  IframeNode,
   PageBreakNode,
 ];

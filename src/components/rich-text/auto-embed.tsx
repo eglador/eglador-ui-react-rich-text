@@ -10,10 +10,16 @@ import {
 } from "@lexical/react/LexicalAutoEmbedPlugin";
 import { $insertNodes, type LexicalEditor } from "lexical";
 import { cn } from "../../lib/utils";
-import { AudioLinesIcon, VideoIcon, YouTubeIcon } from "../../lib/icons";
+import {
+  AudioLinesIcon,
+  ImageIcon,
+  VideoIcon,
+  YouTubeIcon,
+} from "../../lib/icons";
 import { $createYouTubeNode, parseYouTubeUrl } from "./youtube-node";
 import { $createAudioNode, isAudioUrl } from "./audio-node";
 import { $createVideoNode, isVideoUrl } from "./video-node";
+import { $createImageNode, isImageUrl } from "./image-node";
 
 /**
  * Application-level embed config — extends Lexical's `EmbedConfig` with
@@ -84,10 +90,28 @@ const VideoEmbedConfig: AppEmbedConfig = {
   },
 };
 
+const ImageEmbedConfig: AppEmbedConfig = {
+  type: "image-file",
+  contentName: "Image",
+  exampleUrl: "https://cdn.example.com/image.jpg",
+  icon: <ImageIcon className="size-4 text-zinc-700" />,
+  keywords: ["image", "photo", "picture", "gif"],
+  parseUrl: (text) => {
+    if (!isImageUrl(text)) return null;
+    return { url: text, id: text };
+  },
+  insertNode: (editor: LexicalEditor, result) => {
+    editor.update(() => {
+      $insertNodes([$createImageNode(result.url)]);
+    });
+  },
+};
+
 const EMBED_CONFIGS: AppEmbedConfig[] = [
   YouTubeEmbedConfig,
   AudioEmbedConfig,
   VideoEmbedConfig,
+  ImageEmbedConfig,
 ];
 
 /**

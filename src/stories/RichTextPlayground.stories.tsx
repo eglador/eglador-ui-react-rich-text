@@ -30,6 +30,8 @@ const INSERT_ITEM_OPTIONS: InsertMenuItem[] = [
   "youtube",
   "audio",
   "video",
+  "image",
+  "iframe",
 ];
 
 const FEATURE_OPTIONS: RichTextToolbarFeature[] = [

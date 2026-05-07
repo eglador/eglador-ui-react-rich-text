@@ -454,6 +454,27 @@ export const VideoIcon = icon(
   </>,
 );
 
+export const ImageIcon = icon(
+  "ImageIcon",
+  2,
+  <>
+    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+  </>,
+);
+
+export const FrameIcon = icon(
+  "FrameIcon",
+  2,
+  <>
+    <rect width="20" height="14" x="2" y="3" rx="2" />
+    <line x1="2" x2="22" y1="9" y2="9" />
+    <circle cx="6" cy="6" r="0.5" fill="currentColor" stroke="none" />
+    <circle cx="8.5" cy="6" r="0.5" fill="currentColor" stroke="none" />
+  </>,
+);
+
 export const ChevronLeftIcon = icon(
   "ChevronLeftIcon",
   2,

@@ -56,6 +56,36 @@ export {
   VIDEO_DEFAULT_OPTIONS,
 } from "./video-form";
 export type { VideoFormSubmit } from "./video-form";
+export {
+  ImageNode,
+  $createImageNode,
+  $isImageNode,
+  isImageUrl,
+} from "./image-node";
+export type {
+  SerializedImageNode,
+  ImageOptions,
+} from "./image-node";
+export {
+  ImageForm,
+  IMAGE_DEFAULT_OPTIONS,
+} from "./image-form";
+export type { ImageFormSubmit } from "./image-form";
+export {
+  IframeNode,
+  $createIframeNode,
+  $isIframeNode,
+} from "./iframe-node";
+export type {
+  SerializedIframeNode,
+  IframeOptions,
+  IframeAspectRatio,
+} from "./iframe-node";
+export {
+  IframeForm,
+  IFRAME_DEFAULT_OPTIONS,
+} from "./iframe-form";
+export type { IframeFormSubmit } from "./iframe-form";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";

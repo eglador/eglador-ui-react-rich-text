@@ -15,6 +15,8 @@ import {
   YouTubeIcon,
   AudioLinesIcon,
   VideoIcon,
+  ImageIcon,
+  FrameIcon,
   ChevronLeftIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
@@ -24,8 +26,19 @@ import { $createAudioNode } from "./audio-node";
 import { AudioForm } from "./audio-form";
 import { $createVideoNode } from "./video-node";
 import { VideoForm } from "./video-form";
+import { $createImageNode } from "./image-node";
+import { ImageForm } from "./image-form";
+import { $createIframeNode } from "./iframe-node";
+import { IframeForm } from "./iframe-form";
 
-type InsertView = "main" | "table" | "youtube" | "audio" | "video";
+type InsertView =
+  | "main"
+  | "table"
+  | "youtube"
+  | "audio"
+  | "video"
+  | "image"
+  | "iframe";
 
 export type InsertMenuItem =
   | "horizontalRule"
@@ -33,7 +46,9 @@ export type InsertMenuItem =
   | "table"
   | "youtube"
   | "audio"
-  | "video";
+  | "video"
+  | "image"
+  | "iframe";
 
 export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "horizontalRule",
@@ -42,6 +57,8 @@ export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "youtube",
   "audio",
   "video",
+  "image",
+  "iframe",
 ];
 
 interface InsertMenuProps {
@@ -131,6 +148,32 @@ export function InsertMenu({
     setOpen(false);
   };
 
+  const insertImage = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./image-node").ImageOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createImageNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
+  const insertIframe = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./iframe-node").IframeOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createIframeNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
   return (
     <Popover
       open={open}
@@ -202,6 +245,20 @@ export function InsertMenu({
               onClick={() => setView("video")}
             />
           )}
+          {items.includes("image") && (
+            <MenuOption
+              label="Image"
+              icon={<ImageIcon className="size-4" />}
+              onClick={() => setView("image")}
+            />
+          )}
+          {items.includes("iframe") && (
+            <MenuOption
+              label="Iframe"
+              icon={<FrameIcon className="size-4" />}
+              onClick={() => setView("iframe")}
+            />
+          )}
         </div>
       ) : view === "table" ? (
         <TableSizePicker
@@ -222,10 +279,22 @@ export function InsertMenu({
           onSubmit={insertAudio}
           onCancel={() => setView("main")}
         />
-      ) : (
+      ) : view === "video" ? (
         <VideoForm
           mode="insert"
           onSubmit={insertVideo}
+          onCancel={() => setView("main")}
+        />
+      ) : view === "image" ? (
+        <ImageForm
+          mode="insert"
+          onSubmit={insertImage}
+          onCancel={() => setView("main")}
+        />
+      ) : (
+        <IframeForm
+          mode="insert"
+          onSubmit={insertIframe}
           onCancel={() => setView("main")}
         />
       )}
