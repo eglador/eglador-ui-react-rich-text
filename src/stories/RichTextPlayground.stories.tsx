@@ -61,6 +61,82 @@ const FEATURE_GROUPS: RichTextToolbarFeature[][] = [
   ["insert"],
 ];
 
+type OutputTab = "html" | "markdown" | "json" | "text";
+
+const OUTPUT_EXT: Record<OutputTab, string> = {
+  html: "html",
+  markdown: "md",
+  json: "json",
+  text: "txt",
+};
+
+const OUTPUT_MIME: Record<OutputTab, string> = {
+  html: "text/html",
+  markdown: "text/markdown",
+  json: "application/json",
+  text: "text/plain",
+};
+
+function downloadOutput(content: string, tab: OutputTab) {
+  const blob = new Blob([content], { type: OUTPUT_MIME[tab] });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `richtext-${new Date().toISOString().slice(0, 10)}.${OUTPUT_EXT[tab]}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+const CopyIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </svg>
+);
+
+const CheckIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const DownloadIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" x2="12" y1="15" y2="3" />
+  </svg>
+);
+
 /** Insert separators between active feature groups so the toolbar mirrors
  *  the default visual grouping when users toggle features individually. */
 function buildFeatures(
@@ -344,9 +420,8 @@ export default meta;
 
 function PlaygroundDemo(args: PlaygroundArgs) {
   const [value, setValue] = React.useState<RichTextValue>();
-  const [tab, setTab] = React.useState<
-    "html" | "markdown" | "json" | "text"
-  >("html");
+  const [tab, setTab] = React.useState<OutputTab>("html");
+  const [copied, setCopied] = React.useState(false);
 
   // Single source of truth — the same filtered registry feeds all three
   // surfaces (Insert dropdown, slash menu, draggable + menu) so toggling
@@ -357,10 +432,7 @@ function PlaygroundDemo(args: PlaygroundArgs) {
     [args.enabledBlockKeys],
   );
 
-  const tabs: Array<{
-    key: "html" | "markdown" | "json" | "text";
-    label: string;
-  }> = [
+  const tabs: Array<{ key: OutputTab; label: string }> = [
     { key: "html", label: "HTML" },
     { key: "markdown", label: "Markdown" },
     { key: "json", label: "JSON" },
@@ -373,6 +445,24 @@ function PlaygroundDemo(args: PlaygroundArgs) {
       : tab === "json"
         ? JSON.stringify(JSON.parse(value.json), null, 2)
         : value[tab];
+
+  const isEmpty = content === "—";
+
+  const handleCopy = async () => {
+    if (isEmpty) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked — silent no-op */
+    }
+  };
+
+  const handleDownload = () => {
+    if (isEmpty) return;
+    downloadOutput(content, tab);
+  };
 
   return (
     <div className="max-w-5xl space-y-4">
@@ -410,21 +500,56 @@ function PlaygroundDemo(args: PlaygroundArgs) {
 
       {args.showOutput && (
         <div className="rounded-lg border border-zinc-200 overflow-hidden">
-          <div className="flex border-b border-zinc-200 bg-zinc-50">
-            {tabs.map((t) => (
+          <div className="flex items-center border-b border-zinc-200 bg-zinc-50">
+            <div className="flex flex-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={
+                    tab === t.key
+                      ? "px-4 py-2 text-xs font-medium bg-white text-zinc-900 border-b-2 border-blue-500 -mb-px cursor-pointer"
+                      : "px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
+                  }
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 pr-2">
               <button
-                key={t.key}
                 type="button"
-                onClick={() => setTab(t.key)}
-                className={
-                  tab === t.key
-                    ? "px-4 py-2 text-xs font-medium bg-white text-zinc-900 border-b-2 border-blue-500 -mb-px cursor-pointer"
-                    : "px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-                }
+                onClick={handleCopy}
+                disabled={isEmpty}
+                title={copied ? "Copied!" : "Copy to clipboard"}
+                aria-label="Copy to clipboard"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
-                {t.label}
+                {copied ? (
+                  <>
+                    <CheckIcon className="size-3.5 text-green-600" />
+                    <span className="text-green-700">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <CopyIcon className="size-3.5" />
+                    <span>Copy</span>
+                  </>
+                )}
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={isEmpty}
+                title={`Download as .${OUTPUT_EXT[tab]}`}
+                aria-label={`Download as .${OUTPUT_EXT[tab]}`}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                <DownloadIcon className="size-3.5" />
+                <span>.{OUTPUT_EXT[tab]}</span>
+              </button>
+            </div>
           </div>
           <pre className="p-4 text-xs font-mono text-zinc-700 max-h-72 overflow-auto whitespace-pre-wrap break-all">
             {content}
