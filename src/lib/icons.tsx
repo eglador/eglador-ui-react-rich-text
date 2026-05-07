@@ -488,11 +488,37 @@ export const SplitViewIcon = icon(
   </>,
 );
 
+export const Columns3Icon = icon(
+  "Columns3Icon",
+  2,
+  <>
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M9 3v18" />
+    <path d="M15 3v18" />
+  </>,
+);
+
+export const MinusIcon = icon(
+  "MinusIcon",
+  2,
+  <>
+    <path d="M5 12h14" />
+  </>,
+);
+
 export const ChevronLeftIcon = icon(
   "ChevronLeftIcon",
   2,
   <>
     <path d="m15 18-6-6 6-6" />
+  </>,
+);
+
+export const ChevronRightIcon = icon(
+  "ChevronRightIcon",
+  2,
+  <>
+    <path d="m9 18 6-6-6-6" />
   </>,
 );
 
