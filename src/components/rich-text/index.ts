@@ -102,6 +102,26 @@ export {
   IMAGE_COMPARISON_DEFAULT_OPTIONS,
 } from "./image-comparison-form";
 export type { ImageComparisonFormSubmit } from "./image-comparison-form";
+export {
+  ColumnsNode,
+  ColumnNode,
+  $createColumnsNode,
+  $createColumnNode,
+  $isColumnsNode,
+  $isColumnNode,
+  COLUMNS_MIN,
+  COLUMNS_MAX,
+} from "./columns-node";
+export type {
+  SerializedColumnsNode,
+  ColumnsGap,
+} from "./columns-node";
+export {
+  ColumnsForm,
+  COLUMNS_DEFAULT_OPTIONS,
+} from "./columns-form";
+export type { ColumnsFormSubmit } from "./columns-form";
+export { RichTextColumnsToolbar } from "./columns-toolbar";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";

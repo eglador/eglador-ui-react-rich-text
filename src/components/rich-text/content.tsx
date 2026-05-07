@@ -10,6 +10,7 @@ import { RichTextDraggableBlock } from "./draggable-plugin";
 import { RichTextFloatingToolbar } from "./floating-toolbar";
 import { RichTextTableActions } from "./table-actions";
 import { RichTextLinkEditor } from "./link-editor";
+import { RichTextColumnsToolbar } from "./columns-toolbar";
 import { usePageSize } from "./page-size-context";
 
 export interface RichTextContentProps {
@@ -100,6 +101,9 @@ export function RichTextContent({
       )}
       {anchorElem !== null && (
         <RichTextLinkEditor anchorElem={anchorElem} />
+      )}
+      {anchorElem !== null && (
+        <RichTextColumnsToolbar anchorElem={anchorElem} />
       )}
     </div>
   );

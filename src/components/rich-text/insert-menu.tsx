@@ -4,7 +4,11 @@ import * as React from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
-import { $insertNodes, type LexicalCommand } from "lexical";
+import {
+  $createParagraphNode,
+  $insertNodes,
+  type LexicalCommand,
+} from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import {
@@ -18,6 +22,7 @@ import {
   ImageIcon,
   FrameIcon,
   SplitViewIcon,
+  Columns3Icon,
   ChevronLeftIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
@@ -33,6 +38,8 @@ import { $createIframeNode } from "./iframe-node";
 import { IframeForm } from "./iframe-form";
 import { $createImageComparisonNode } from "./image-comparison-node";
 import { ImageComparisonForm } from "./image-comparison-form";
+import { $createColumnNode, $createColumnsNode } from "./columns-node";
+import { ColumnsForm } from "./columns-form";
 
 type InsertView =
   | "main"
@@ -42,7 +49,8 @@ type InsertView =
   | "video"
   | "image"
   | "iframe"
-  | "imageComparison";
+  | "imageComparison"
+  | "columns";
 
 export type InsertMenuItem =
   | "horizontalRule"
@@ -53,7 +61,8 @@ export type InsertMenuItem =
   | "video"
   | "image"
   | "iframe"
-  | "imageComparison";
+  | "imageComparison"
+  | "columns";
 
 export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "horizontalRule",
@@ -65,6 +74,7 @@ export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "image",
   "iframe",
   "imageComparison",
+  "columns",
 ];
 
 interface InsertMenuProps {
@@ -197,6 +207,23 @@ export function InsertMenu({
     setOpen(false);
   };
 
+  const insertColumns = (data: import("./columns-form").ColumnsFormSubmit) => {
+    editor.update(() => {
+      const columns = $createColumnsNode({
+        count: data.count,
+        gap: data.gap,
+        mobileStack: data.mobileStack,
+      });
+      for (let i = 0; i < data.count; i++) {
+        const col = $createColumnNode();
+        col.append($createParagraphNode());
+        columns.append(col);
+      }
+      $insertNodes([columns]);
+    });
+    setOpen(false);
+  };
+
   return (
     <Popover
       open={open}
@@ -289,6 +316,13 @@ export function InsertMenu({
               onClick={() => setView("imageComparison")}
             />
           )}
+          {items.includes("columns") && (
+            <MenuOption
+              label="Columns layout"
+              icon={<Columns3Icon className="size-4" />}
+              onClick={() => setView("columns")}
+            />
+          )}
         </div>
       ) : view === "table" ? (
         <TableSizePicker
@@ -327,10 +361,15 @@ export function InsertMenu({
           onSubmit={insertIframe}
           onCancel={() => setView("main")}
         />
-      ) : (
+      ) : view === "imageComparison" ? (
         <ImageComparisonForm
           mode="insert"
           onSubmit={insertImageComparison}
+          onCancel={() => setView("main")}
+        />
+      ) : (
+        <ColumnsForm
+          onSubmit={insertColumns}
           onCancel={() => setView("main")}
         />
       )}
