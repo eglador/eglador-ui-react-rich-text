@@ -17,6 +17,7 @@ import {
   VideoIcon,
   ImageIcon,
   FrameIcon,
+  SplitViewIcon,
   ChevronLeftIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
@@ -30,6 +31,8 @@ import { $createImageNode } from "./image-node";
 import { ImageForm } from "./image-form";
 import { $createIframeNode } from "./iframe-node";
 import { IframeForm } from "./iframe-form";
+import { $createImageComparisonNode } from "./image-comparison-node";
+import { ImageComparisonForm } from "./image-comparison-form";
 
 type InsertView =
   | "main"
@@ -38,7 +41,8 @@ type InsertView =
   | "audio"
   | "video"
   | "image"
-  | "iframe";
+  | "iframe"
+  | "imageComparison";
 
 export type InsertMenuItem =
   | "horizontalRule"
@@ -48,7 +52,8 @@ export type InsertMenuItem =
   | "audio"
   | "video"
   | "image"
-  | "iframe";
+  | "iframe"
+  | "imageComparison";
 
 export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "horizontalRule",
@@ -59,6 +64,7 @@ export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "video",
   "image",
   "iframe",
+  "imageComparison",
 ];
 
 interface InsertMenuProps {
@@ -174,6 +180,23 @@ export function InsertMenu({
     setOpen(false);
   };
 
+  const insertImageComparison = ({
+    beforeSrc,
+    afterSrc,
+    options,
+  }: {
+    beforeSrc: string;
+    afterSrc: string;
+    options: import("./image-comparison-node").ImageComparisonOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([
+        $createImageComparisonNode(beforeSrc, afterSrc, options),
+      ]);
+    });
+    setOpen(false);
+  };
+
   return (
     <Popover
       open={open}
@@ -259,6 +282,13 @@ export function InsertMenu({
               onClick={() => setView("iframe")}
             />
           )}
+          {items.includes("imageComparison") && (
+            <MenuOption
+              label="Image comparison"
+              icon={<SplitViewIcon className="size-4" />}
+              onClick={() => setView("imageComparison")}
+            />
+          )}
         </div>
       ) : view === "table" ? (
         <TableSizePicker
@@ -291,10 +321,16 @@ export function InsertMenu({
           onSubmit={insertImage}
           onCancel={() => setView("main")}
         />
-      ) : (
+      ) : view === "iframe" ? (
         <IframeForm
           mode="insert"
           onSubmit={insertIframe}
+          onCancel={() => setView("main")}
+        />
+      ) : (
+        <ImageComparisonForm
+          mode="insert"
+          onSubmit={insertImageComparison}
           onCancel={() => setView("main")}
         />
       )}

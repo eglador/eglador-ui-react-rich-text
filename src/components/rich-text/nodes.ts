@@ -13,6 +13,7 @@ import { AudioNode } from "./audio-node";
 import { VideoNode } from "./video-node";
 import { ImageNode } from "./image-node";
 import { IframeNode } from "./iframe-node";
+import { ImageComparisonNode } from "./image-comparison-node";
 
 /**
  * Default Lexical nodes registered with the composer.
@@ -39,5 +40,6 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   VideoNode,
   ImageNode,
   IframeNode,
+  ImageComparisonNode,
   PageBreakNode,
 ];
