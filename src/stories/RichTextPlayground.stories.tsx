@@ -6,6 +6,7 @@ import {
   RichTextToolbar,
   RichTextPageSize,
   RichTextSlashCommands,
+  RichTextAutoEmbed,
   type RichTextToolbarFeature,
   type RichTextValue,
   type HeadingMenuItem,
@@ -26,6 +27,9 @@ const INSERT_ITEM_OPTIONS: InsertMenuItem[] = [
   "horizontalRule",
   "pageBreak",
   "table",
+  "youtube",
+  "audio",
+  "video",
 ];
 
 const FEATURE_OPTIONS: RichTextToolbarFeature[] = [
@@ -89,6 +93,7 @@ type PlaygroundArgs = {
   showPageSize: boolean;
   showOutput: boolean;
   showSlashCommands: boolean;
+  showAutoEmbed: boolean;
   // Content
   mode: "rich" | "plain";
   placeholder: string;
@@ -192,7 +197,8 @@ const INITIAL_HTML = `<h1 style="text-align: center">The Art of Rich Text Editin
 <h2>Conclusion</h2>
 <p style="text-align: justify">Et harum quidem <mark>rerum facilis est</mark> et <span style="color: #8b5cf6"><strong>expedita distinctio</strong></span>. Modern bir rich text editörü inşa etmek; <em>state management</em>, <em>DOM serialization</em> ve <em>UX detayları</em>'nın ince dengesini gerektirir. Lexical bu üçünü zarif bir API ile birleştirir.</p>
 <blockquote><strong>Sonuç:</strong> En iyi editör, kullanıcının önünden çekilen editördür. Düşünceler akmalı; araç değil, <span style="background-color: #fef08a">akış</span> ön plana çıkmalıdır.</blockquote>
-<p style="text-align: center"><em>Bu makaleyi beğendiyseniz, <a href="https://lexical.dev" target="_blank" rel="noopener noreferrer">Lexical dokümantasyonunu</a> ziyaret edin ve <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub'da yıldız</a> bırakın. ★</em></p>`;
+<p style="text-align: center"><em>Bu makaleyi beğendiyseniz, <a href="https://lexical.dev" target="_blank" rel="noopener noreferrer">Lexical dokümantasyonunu</a> ziyaret edin ve <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub'da yıldız</a> bırakın. ★</em></p>
+<p>Embed örnekleri — Insert menüsünden veya direkt URL yapıştırarak da ekleyebilirsiniz (YouTube, .mp3, .mp4 URL'leri otomatik tanınır):</p>`;
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Rich Text/Playground",
@@ -215,6 +221,7 @@ const meta: Meta<PlaygroundArgs> = {
     showPageSize: true,
     showOutput: false,
     showSlashCommands: true,
+    showAutoEmbed: true,
     mode: "rich",
     placeholder: "Start writing... or press / for commands",
     minHeight: "min-h-32",
@@ -268,6 +275,13 @@ const meta: Meta<PlaygroundArgs> = {
       table: { category: "Slots" },
       description:
         "`/` yazınca açılan Notion-style komut menüsü (block ekleme).",
+    },
+    showAutoEmbed: {
+      control: "boolean",
+      name: "Auto embed",
+      table: { category: "Slots" },
+      description:
+        "Yapıştırılan / yazılan URL'i otomatik tanır (YouTube vs.) ve embed önerir.",
     },
     // ── Content ──────────────────────────
     mode: {
@@ -382,6 +396,7 @@ function PlaygroundDemo(args: PlaygroundArgs) {
           floatingToolbar={args.floatingToolbar}
         />
         {args.showSlashCommands && <RichTextSlashCommands />}
+        {args.showAutoEmbed && <RichTextAutoEmbed />}
         {args.showPageSize && <RichTextPageSize />}
       </RichTextEditor>
 

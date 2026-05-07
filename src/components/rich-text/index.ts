@@ -6,6 +6,56 @@ export { RichTextDraggableBlock } from "./draggable-plugin";
 export { RichTextTableActions } from "./table-actions";
 export { RichTextLinkEditor } from "./link-editor";
 export { RichTextSlashCommands } from "./slash-commands";
+export { RichTextAutoEmbed } from "./auto-embed";
+export {
+  YouTubeNode,
+  $createYouTubeNode,
+  $isYouTubeNode,
+  parseYouTubeUrl,
+} from "./youtube-node";
+export type {
+  SerializedYouTubeNode,
+  YouTubeOptions,
+  YouTubeUrlMatch,
+} from "./youtube-node";
+export {
+  YouTubeForm,
+  YOUTUBE_DEFAULT_OPTIONS,
+} from "./youtube-form";
+export type { YouTubeFormSubmit } from "./youtube-form";
+export {
+  AudioNode,
+  $createAudioNode,
+  $isAudioNode,
+  isAudioUrl,
+} from "./audio-node";
+export type {
+  SerializedAudioNode,
+  AudioOptions,
+  AudioPreload,
+} from "./audio-node";
+export {
+  AudioForm,
+  AUDIO_DEFAULT_OPTIONS,
+} from "./audio-form";
+export type { AudioFormSubmit } from "./audio-form";
+export {
+  VideoNode,
+  $createVideoNode,
+  $isVideoNode,
+  isVideoUrl,
+} from "./video-node";
+export type {
+  SerializedVideoNode,
+  VideoOptions,
+  VideoPreload,
+  VideoAspectRatio,
+} from "./video-node";
+export {
+  VideoForm,
+  VIDEO_DEFAULT_OPTIONS,
+} from "./video-form";
+export type { VideoFormSubmit } from "./video-form";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";

@@ -190,7 +190,23 @@ export function Popover({
             ref={contentRef}
             role="presentation"
             onMouseDown={
-              preserveSelection ? (e) => e.preventDefault() : undefined
+              preserveSelection
+                ? (e) => {
+                    // Allow native focusable elements (form inputs) to
+                    // actually receive focus on click. Without this, the
+                    // wrapper-level preventDefault swallows focus for any
+                    // descendant — including inputs the user wants to type in.
+                    const target = e.target as Element | null;
+                    if (
+                      target?.matches?.(
+                        'input, textarea, select, [contenteditable="true"]',
+                      )
+                    ) {
+                      return;
+                    }
+                    e.preventDefault();
+                  }
+                : undefined
             }
             className={cn("fixed z-[9999]", contentClassName)}
             style={
