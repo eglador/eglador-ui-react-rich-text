@@ -727,3 +727,16 @@ export const SuperscriptIcon = icon(
     <path d="M20 8h-4c0-1.5.44-2 1.5-2.5S20 4.33 20 3c0-.47-.17-.93-.48-1.29a2.11 2.11 0 0 0-2.62-.44c-.47.27-.83.72-1 1.23" />
   </>,
 );
+
+export const CalendarClockIcon = icon(
+  "CalendarClockIcon",
+  2,
+  <>
+    <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" />
+    <path d="M16 2v4" />
+    <path d="M8 2v4" />
+    <path d="M3 10h5" />
+    <path d="M17.5 17.5 16 16.25V14" />
+    <circle cx="16" cy="16" r="6" />
+  </>,
+);

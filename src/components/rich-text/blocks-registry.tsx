@@ -9,6 +9,7 @@ import {
   type ElementNode,
   type LexicalEditor,
 } from "lexical";
+import { DateTimeForm, formatDateTime } from "./date-time-form";
 import {
   $createHeadingNode,
   $createQuoteNode,
@@ -24,6 +25,7 @@ import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontal
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import {
   AudioLinesIcon,
+  CalendarClockIcon,
   CodeIcon,
   Columns3Icon,
   FrameIcon,
@@ -274,6 +276,36 @@ export const defaultBlocks: BlockSpec[] = [
     category: "block",
     surfaces: ["slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createCodeNode()),
+  },
+
+  // ── inline utility (text-level) ────────────────
+  {
+    key: "date-time",
+    label: "Date / time",
+    description: "Insert current date or time",
+    icon: icon(CalendarClockIcon),
+    keywords: ["date", "time", "datetime", "today", "now", "timestamp"],
+    category: "text",
+    surfaces: ["insert", "slash", "draggable"],
+    // Quick path: drop the default datetime string at the caret. Used by
+    // slash and draggable surfaces (renderForm overrides this for Insert).
+    action: (editor) =>
+      editor.update(() => {
+        const sel = $getSelection();
+        if ($isRangeSelection(sel)) sel.insertText(formatDateTime());
+      }),
+    renderForm: (editor, { onComplete, onCancel }) => (
+      <DateTimeForm
+        onSubmit={(text) => {
+          editor.update(() => {
+            const sel = $getSelection();
+            if ($isRangeSelection(sel)) sel.insertText(text);
+          });
+          onComplete();
+        }}
+        onCancel={onCancel}
+      />
+    ),
   },
 
   // ── separator ──────────────────────────────────

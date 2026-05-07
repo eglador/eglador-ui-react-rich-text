@@ -148,6 +148,13 @@ export type {
   BlockFormHandlers,
 } from "./blocks-registry";
 export { TableSizePicker } from "./table-size-picker";
+export {
+  DateTimeForm,
+  DATE_TIME_FORMATS,
+  DATE_TIME_DEFAULT_FORMAT,
+  formatDateTime,
+} from "./date-time-form";
+export type { DateTimeFormat } from "./date-time-form";
 
 export type {
   RichTextValue,
