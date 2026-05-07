@@ -4,7 +4,7 @@ import * as React from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
-import type { LexicalCommand } from "lexical";
+import { $insertNodes, type LexicalCommand } from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import {
@@ -12,18 +12,53 @@ import {
   HorizontalRuleIcon,
   PageBreakIcon,
   TableIcon,
+  YouTubeIcon,
+  AudioLinesIcon,
+  VideoIcon,
+  ImageIcon,
+  FrameIcon,
   ChevronLeftIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
+import { $createYouTubeNode } from "./youtube-node";
+import { YouTubeForm } from "./youtube-form";
+import { $createAudioNode } from "./audio-node";
+import { AudioForm } from "./audio-form";
+import { $createVideoNode } from "./video-node";
+import { VideoForm } from "./video-form";
+import { $createImageNode } from "./image-node";
+import { ImageForm } from "./image-form";
+import { $createIframeNode } from "./iframe-node";
+import { IframeForm } from "./iframe-form";
 
-type InsertView = "main" | "table";
+type InsertView =
+  | "main"
+  | "table"
+  | "youtube"
+  | "audio"
+  | "video"
+  | "image"
+  | "iframe";
 
-export type InsertMenuItem = "horizontalRule" | "pageBreak" | "table";
+export type InsertMenuItem =
+  | "horizontalRule"
+  | "pageBreak"
+  | "table"
+  | "youtube"
+  | "audio"
+  | "video"
+  | "image"
+  | "iframe";
 
 export const DEFAULT_INSERT_ITEMS: InsertMenuItem[] = [
   "horizontalRule",
   "pageBreak",
   "table",
+  "youtube",
+  "audio",
+  "video",
+  "image",
+  "iframe",
 ];
 
 interface InsertMenuProps {
@@ -74,6 +109,71 @@ export function InsertMenu({
     setOpen(false);
   };
 
+  const insertYouTube = ({
+    videoID,
+    options,
+  }: {
+    videoID: string;
+    options: import("./youtube-node").YouTubeOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createYouTubeNode(videoID, options)]);
+    });
+    setOpen(false);
+  };
+
+  const insertAudio = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./audio-node").AudioOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createAudioNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
+  const insertVideo = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./video-node").VideoOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createVideoNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
+  const insertImage = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./image-node").ImageOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createImageNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
+  const insertIframe = ({
+    src,
+    options,
+  }: {
+    src: string;
+    options: import("./iframe-node").IframeOptions;
+  }) => {
+    editor.update(() => {
+      $insertNodes([$createIframeNode(src, options)]);
+    });
+    setOpen(false);
+  };
+
   return (
     <Popover
       open={open}
@@ -99,10 +199,10 @@ export function InsertMenu({
           <PlusIcon className="size-4" />
         </button>
       }
-      contentClassName="rounded-lg border border-zinc-200 bg-white shadow-lg p-1"
+      contentClassName="rounded-lg border border-zinc-200 bg-white shadow-lg overflow-hidden"
     >
       {view === "main" ? (
-        <div className="w-48">
+        <div className="w-48 p-1">
           {items.includes("horizontalRule") && (
             <MenuOption
               label="Horizontal rule"
@@ -124,13 +224,78 @@ export function InsertMenu({
               onClick={() => setView("table")}
             />
           )}
+          {items.includes("youtube") && (
+            <MenuOption
+              label="YouTube"
+              icon={<YouTubeIcon className="size-4" />}
+              onClick={() => setView("youtube")}
+            />
+          )}
+          {items.includes("audio") && (
+            <MenuOption
+              label="Audio"
+              icon={<AudioLinesIcon className="size-4" />}
+              onClick={() => setView("audio")}
+            />
+          )}
+          {items.includes("video") && (
+            <MenuOption
+              label="Video"
+              icon={<VideoIcon className="size-4" />}
+              onClick={() => setView("video")}
+            />
+          )}
+          {items.includes("image") && (
+            <MenuOption
+              label="Image"
+              icon={<ImageIcon className="size-4" />}
+              onClick={() => setView("image")}
+            />
+          )}
+          {items.includes("iframe") && (
+            <MenuOption
+              label="Iframe"
+              icon={<FrameIcon className="size-4" />}
+              onClick={() => setView("iframe")}
+            />
+          )}
         </div>
-      ) : (
+      ) : view === "table" ? (
         <TableSizePicker
           maxRows={tableMaxRows}
           maxCols={tableMaxCols}
           onSelect={insertTable}
           onBack={() => setView("main")}
+        />
+      ) : view === "youtube" ? (
+        <YouTubeForm
+          mode="insert"
+          onSubmit={insertYouTube}
+          onCancel={() => setView("main")}
+        />
+      ) : view === "audio" ? (
+        <AudioForm
+          mode="insert"
+          onSubmit={insertAudio}
+          onCancel={() => setView("main")}
+        />
+      ) : view === "video" ? (
+        <VideoForm
+          mode="insert"
+          onSubmit={insertVideo}
+          onCancel={() => setView("main")}
+        />
+      ) : view === "image" ? (
+        <ImageForm
+          mode="insert"
+          onSubmit={insertImage}
+          onCancel={() => setView("main")}
+        />
+      ) : (
+        <IframeForm
+          mode="insert"
+          onSubmit={insertIframe}
+          onCancel={() => setView("main")}
         />
       )}
     </Popover>
@@ -226,3 +391,4 @@ function TableSizePicker({
     </div>
   );
 }
+

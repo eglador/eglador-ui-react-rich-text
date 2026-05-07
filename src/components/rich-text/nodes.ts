@@ -8,6 +8,11 @@ import { TableNode, TableRowNode, TableCellNode } from "@lexical/table";
 import { HashtagNode } from "@lexical/hashtag";
 import { OverflowNode } from "@lexical/overflow";
 import { PageBreakNode } from "./page-break";
+import { YouTubeNode } from "./youtube-node";
+import { AudioNode } from "./audio-node";
+import { VideoNode } from "./video-node";
+import { ImageNode } from "./image-node";
+import { IframeNode } from "./iframe-node";
 
 /**
  * Default Lexical nodes registered with the composer.
@@ -29,5 +34,10 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   TableCellNode,
   HashtagNode,
   OverflowNode,
+  YouTubeNode,
+  AudioNode,
+  VideoNode,
+  ImageNode,
+  IframeNode,
   PageBreakNode,
 ];

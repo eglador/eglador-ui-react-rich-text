@@ -106,7 +106,6 @@ export function RichTextFloatingToolbar({
         link: isLink,
       };
 
-      // Compute DOM rect of selection
       const domSelection = window.getSelection();
       if (!domSelection || domSelection.rangeCount === 0) return;
       const rangeRect = domSelection.getRangeAt(0).getBoundingClientRect();
@@ -144,7 +143,6 @@ export function RichTextFloatingToolbar({
     );
   }, [editor, updatePosition]);
 
-  // Hide on outside click / scroll
   React.useEffect(() => {
     const onScroll = () => updatePosition();
     document.addEventListener("scroll", onScroll, true);
