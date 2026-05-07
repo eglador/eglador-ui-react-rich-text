@@ -7,10 +7,10 @@ import {
   RichTextPageSize,
   RichTextSlashCommands,
   RichTextAutoEmbed,
+  defaultBlocks,
   type RichTextToolbarFeature,
   type RichTextValue,
   type HeadingMenuItem,
-  type InsertMenuItem,
 } from "../components/rich-text";
 
 const HEADING_ITEM_OPTIONS: HeadingMenuItem[] = [
@@ -23,18 +23,10 @@ const HEADING_ITEM_OPTIONS: HeadingMenuItem[] = [
   "h6",
 ];
 
-const INSERT_ITEM_OPTIONS: InsertMenuItem[] = [
-  "horizontalRule",
-  "pageBreak",
-  "table",
-  "youtube",
-  "audio",
-  "video",
-  "image",
-  "iframe",
-  "imageComparison",
-  "columns",
-];
+/** Keys of every block in the registry — used as the controls panel
+ *  option list. Toggling a key off filters that block out of every
+ *  surface (Insert dropdown, slash menu, draggable + menu). */
+const ALL_BLOCK_KEYS: string[] = defaultBlocks.map((b) => b.key);
 
 const FEATURE_OPTIONS: RichTextToolbarFeature[] = [
   "undo",
@@ -107,7 +99,7 @@ type PlaygroundArgs = {
   // Toolbar features
   features: RichTextToolbarFeature[];
   headingItems: HeadingMenuItem[];
-  insertItems: InsertMenuItem[];
+  enabledBlockKeys: string[];
   // Initial content
   initialHtml: string;
 };
@@ -233,7 +225,7 @@ const meta: Meta<PlaygroundArgs> = {
     floatingToolbar: true,
     features: [...FEATURE_OPTIONS],
     headingItems: [...HEADING_ITEM_OPTIONS],
-    insertItems: [...INSERT_ITEM_OPTIONS],
+    enabledBlockKeys: [...ALL_BLOCK_KEYS],
     initialHtml: INITIAL_HTML,
   },
   argTypes: {
@@ -329,14 +321,14 @@ const meta: Meta<PlaygroundArgs> = {
         "Heading dropdown'ı içinde görünecek block tipleri (sadece `heading` feature aktifken etkili).",
       if: { arg: "showToolbar", truthy: true },
     },
-    // ── Insert dropdown ──────────────────
-    insertItems: {
+    // ── Blocks ───────────────────────────
+    enabledBlockKeys: {
       control: "check",
-      options: INSERT_ITEM_OPTIONS,
-      table: { category: "Insert dropdown" },
+      options: ALL_BLOCK_KEYS,
+      name: "Enabled blocks",
+      table: { category: "Blocks" },
       description:
-        "Insert dropdown'ı içinde görünecek seçenekler. İleride büyüyecek (image, embed, callout vs.). Sadece `insert` feature aktifken etkili.",
-      if: { arg: "showToolbar", truthy: true },
+        "Registry'den seçilen block key'leri. Filtre üç yüzeye birden uygulanır: Insert dropdown, slash menu (`/`) ve draggable `+` menüsü. Bir block kapatılırsa hiçbir yüzeyde görünmez.",
     },
     // ── Initial content ──────────────────
     initialHtml: {
@@ -355,6 +347,15 @@ function PlaygroundDemo(args: PlaygroundArgs) {
   const [tab, setTab] = React.useState<
     "html" | "markdown" | "json" | "text"
   >("html");
+
+  // Single source of truth — the same filtered registry feeds all three
+  // surfaces (Insert dropdown, slash menu, draggable + menu) so toggling
+  // a block off in controls removes it everywhere.
+  const enabledBlocks = React.useMemo(
+    () =>
+      defaultBlocks.filter((b) => args.enabledBlockKeys.includes(b.key)),
+    [args.enabledBlockKeys],
+  );
 
   const tabs: Array<{
     key: "html" | "markdown" | "json" | "text";
@@ -389,7 +390,7 @@ function PlaygroundDemo(args: PlaygroundArgs) {
           <RichTextToolbar
             features={buildFeatures(args.features)}
             headingItems={args.headingItems}
-            insertItems={args.insertItems}
+            insertBlocks={enabledBlocks}
           />
         )}
         <RichTextContent
@@ -397,9 +398,12 @@ function PlaygroundDemo(args: PlaygroundArgs) {
           placeholder={args.placeholder}
           minHeight={args.minHeight}
           draggable={args.draggable}
+          draggableBlocks={enabledBlocks}
           floatingToolbar={args.floatingToolbar}
         />
-        {args.showSlashCommands && <RichTextSlashCommands />}
+        {args.showSlashCommands && (
+          <RichTextSlashCommands blocks={enabledBlocks} />
+        )}
         {args.showAutoEmbed && <RichTextAutoEmbed />}
         {args.showPageSize && <RichTextPageSize />}
       </RichTextEditor>

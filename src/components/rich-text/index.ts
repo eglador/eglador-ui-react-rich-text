@@ -137,6 +137,18 @@ export {
 } from "./page-break";
 export type { SerializedPageBreakNode } from "./page-break";
 
+export {
+  defaultBlocks,
+  getBlocksForSurface,
+} from "./blocks-registry";
+export type {
+  BlockSpec,
+  BlockSurface,
+  BlockCategory,
+  BlockFormHandlers,
+} from "./blocks-registry";
+export { TableSizePicker } from "./table-size-picker";
+
 export type {
   RichTextValue,
   RichTextEditorProps,
@@ -147,5 +159,4 @@ export type {
   RichTextToolbarFeature,
 } from "./toolbar";
 export type { HeadingMenuItem } from "./heading-menu";
-export type { InsertMenuItem } from "./insert-menu";
 export type { RichTextEditorApi } from "./hook";

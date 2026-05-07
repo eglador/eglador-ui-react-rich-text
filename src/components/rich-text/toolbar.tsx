@@ -63,7 +63,8 @@ import {
 } from "./color-picker";
 import { AlignmentMenu } from "./alignment-menu";
 import { HeadingMenu, type HeadingMenuItem } from "./heading-menu";
-import { InsertMenu, type InsertMenuItem } from "./insert-menu";
+import { InsertMenu } from "./insert-menu";
+import type { BlockSpec } from "./blocks-registry";
 import { LinkEditPopover } from "./link-edit-popover";
 import { TextTransformMenu } from "./text-transform-menu";
 
@@ -128,8 +129,12 @@ export interface RichTextToolbarProps
   features?: RichTextToolbarFeature[];
   /** Items shown inside the heading dropdown (default: paragraph + h1–h6) */
   headingItems?: HeadingMenuItem[];
-  /** Items shown inside the insert dropdown (default: all available) */
-  insertItems?: InsertMenuItem[];
+  /**
+   * Blocks shown inside the Insert dropdown. Defaults to the built-in
+   * `defaultBlocks` registry filtered to `surfaces.includes("insert")`.
+   * Pass a custom array to extend / re-order / restrict.
+   */
+  insertBlocks?: BlockSpec[];
 }
 
 type BlockType = "paragraph" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "quote" | "ul" | "ol" | "check" | "code" | "other";
@@ -193,7 +198,7 @@ function isLinkSelection(selection: RangeSelection): boolean {
 export function RichTextToolbar({
   features = DEFAULT_FEATURES,
   headingItems,
-  insertItems,
+  insertBlocks,
   className,
   ...props
 }: RichTextToolbarProps) {
@@ -261,7 +266,7 @@ export function RichTextToolbar({
       {features.map((feature, i) =>
         renderFeature(feature, i, editor, active, {
           headingItems,
-          insertItems,
+          insertBlocks,
         }),
       )}
     </div>
@@ -274,7 +279,7 @@ RichTextToolbar.displayName = "RichTextToolbar";
 
 interface RenderOptions {
   headingItems?: HeadingMenuItem[];
-  insertItems?: InsertMenuItem[];
+  insertBlocks?: BlockSpec[];
 }
 
 function renderFeature(
@@ -509,7 +514,7 @@ function renderFeature(
       return <HeadingMenu key={key} items={options.headingItems} />;
 
     case "insert":
-      return <InsertMenu key={key} items={options.insertItems} />;
+      return <InsertMenu key={key} blocks={options.insertBlocks} />;
 
     case "textTransform":
       return (
