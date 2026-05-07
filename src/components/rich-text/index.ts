@@ -122,6 +122,8 @@ export {
 } from "./columns-form";
 export type { ColumnsFormSubmit } from "./columns-form";
 export { RichTextColumnsToolbar } from "./columns-toolbar";
+export { RichTextStats } from "./stats";
+export type { RichTextStatsProps, RichTextStatsValue } from "./stats";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";

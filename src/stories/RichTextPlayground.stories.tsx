@@ -7,6 +7,7 @@ import {
   RichTextPageSize,
   RichTextSlashCommands,
   RichTextAutoEmbed,
+  RichTextStats,
   defaultBlocks,
   type RichTextToolbarFeature,
   type RichTextValue,
@@ -166,6 +167,8 @@ type PlaygroundArgs = {
   showOutput: boolean;
   showSlashCommands: boolean;
   showAutoEmbed: boolean;
+  showStats: boolean;
+  statsReadingTime: boolean;
   // Content
   mode: "rich" | "plain";
   placeholder: string;
@@ -294,6 +297,8 @@ const meta: Meta<PlaygroundArgs> = {
     showOutput: false,
     showSlashCommands: true,
     showAutoEmbed: true,
+    showStats: true,
+    statsReadingTime: false,
     mode: "rich",
     placeholder: "Start writing... or press / for commands",
     minHeight: "min-h-32",
@@ -354,6 +359,21 @@ const meta: Meta<PlaygroundArgs> = {
       table: { category: "Slots" },
       description:
         "Yapıştırılan / yazılan URL'i otomatik tanır (YouTube vs.) ve embed önerir.",
+    },
+    showStats: {
+      control: "boolean",
+      name: "Stats bar",
+      table: { category: "Slots" },
+      description:
+        "Editör altında live word + character count gösterir (modern editör standardı).",
+    },
+    statsReadingTime: {
+      control: "boolean",
+      name: "+ Reading time",
+      table: { category: "Slots" },
+      description:
+        "Stats bar'a tahmini okuma süresi ekler (200 wpm).",
+      if: { arg: "showStats", truthy: true },
     },
     // ── Content ──────────────────────────
     mode: {
@@ -495,6 +515,9 @@ function PlaygroundDemo(args: PlaygroundArgs) {
           <RichTextSlashCommands blocks={enabledBlocks} />
         )}
         {args.showAutoEmbed && <RichTextAutoEmbed />}
+        {args.showStats && (
+          <RichTextStats showReadingTime={args.statsReadingTime} />
+        )}
         {args.showPageSize && <RichTextPageSize />}
       </RichTextEditor>
 
