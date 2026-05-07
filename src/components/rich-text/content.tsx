@@ -12,6 +12,7 @@ import { RichTextTableActions } from "./table-actions";
 import { RichTextLinkEditor } from "./link-editor";
 import { RichTextColumnsToolbar } from "./columns-toolbar";
 import { usePageSize } from "./page-size-context";
+import type { BlockSpec } from "./blocks-registry";
 
 export interface RichTextContentProps {
   placeholder?: React.ReactNode;
@@ -22,6 +23,11 @@ export interface RichTextContentProps {
   minHeight?: string;
   /** Enable Notion-style drag handle + "+" insert menu (default `false`) */
   draggable?: boolean;
+  /**
+   * Custom blocks shown inside the draggable "+" popover. Defaults to
+   * `defaultBlocks` filtered to `surfaces.includes("draggable")`.
+   */
+  draggableBlocks?: BlockSpec[];
   /** Enable floating format toolbar that appears on text selection (default `false`) */
   floatingToolbar?: boolean;
   /** Editor mode (default `"rich"`). `"plain"` swaps RichTextPlugin for
@@ -36,6 +42,7 @@ export function RichTextContent({
   placeholderClassName,
   minHeight = "min-h-32",
   draggable = false,
+  draggableBlocks,
   floatingToolbar = false,
   mode = "rich",
 }: RichTextContentProps) {
@@ -91,7 +98,10 @@ export function RichTextContent({
         );
       })()}
       {anchorElem !== null && draggable && (
-        <RichTextDraggableBlock anchorElem={anchorElem} />
+        <RichTextDraggableBlock
+          anchorElem={anchorElem}
+          blocks={draggableBlocks}
+        />
       )}
       {anchorElem !== null && floatingToolbar && (
         <RichTextFloatingToolbar anchorElem={anchorElem} />

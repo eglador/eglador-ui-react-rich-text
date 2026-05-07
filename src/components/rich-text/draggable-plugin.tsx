@@ -6,31 +6,16 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import {
   $getNearestNodeFromDOMNode,
   $createParagraphNode,
-  $isElementNode,
   type LexicalEditor,
-  type LexicalNode,
 } from "lexical";
-import {
-  $createHeadingNode,
-  $createQuoteNode,
-  type HeadingTagType,
-} from "@lexical/rich-text";
-import { $createListNode, $createListItemNode } from "@lexical/list";
-import { $createCodeNode } from "@lexical/code";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
+import { GripVerticalIcon, PlusIcon } from "../../lib/icons";
 import {
-  GripVerticalIcon,
-  PlusIcon,
-  Heading1Icon,
-  Heading2Icon,
-  Heading3Icon,
-  PilcrowIcon,
-  ListBulletIcon,
-  ListOrderedIcon,
-  QuoteIcon,
-  CodeIcon,
-} from "../../lib/icons";
+  type BlockSpec,
+  defaultBlocks,
+  getBlocksForSurface,
+} from "./blocks-registry";
 
 const DRAGGABLE_BLOCK_MENU_CLASSNAME = "rich-text-draggable-block-menu";
 
@@ -38,92 +23,51 @@ function isOnMenu(element: HTMLElement): boolean {
   return Boolean(element.closest(`.${DRAGGABLE_BLOCK_MENU_CLASSNAME}`));
 }
 
-type BlockType =
-  | "paragraph"
-  | "h1"
-  | "h2"
-  | "h3"
-  | "bulletList"
-  | "numberedList"
-  | "quote"
-  | "code";
-
-const BLOCK_OPTIONS: Array<{
-  type: BlockType;
-  label: string;
-  icon: React.ReactNode;
-}> = [
-  { type: "paragraph", label: "Paragraph", icon: <PilcrowIcon className="size-4" /> },
-  { type: "h1", label: "Heading 1", icon: <Heading1Icon className="size-4" /> },
-  { type: "h2", label: "Heading 2", icon: <Heading2Icon className="size-4" /> },
-  { type: "h3", label: "Heading 3", icon: <Heading3Icon className="size-4" /> },
-  { type: "bulletList", label: "Bullet list", icon: <ListBulletIcon className="size-4" /> },
-  { type: "numberedList", label: "Numbered list", icon: <ListOrderedIcon className="size-4" /> },
-  { type: "quote", label: "Quote", icon: <QuoteIcon className="size-4" /> },
-  { type: "code", label: "Code block", icon: <CodeIcon className="size-4" /> },
-];
-
-function createBlockNode(type: BlockType): LexicalNode {
-  switch (type) {
-    case "h1":
-    case "h2":
-    case "h3":
-      return $createHeadingNode(type as HeadingTagType);
-    case "quote":
-      return $createQuoteNode();
-    case "bulletList": {
-      const list = $createListNode("bullet");
-      list.append($createListItemNode());
-      return list;
-    }
-    case "numberedList": {
-      const list = $createListNode("number");
-      list.append($createListItemNode());
-      return list;
-    }
-    case "code":
-      return $createCodeNode();
-    case "paragraph":
-    default:
-      return $createParagraphNode();
-  }
-}
-
-function insertBlockAt(
+/**
+ * Insert a fresh paragraph after the target block, focus into it, then
+ * run the spec's action (which typically converts the focused block via
+ * `$setBlocksType`, or dispatches an insert command). This unifies the
+ * "insert after hovered block" semantics with the registry's
+ * selection-based action contract.
+ */
+function insertBlockAfter(
   editor: LexicalEditor,
   domElement: HTMLElement,
-  type: BlockType,
+  spec: BlockSpec,
 ) {
+  if (typeof spec.action !== "function") return;
   editor.update(() => {
     const node = $getNearestNodeFromDOMNode(domElement);
     if (!node) return;
-
     const target = node.getTopLevelElement();
     if (!target) return;
-
-    const newBlock = createBlockNode(type);
-    target.insertAfter(newBlock);
-
-    if ($isElementNode(newBlock)) {
-      newBlock.selectEnd();
-    }
+    const placeholder = $createParagraphNode();
+    target.insertAfter(placeholder);
+    placeholder.selectEnd();
   });
+  spec.action(editor);
 }
 
 interface RichTextDraggableBlockProps {
   anchorElem: HTMLElement;
   /** Hide the "+" insert button (default `false` — button is shown) */
   hideInsertButton?: boolean;
+  /**
+   * Custom blocks registry. Defaults to `defaultBlocks` filtered to
+   * `surfaces.includes("draggable")` and `action` defined.
+   */
+  blocks?: BlockSpec[];
 }
 
 /**
  * Notion-style drag handle with an optional "+" insert menu.
  * Hover over a block → grip handle appears on the left, drag to reorder.
- * Click "+" to insert a new block (heading, list, quote, code, ...) below.
+ * Click "+" to insert a new block from the registry's draggable surface.
  */
 export function RichTextDraggableBlock({
   anchorElem,
   hideInsertButton = false,
+  blocks = defaultBlocks,
 }: RichTextDraggableBlockProps) {
   const [editor] = useLexicalComposerContext();
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -131,6 +75,11 @@ export function RichTextDraggableBlock({
   const [activeElement, setActiveElement] =
     React.useState<HTMLElement | null>(null);
   const [open, setOpen] = React.useState(false);
+
+  const draggableBlocks = React.useMemo(
+    () => getBlocksForSurface("draggable", blocks),
+    [blocks],
+  );
 
   // Capture the active block when the popover opens, then freeze it so
   // hover-driven `activeElement` changes (caused by the user moving toward
@@ -143,11 +92,11 @@ export function RichTextDraggableBlock({
   }, [open, activeElement]);
 
   const handleInsert = React.useCallback(
-    (type: BlockType) => {
+    (spec: BlockSpec) => {
       setOpen(false);
       const target = insertTargetRef.current;
       if (!target) return;
-      insertBlockAt(editor, target, type);
+      insertBlockAfter(editor, target, spec);
     },
     [editor],
   );
@@ -183,18 +132,18 @@ export function RichTextDraggableBlock({
                   <PlusIcon className="size-4" />
                 </button>
               }
-              contentClassName="w-48 rounded-lg border border-zinc-200 bg-white shadow-lg p-1"
+              contentClassName="w-56 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 max-h-80 overflow-y-auto"
             >
-              {BLOCK_OPTIONS.map((option) => (
+              {draggableBlocks.map((spec) => (
                 <button
-                  key={option.type}
+                  key={spec.key}
                   type="button"
                   role="menuitem"
-                  onClick={() => handleInsert(option.type)}
+                  onClick={() => handleInsert(spec)}
                   className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-zinc-700 hover:bg-zinc-100 cursor-pointer"
                 >
-                  <span className="text-zinc-500">{option.icon}</span>
-                  {option.label}
+                  <span className="text-zinc-500">{spec.icon}</span>
+                  <span className="truncate">{spec.label}</span>
                 </button>
               ))}
             </Popover>
