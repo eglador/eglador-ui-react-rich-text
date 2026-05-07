@@ -8,6 +8,7 @@ import {
   RichTextSlashCommands,
   RichTextAutoEmbed,
   RichTextStats,
+  RichTextFindReplace,
   defaultBlocks,
   type RichTextToolbarFeature,
   type RichTextValue,
@@ -169,6 +170,7 @@ type PlaygroundArgs = {
   showAutoEmbed: boolean;
   showStats: boolean;
   statsReadingTime: boolean;
+  showFindReplace: boolean;
   // Content
   mode: "rich" | "plain";
   placeholder: string;
@@ -299,6 +301,7 @@ const meta: Meta<PlaygroundArgs> = {
     showAutoEmbed: true,
     showStats: true,
     statsReadingTime: false,
+    showFindReplace: true,
     mode: "rich",
     placeholder: "Start writing... or press / for commands",
     minHeight: "min-h-32",
@@ -374,6 +377,13 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Stats bar'a tahmini okuma süresi ekler (200 wpm).",
       if: { arg: "showStats", truthy: true },
+    },
+    showFindReplace: {
+      control: "boolean",
+      name: "Find & Replace",
+      table: { category: "Slots" },
+      description:
+        "Cmd/Ctrl+F ile açılan find & replace paneli (modern editör standardı).",
     },
     // ── Content ──────────────────────────
     mode: {
@@ -518,6 +528,7 @@ function PlaygroundDemo(args: PlaygroundArgs) {
         {args.showStats && (
           <RichTextStats showReadingTime={args.statsReadingTime} />
         )}
+        {args.showFindReplace && <RichTextFindReplace />}
         {args.showPageSize && <RichTextPageSize />}
       </RichTextEditor>
 
