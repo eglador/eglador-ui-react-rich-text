@@ -475,6 +475,19 @@ export const FrameIcon = icon(
   </>,
 );
 
+export const SplitViewIcon = icon(
+  "SplitViewIcon",
+  2,
+  <>
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M12 3v18" />
+    <path d="m6 12 2-2" />
+    <path d="m6 12 2 2" />
+    <path d="m18 12-2-2" />
+    <path d="m18 12-2 2" />
+  </>,
+);
+
 export const ChevronLeftIcon = icon(
   "ChevronLeftIcon",
   2,

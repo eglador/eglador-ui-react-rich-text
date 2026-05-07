@@ -86,6 +86,22 @@ export {
   IFRAME_DEFAULT_OPTIONS,
 } from "./iframe-form";
 export type { IframeFormSubmit } from "./iframe-form";
+export {
+  ImageComparisonNode,
+  $createImageComparisonNode,
+  $isImageComparisonNode,
+} from "./image-comparison-node";
+export type {
+  SerializedImageComparisonNode,
+  ImageComparisonOptions,
+  ComparisonOrientation,
+  ComparisonAspectRatio,
+} from "./image-comparison-node";
+export {
+  ImageComparisonForm,
+  IMAGE_COMPARISON_DEFAULT_OPTIONS,
+} from "./image-comparison-form";
+export type { ImageComparisonFormSubmit } from "./image-comparison-form";
 export { RichTextPageSize } from "./page-size";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";
