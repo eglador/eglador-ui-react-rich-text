@@ -52,7 +52,9 @@ export const defaultTheme: EditorThemeClasses = {
   tableCellSelected: "bg-blue-100",
   hashtag:
     "text-blue-600 bg-blue-50 px-1 py-0.5 rounded font-medium hover:bg-blue-100 cursor-pointer",
-  characterLimit: "bg-red-100",
+  // OverflowNode wrap stays (Lexical reads it for `remainingCharacters`),
+  // but no visual highlight — the character counter handles user feedback.
+  characterLimit: "",
   embedBlock: {
     base: "relative my-3 select-none",
     focus: "outline outline-2 outline-blue-500 outline-offset-2 rounded-lg",
