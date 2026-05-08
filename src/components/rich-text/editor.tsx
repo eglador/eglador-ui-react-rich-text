@@ -115,6 +115,7 @@ function DragonSupportPlugin(): null {
   return null;
 }
 
+
 const URL_REGEX =
   /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/;
 const EMAIL_REGEX =
