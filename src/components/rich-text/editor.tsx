@@ -54,10 +54,6 @@ function buildInitialState(
 
   if (initialHtml) {
     return (editor: LexicalEditor) => {
-      // DOMParser is browser-only. Lexical may invoke this synchronously
-      // during createEditor (which runs on SSR for "use client" components);
-      // skip on the server and let the client useEffect apply it post-mount.
-      if (typeof window === "undefined") return;
       const dom = new DOMParser().parseFromString(initialHtml, "text/html");
       const nodes = $generateNodesFromDOM(editor, dom);
       const root = $getRoot();
