@@ -6,6 +6,7 @@ import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 import { $generateHtmlFromNodes } from "@lexical/html";
 import { $getRoot } from "lexical";
 import { cn } from "../../lib/utils";
+import { CheckIcon, CopyIcon, DownloadIcon } from "../../lib/icons";
 
 export type RichTextOutputTab = "html" | "markdown" | "json" | "text";
 
@@ -28,7 +29,7 @@ export interface RichTextOutputProps
   showDownload?: boolean;
   /** Filename stem for downloads. Final name is `${downloadName}.{ext}`. Default: `richtext`. */
   downloadName?: string;
-  /** Max content height (Tailwind class). Default: `max-h-80`. */
+  /** Max content height (Tailwind class). Default: `max-h-72`. */
   maxHeight?: string;
 }
 
@@ -55,6 +56,9 @@ const TAB_MIME: Record<RichTextOutputTab, string> = {
 
 const EMPTY_VALUE: OutputValue = { html: "", markdown: "", json: "", text: "" };
 
+const ACTION_BUTTON =
+  "inline-flex h-7 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 text-xs font-medium text-zinc-700 transition-colors cursor-pointer hover:bg-zinc-50 hover:text-zinc-900 hover:border-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/15 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-zinc-700 disabled:hover:border-zinc-200";
+
 /**
  * Live serialization panel — tabbed view of the current editor state as
  * HTML, Markdown, Lexical JSON and plain text. Place after `<RichTextContent />`
@@ -67,7 +71,7 @@ export function RichTextOutput({
   showCopy = true,
   showDownload = true,
   downloadName = "richtext",
-  maxHeight = "max-h-80",
+  maxHeight = "max-h-72",
   className,
   ...props
 }: RichTextOutputProps) {
@@ -134,7 +138,7 @@ export function RichTextOutput({
     <div
       data-slot="rich-text-output"
       className={cn(
-        "overflow-hidden border-t border-zinc-200 bg-white",
+        "flex flex-col overflow-hidden border-t border-zinc-200 bg-white",
         className,
       )}
       {...props}
@@ -142,9 +146,9 @@ export function RichTextOutput({
       <div
         role="tablist"
         aria-label="Editor output"
-        className="flex items-center border-b border-zinc-200 bg-zinc-50/80"
+        className="flex items-center gap-1 border-b border-zinc-200 bg-zinc-50/60 px-2 py-1.5"
       >
-        <div className="flex flex-1">
+        <div className="flex flex-1 items-center gap-0.5">
           {tabs.map((t) => {
             const active = tab === t;
             return (
@@ -155,10 +159,10 @@ export function RichTextOutput({
                 aria-selected={active}
                 onClick={() => setTab(t)}
                 className={cn(
-                  "px-4 py-2 text-xs font-medium cursor-pointer transition-colors",
+                  "inline-flex h-7 items-center rounded-sm px-2.5 text-xs font-medium transition-colors cursor-pointer",
                   active
-                    ? "-mb-px border-b-2 border-zinc-900 bg-white text-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:bg-zinc-200/70 hover:text-zinc-900",
                 )}
               >
                 {TAB_LABELS[t]}
@@ -166,38 +170,48 @@ export function RichTextOutput({
             );
           })}
         </div>
-        <div className="flex items-center gap-1 pr-2">
-          {showCopy && (
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={!display}
-              aria-label={copied ? "Copied" : "Copy to clipboard"}
-              className="inline-flex h-7 items-center rounded-sm px-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-200 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              {copied ? "Copied" : "Copy"}
-            </button>
-          )}
-          {showDownload && (
-            <button
-              type="button"
-              onClick={handleDownload}
-              disabled={!display}
-              aria-label={`Download as .${TAB_EXTENSION[tab]}`}
-              className="inline-flex h-7 items-center rounded-sm px-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-200 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              .{TAB_EXTENSION[tab]}
-            </button>
-          )}
-        </div>
+        {(showCopy || showDownload) && (
+          <div className="flex items-center gap-1">
+            {showCopy && (
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={!display}
+                aria-label={copied ? "Copied" : "Copy to clipboard"}
+                className={ACTION_BUTTON}
+              >
+                {copied ? (
+                  <CheckIcon className="size-3.5 text-emerald-600" />
+                ) : (
+                  <CopyIcon className="size-3.5" />
+                )}
+                <span>{copied ? "Copied" : "Copy"}</span>
+              </button>
+            )}
+            {showDownload && (
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={!display}
+                aria-label={`Download as .${TAB_EXTENSION[tab]}`}
+                className={ACTION_BUTTON}
+              >
+                <DownloadIcon className="size-3.5" />
+                <span>.{TAB_EXTENSION[tab]}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <pre
         className={cn(
-          "overflow-auto whitespace-pre-wrap break-words bg-white p-3 text-xs leading-relaxed text-zinc-700",
+          "overflow-auto whitespace-pre-wrap break-words bg-zinc-50/40 p-4 font-mono text-[11px] leading-relaxed text-zinc-700",
           maxHeight,
         )}
       >
-        {display || "—"}
+        {display || (
+          <span className="text-zinc-400 italic">empty</span>
+        )}
       </pre>
     </div>
   );
