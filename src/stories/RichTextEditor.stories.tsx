@@ -1,11 +1,10 @@
-import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   RichTextEditor,
   RichTextContent,
   RichTextToolbar,
   RichTextPageSize,
-  type RichTextValue,
+  RichTextOutput,
 } from "../components/rich-text";
 
 const meta: Meta = {
@@ -458,86 +457,35 @@ export const WithOutput: Story = {
     docs: {
       description: {
         story:
-          "`onChange` callback'i her güncellemede `{ json, html, text }` üçlüsünü verir.",
+          "`<RichTextOutput />` editörün altına yerleşen DevTools-tarzı tab panel. HTML / Markdown / JSON / Text serileştirmelerini canlı gösterir, Copy butonu ile clipboard'a yazar. `tabs`, `defaultTab`, `showCopy`, `maxHeight` prop'larıyla daraltılabilir. PageSize gibi `<RichTextEditor>` içine bir kez koymak yeterli; subscription'ı kendisi yapar (`onChange`'e gerek yok).",
       },
       source: {
-        code: `import { useState } from "react";
-import {
+        code: `import {
   RichTextEditor,
   RichTextContent,
   RichTextToolbar,
-  type RichTextValue,
+  RichTextOutput,
 } from "eglador-ui-react-rich-text";
 
 export function MyEditor() {
-  const [value, setValue] = useState<RichTextValue>();
-
   return (
-    <>
-      <RichTextEditor onChange={setValue}>
-        <RichTextToolbar />
-        <RichTextContent placeholder="Type to see live output..." />
-      </RichTextEditor>
-
-      <pre>{value?.html}</pre>
-    </>
+    <RichTextEditor>
+      <RichTextToolbar />
+      <RichTextContent placeholder="Type to see live output..." />
+      <RichTextOutput />
+    </RichTextEditor>
   );
 }`,
       },
     },
   },
-  render: () => {
-    const [value, setValue] = React.useState<RichTextValue>();
-    const [tab, setTab] = React.useState<
-      "html" | "markdown" | "json" | "text"
-    >("html");
-
-    const content =
-      !value || value[tab] === undefined
-        ? "—"
-        : tab === "json"
-          ? JSON.stringify(JSON.parse(value.json), null, 2)
-          : value[tab];
-
-    const tabs: Array<{
-      key: "html" | "markdown" | "json" | "text";
-      label: string;
-    }> = [
-      { key: "html", label: "HTML" },
-      { key: "markdown", label: "Markdown" },
-      { key: "json", label: "JSON" },
-      { key: "text", label: "Text" },
-    ];
-
-    return (
-      <div className="max-w-3xl space-y-4">
-        <RichTextEditor onChange={setValue}>
-          <RichTextToolbar />
-          <RichTextContent placeholder="Type to see live output below..." />
-        </RichTextEditor>
-
-        <div className="rounded-lg border border-zinc-200 overflow-hidden">
-          <div className="flex border-b border-zinc-200 bg-zinc-50">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTab(t.key)}
-                className={
-                  tab === t.key
-                    ? "px-4 py-2 text-xs font-medium bg-white text-zinc-900 border-b-2 border-blue-500 -mb-px cursor-pointer"
-                    : "px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-                }
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <pre className="p-4 text-xs font-mono text-zinc-700 max-h-72 overflow-auto whitespace-pre-wrap break-all">
-            {content}
-          </pre>
-        </div>
-      </div>
-    );
-  },
+  render: () => (
+    <div className="max-w-3xl">
+      <RichTextEditor>
+        <RichTextToolbar />
+        <RichTextContent placeholder="Type to see live output below..." />
+        <RichTextOutput />
+      </RichTextEditor>
+    </div>
+  ),
 };

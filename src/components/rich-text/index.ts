@@ -126,6 +126,8 @@ export { RichTextStats } from "./stats";
 export type { RichTextStatsProps, RichTextStatsValue } from "./stats";
 export { RichTextFindReplace } from "./find-replace";
 export { RichTextPageSize } from "./page-size";
+export { RichTextOutput } from "./output";
+export type { RichTextOutputProps, RichTextOutputTab } from "./output";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";
 export { useRichTextEditor } from "./hook";
