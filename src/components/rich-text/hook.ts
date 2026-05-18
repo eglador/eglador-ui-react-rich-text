@@ -15,9 +15,8 @@ import {
   $getRoot,
   $getSelection,
   $setSelection,
-  $isElementNode,
+  $insertNodes,
   $isRangeSelection,
-  $createParagraphNode,
   type LexicalEditor,
 } from "lexical";
 import { $createOffsetView } from "@lexical/offset";
@@ -98,13 +97,8 @@ export function useRichTextEditor(): RichTextEditorApi {
           const nodes = $generateNodesFromDOM(editor, dom);
           const root = $getRoot();
           root.clear();
-          nodes.forEach((node) => {
-            if ($isElementNode(node)) {
-              root.append(node);
-            } else {
-              root.append($createParagraphNode().append(node));
-            }
-          });
+          root.select();
+          $insertNodes(nodes);
         });
       },
 
