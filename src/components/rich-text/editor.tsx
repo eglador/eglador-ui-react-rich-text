@@ -35,7 +35,7 @@ import type {
   InitialEditorStateType,
 } from "@lexical/react/LexicalComposer";
 import type { EditorState, LexicalEditor } from "lexical";
-import { $getRoot, $isElementNode, $createParagraphNode } from "lexical";
+import { $getRoot, $insertNodes } from "lexical";
 import { cn } from "../../lib/utils";
 import { defaultTheme } from "./theme";
 import { defaultNodes } from "./nodes";
@@ -47,30 +47,39 @@ function buildInitialState(
   initialHtml: string | undefined,
   initialJson: string | undefined,
 ): InitialEditorStateType | null {
-  // Priority: markdown > html > json
   if (initialMarkdown) {
     return () => $convertFromMarkdownString(initialMarkdown, TRANSFORMERS);
   }
 
   if (initialHtml) {
-    return (editor: LexicalEditor) => {
-      const dom = new DOMParser().parseFromString(initialHtml, "text/html");
-      const nodes = $generateNodesFromDOM(editor, dom);
-      const root = $getRoot();
-      root.clear();
-      nodes.forEach((node) => {
-        if ($isElementNode(node)) {
-          root.append(node);
-        } else {
-          root.append($createParagraphNode().append(node));
-        }
-      });
-    };
+    return null;
   }
 
   if (initialJson) {
     return initialJson;
   }
+
+  return null;
+}
+
+function InitialHtmlPlugin({ html }: { html: string }) {
+  const [editor] = useLexicalComposerContext();
+  const appliedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (appliedRef.current) return;
+    if (typeof window === "undefined") return;
+    appliedRef.current = true;
+
+    editor.update(() => {
+      const dom = new DOMParser().parseFromString(html, "text/html");
+      const nodes = $generateNodesFromDOM(editor, dom);
+      const root = $getRoot();
+      root.clear();
+      root.select();
+      $insertNodes(nodes);
+    });
+  }, [editor, html]);
 
   return null;
 }
@@ -166,11 +175,7 @@ export function RichTextEditor({
       theme: defaultTheme,
       nodes: defaultNodes,
       editable,
-      editorState: buildInitialState(
-        initialMarkdown,
-        initialHtml,
-        initialJson,
-      ),
+      editorState: buildInitialState(initialMarkdown, initialHtml, initialJson),
       onError: (error) => {
         throw error;
       },
@@ -179,6 +184,9 @@ export function RichTextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [namespace],
   );
+
+  const shouldApplyInitialHtml =
+    initialHtml != null && initialHtml.length > 0 && !initialMarkdown;
 
   const handleChange = React.useCallback(
     (editorState: EditorState, editor: LexicalEditor) => {
@@ -203,6 +211,7 @@ export function RichTextEditor({
       {...props}
     >
       <LexicalComposer initialConfig={initialConfig}>
+        {shouldApplyInitialHtml && <InitialHtmlPlugin html={initialHtml!} />}
         <PageSizeProvider>{children}</PageSizeProvider>
         <HistoryPlugin />
         <ListPlugin />
