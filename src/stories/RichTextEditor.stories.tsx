@@ -15,7 +15,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Lexical tabanlı zengin metin editörü. Compound API: `<RichTextEditor>` root, içine `<RichTextToolbar />` (opsiyonel) ve `<RichTextContent />`. Default plugin'ler: history, list, link, markdown shortcuts. Klavye kısayolları (Cmd+B, Cmd+I, Cmd+Z) ve markdown shortcut'ları (`**bold**`, `# heading`, `- list`) çalışır.",
+          "Lexical-based rich text editor. Compound API: `<RichTextEditor>` root containing `<RichTextToolbar />` (optional) and `<RichTextContent />`. Default plugins: history, list, link, markdown shortcuts. Keyboard shortcuts (Cmd+B, Cmd+I, Cmd+Z) and markdown shortcuts (`**bold**`, `# heading`, `- list`) all work.",
       },
     },
   },
@@ -29,7 +29,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Tam toolbar + içerik alanı. Toolbar default'ta tüm formatting feature'larıyla gelir.",
+          "Full toolbar + content area. The toolbar ships with every formatting feature enabled by default.",
       },
       source: {
         code: `import {
@@ -64,7 +64,7 @@ export const NoToolbar: Story = {
     docs: {
       description: {
         story:
-          "Toolbar olmadan — kullanıcı sadece klavye kısayollarıyla (Cmd+B, Cmd+I) ve markdown shortcut'larıyla (`**bold**`, `# heading`) formatlar.",
+          "Without a toolbar — the user only formats via keyboard shortcuts (Cmd+B, Cmd+I) and markdown shortcuts (`**bold**`, `# heading`).",
       },
     },
   },
@@ -82,7 +82,7 @@ export const MinimalToolbar: Story = {
     docs: {
       description: {
         story:
-          "`features` array'i ile toolbar'da sadece istediğin butonlar.",
+          "Use the `features` array to show only the toolbar buttons you want.",
       },
       source: {
         code: `<RichTextEditor>
@@ -115,7 +115,7 @@ export const AutoFocus: Story = {
     docs: {
       description: {
         story:
-          "`autoFocus` prop'u ile editör mount olunca cursor otomatik olarak içeriğe düşer.",
+          "With the `autoFocus` prop, the cursor is placed in the content automatically on mount.",
       },
     },
   },
@@ -134,7 +134,7 @@ export const Draggable: Story = {
     docs: {
       description: {
         story:
-          "`<RichTextContent draggable />` ile Notion tarzı drag handle + insert menu aktifleşir. Block'a hover'la → solda **+** ve **grip** belirir. Grip'i tut ve sürükle ile sırala. **+**'a tıkla → yeni block tipi seç (paragraph, heading, list, quote, code).",
+          "`<RichTextContent draggable />` enables a Notion-style drag handle + insert menu. Hover a block → a **+** and **grip** icon appear on the left. Hold the grip and drag to reorder. Click **+** → pick a new block type (paragraph, heading, list, quote, code).",
       },
       source: {
         code: `<RichTextEditor
@@ -182,7 +182,7 @@ export const FloatingToolbar: Story = {
     docs: {
       description: {
         story:
-          "`<RichTextContent floatingToolbar />` ile selection üzerinde float eden mini toolbar. Yazıyı seç → seçimin üstünde bold/italic/underline/strikethrough/code/link butonları belirir.",
+          "`<RichTextContent floatingToolbar />` shows a mini toolbar floating above the current selection. Select some text → bold/italic/underline/strikethrough/code/link buttons appear above the selection.",
       },
       source: {
         code: `<RichTextEditor>
@@ -214,7 +214,7 @@ export const FullFeatured: Story = {
     docs: {
       description: {
         story:
-          "Tüm özellikler birlikte: top toolbar + page size + drag handle + insert menu + floating selection toolbar.",
+          "All features combined: top toolbar + page size + drag handle + insert menu + floating selection toolbar.",
       },
       source: {
         code: `<RichTextEditor>
@@ -255,7 +255,7 @@ export const PageSize: Story = {
     docs: {
       description: {
         story:
-          "`<RichTextPageSize />` editörün **alt kenarına** yerleşen DevTools-tarzı modern bar. Pill button grup ile **Full** / **Desktop** (1280) / **Tablet** (768) / **Mobile** (375), ortada canlı boyut göstergesi (`1280 × auto`), sağda **custom** px input. İçeriğe yerleşim için `<RichTextContent />`'ten sonra koy.",
+          "`<RichTextPageSize />` is a modern DevTools-style bar that sits at the **bottom edge** of the editor. A pill button group with **Full** / **Desktop** (1280) / **Tablet** (768) / **Mobile** (375), a live size indicator in the middle (`1280 × auto`), and a **custom** px input on the right. Place it after `<RichTextContent />` to anchor it to the content.",
       },
       source: {
         code: `<RichTextEditor>
@@ -294,7 +294,7 @@ export const InitialMarkdown: Story = {
     docs: {
       description: {
         story:
-          "`initialMarkdown` prop'u ile editor markdown string'inden başlar. `@lexical/markdown` TRANSFORMERS ile parse edilir.",
+          "The `initialMarkdown` prop starts the editor from a markdown string. Parsed via `@lexical/markdown` TRANSFORMERS.",
       },
       source: {
         code: `<RichTextEditor
@@ -339,7 +339,7 @@ export const InitialHtml: Story = {
     docs: {
       description: {
         story:
-          "`initialHtml` prop'u ile editor HTML string'inden başlar. `@lexical/html` ile DOM parse edilip Lexical node'larına dönüştürülür.",
+          "The `initialHtml` prop starts the editor from an HTML string. Parsed via `@lexical/html` and converted into Lexical nodes.",
       },
       source: {
         code: `<RichTextEditor
@@ -368,7 +368,7 @@ export const ReadOnly: Story = {
     docs: {
       description: {
         story:
-          "`editable={false}` ile içerik salt-okunur. Toolbar bu modda da render olur ama dispatch etse bile değişiklik olmaz.",
+          "`editable={false}` makes the content read-only. The toolbar still renders, but its dispatches have no effect.",
       },
     },
   },
@@ -457,7 +457,7 @@ export const WithOutput: Story = {
     docs: {
       description: {
         story:
-          "`<RichTextOutput />` editörün altına yerleşen DevTools-tarzı tab panel. HTML / Markdown / JSON / Text serileştirmelerini canlı gösterir, Copy butonu ile clipboard'a yazar. `tabs`, `defaultTab`, `showCopy`, `maxHeight` prop'larıyla daraltılabilir. PageSize gibi `<RichTextEditor>` içine bir kez koymak yeterli; subscription'ı kendisi yapar (`onChange`'e gerek yok).",
+          "`<RichTextOutput />` is a DevTools-style tab panel that sits below the editor. It shows HTML / Markdown / JSON / Text serializations live and copies to the clipboard via a Copy button. Customizable via `tabs`, `defaultTab`, `showCopy`, and `maxHeight`. Like PageSize, drop it once inside `<RichTextEditor>` — it subscribes on its own (no `onChange` needed).",
       },
       source: {
         code: `import {

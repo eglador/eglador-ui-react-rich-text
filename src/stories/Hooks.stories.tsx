@@ -20,7 +20,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Programatik kontrol için iki yol: `useRichTextEditor()` hook (Carousel children'ı içinde) veya `editorRef` prop (dışarıdan).",
+          "Two ways to control the editor programmatically: the `useRichTextEditor()` hook (from inside the editor's children) or the `editorRef` prop (from outside).",
       },
     },
   },
@@ -77,7 +77,7 @@ export const UseRichTextEditorHook: Story = {
     docs: {
       description: {
         story:
-          "`useRichTextEditor()` Carousel children'ından çağrılır. Editor instance + getter/setter helpers döner: `setMarkdown`, `setHtml`, `setJson`, `getMarkdown`, `getHtml`, `getJson`, `getText`, `clear`, `focus`.",
+          "`useRichTextEditor()` is called from inside the editor's children. Returns the editor instance plus getter/setter helpers: `setMarkdown`, `setHtml`, `setJson`, `getMarkdown`, `getHtml`, `getJson`, `getText`, `clear`, `focus`.",
       },
       source: {
         code: `import {
@@ -175,7 +175,7 @@ export const EditorRef: Story = {
     docs: {
       description: {
         story:
-          "`editorRef` prop'u ile LexicalEditor instance'ını dışarıya sızdır. RichTextEditor children'ı dışından kontrol etmek için ideal (örn. form submit handler).",
+          "Use the `editorRef` prop to expose the LexicalEditor instance outside the component tree. Ideal for controlling the editor from outside its children (e.g. a form submit handler).",
       },
       source: {
         code: `import { useRef } from "react";

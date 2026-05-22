@@ -113,25 +113,25 @@ const INITIAL_HTML = `<h1 style="text-align: center">The Art of Rich Text Editin
 <p style="text-align: center"><em>A practical guide to building modern document experiences with <span style="color: #3b82f6">Lexical</span> and <span style="color: #06b6d4">React</span></em></p>
 <p style="text-align: center">By <strong>Jane Doe</strong> · Published <a href="https://lexical.dev" target="_blank" rel="noopener noreferrer">on Lexical Journal</a> · 8 min read</p>
 <hr />
-<p style="text-align: justify"><strong>Lorem ipsum dolor sit amet</strong>, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Modern editörler <mark>basit metin alanlarının</mark> çok ötesinde — onlar <em>yapısal içerik</em>, <u>zengin formatlamalar</u> ve <span style="color: #8b5cf6">co-authoring</span> deneyimleri sunar. Bu makalede, üretim kalitesinde bir rich text editörünün nasıl tasarlandığına dair temel ilkeleri inceleyeceğiz.</p>
+<p style="text-align: justify"><strong>Lorem ipsum dolor sit amet</strong>, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Modern editors go <mark>far beyond simple text areas</mark> — they deliver <em>structured content</em>, <u>rich formatting</u>, and <span style="color: #8b5cf6">co-authoring</span> experiences. This article walks through the core principles behind a production-grade rich text editor.</p>
 <h2>Why Rich Text Matters</h2>
-<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. <span style="background-color: #fef08a">Yapısal düzenleyici</span>, kullanıcıya yalnızca yazma değil — <strong>düşünme</strong> aracı verir. <span style="color: #ef4444">Duis aute irure dolor</span> in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. A <span style="background-color: #fef08a">structural editor</span> gives the user more than a writing surface — it gives them a <strong>thinking</strong> tool. <span style="color: #ef4444">Duis aute irure dolor</span> in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
 <blockquote>"The best tool gets out of your way and lets ideas flow. Rich text editors should feel like an extension of thought, not a barrier to it." — <em>Jakob Nielsen</em>, Nielsen Norman Group</blockquote>
 <h3>Key Capabilities</h3>
-<p>Modern bir editörden beklenen temel yetenekler şunlardır:</p>
+<p>A modern editor is expected to provide these core capabilities:</p>
 <ul>
-  <li><strong>Block-level editing</strong> — drag-and-drop ile yeniden sıralanabilir bloklar</li>
-  <li><em>Inline formatting</em> — bold, italic, underline, <s>strikethrough</s>, <code>inline code</code> ve daha fazlası</li>
-  <li><span style="background-color: #bbf7d0">Markdown shortcut'ları</span> — <code>**bold**</code>, <code># heading</code>, <code>- list</code></li>
+  <li><strong>Block-level editing</strong> — blocks that can be reordered with drag-and-drop</li>
+  <li><em>Inline formatting</em> — bold, italic, underline, <s>strikethrough</s>, <code>inline code</code>, and more</li>
+  <li><span style="background-color: #bbf7d0">Markdown shortcuts</span> — <code>**bold**</code>, <code># heading</code>, <code>- list</code></li>
   <li>HTML / JSON / Markdown <span style="color: #22c55e">round-trip</span> serialization</li>
-  <li>Collaborative-ready mimari <span style="color: #71717a">(yakında)</span></li>
+  <li>Collaborative-ready architecture <span style="color: #71717a">(coming soon)</span></li>
 </ul>
 <h3>Architecture Overview</h3>
-<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. Sistem üç temel <code>primitive</code> üzerine kuruludur:</p>
+<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. The system is built on three fundamental <code>primitives</code>:</p>
 <ol>
-  <li><strong>EditorState</strong> — değiştirilemez (immutable) tek doğru kaynak</li>
-  <li><strong>Nodes</strong> — genişletilebilir içerik blokları (heading, list, table, custom...)</li>
-  <li><strong>Commands</strong> — selection üstünde declarative işlemler</li>
+  <li><strong>EditorState</strong> — the single immutable source of truth</li>
+  <li><strong>Nodes</strong> — extensible content blocks (heading, list, table, custom…)</li>
+  <li><strong>Commands</strong> — declarative operations over the current selection</li>
 </ol>
 <pre><code>function useEditor() {
   const [state, setState] = useState(initialState);
@@ -141,7 +141,7 @@ const INITIAL_HTML = `<h1 style="text-align: center">The Art of Rich Text Editin
   return { state, dispatch };
 }</code></pre>
 <h2>Performance Benchmarks</h2>
-<p style="text-align: justify">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. <strong>Gerçek dünya ölçümleri</strong>, mimari kararların pratik etkisini gösterir:</p>
+<p style="text-align: justify">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. <strong>Real-world measurements</strong> show the practical impact of architectural choices:</p>
 <table>
   <tr>
     <th>Metric</th>
@@ -174,32 +174,32 @@ const INITIAL_HTML = `<h1 style="text-align: center">The Art of Rich Text Editin
     <td>Mature</td>
   </tr>
 </table>
-<p style="text-align: center"><em>Ölçümler: Chrome 120, MacBook Pro M2 — <a href="https://github.com" target="_blank" rel="noopener noreferrer">methodology</a></em></p>
+<p style="text-align: center"><em>Measurements: Chrome 120, MacBook Pro M2 — <a href="https://github.com" target="_blank" rel="noopener noreferrer">methodology</a></em></p>
 <h2>Mathematical & Scientific Notation</h2>
-<p>Editörler yalnızca düz metin değil, <strong>bilimsel notasyon</strong> da işleyebilmelidir.</p>
-<p><strong>Kimya:</strong> Suyun molekül formülü H<sub>2</sub>O. Yanma reaksiyonu: 2H<sub>2</sub> + O<sub>2</sub> → 2H<sub>2</sub>O. <span style="background-color: #fef08a">Glukoz</span>: C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>.</p>
-<p><strong>Fizik:</strong> Einstein'ın kütle-enerji denkliği E = mc<sup>2</sup> evrenin yapısı hakkında devrim niteliğindeydi. Pisagor: a<sup>2</sup> + b<sup>2</sup> = c<sup>2</sup>. Üçüncü dereceden polinom: x<sup>3</sup> + 2x<sup>2</sup> − 5x + 1.</p>
+<p>Editors should handle not only plain prose but also <strong>scientific notation</strong>.</p>
+<p><strong>Chemistry:</strong> Water has the molecular formula H<sub>2</sub>O. The combustion reaction: 2H<sub>2</sub> + O<sub>2</sub> → 2H<sub>2</sub>O. <span style="background-color: #fef08a">Glucose</span>: C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>.</p>
+<p><strong>Physics:</strong> Einstein's mass-energy equivalence E = mc<sup>2</sup> reshaped our understanding of the universe. Pythagoras: a<sup>2</sup> + b<sup>2</sup> = c<sup>2</sup>. A cubic polynomial: x<sup>3</sup> + 2x<sup>2</sup> − 5x + 1.</p>
 <hr />
 <h2>API Reference</h2>
-<p>Bu bölüm derin başlık seviyelerini gösterir — kapsamlı dokümantasyonlarda h4/h5/h6 yaygındır.</p>
+<p>This section demonstrates deep heading levels — h4/h5/h6 are common in extensive documentation.</p>
 <h3>Components</h3>
 <h4>RichTextEditor</h4>
-<p>Lexical composer'ı saran kök bileşen.</p>
+<p>The root component that wraps Lexical's composer.</p>
 <h5>Configuration</h5>
-<p>Editör mount olurken <code>initialConfig</code>'i tek seferlik tüketir.</p>
+<p>It consumes <code>initialConfig</code> once when the editor mounts.</p>
 <h6>Theme tokens</h6>
-<p>Lexical'in <code>EditorThemeClasses</code> map'i node tiplerine class isimleri atar — <span style="color: #8b5cf6">Tailwind v4</span> ile harmanlanır.</p>
+<p>Lexical's <code>EditorThemeClasses</code> map assigns class names to node types — blended with <span style="color: #8b5cf6">Tailwind v4</span>.</p>
 <h2>Layout & Typography</h2>
-<p>Hizalama, tipografinin temel bileşenidir. Aşağıdaki örnekler dört modu gösterir:</p>
-<p style="text-align: left"><strong>Sola hizalı:</strong> Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit.</p>
-<p style="text-align: center"><strong>Ortalanmış:</strong> Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.</p>
-<p style="text-align: right"><strong>Sağa hizalı:</strong> Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.</p>
-<p style="text-align: justify"><strong>İki yana yaslı:</strong> At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi.</p>
+<p>Alignment is a core typography primitive. The examples below illustrate the four modes:</p>
+<p style="text-align: left"><strong>Left-aligned:</strong> Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit.</p>
+<p style="text-align: center"><strong>Centered:</strong> Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.</p>
+<p style="text-align: right"><strong>Right-aligned:</strong> Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.</p>
+<p style="text-align: justify"><strong>Justified:</strong> At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi.</p>
 <h2>Conclusion</h2>
-<p style="text-align: justify">Et harum quidem <mark>rerum facilis est</mark> et <span style="color: #8b5cf6"><strong>expedita distinctio</strong></span>. Modern bir rich text editörü inşa etmek; <em>state management</em>, <em>DOM serialization</em> ve <em>UX detayları</em>'nın ince dengesini gerektirir. Lexical bu üçünü zarif bir API ile birleştirir.</p>
-<blockquote><strong>Sonuç:</strong> En iyi editör, kullanıcının önünden çekilen editördür. Düşünceler akmalı; araç değil, <span style="background-color: #fef08a">akış</span> ön plana çıkmalıdır.</blockquote>
-<p style="text-align: center"><em>Bu makaleyi beğendiyseniz, <a href="https://lexical.dev" target="_blank" rel="noopener noreferrer">Lexical dokümantasyonunu</a> ziyaret edin ve <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub'da yıldız</a> bırakın. ★</em></p>
-<p>Embed örnekleri — Insert menüsünden veya direkt URL yapıştırarak da ekleyebilirsiniz (YouTube, .mp3, .mp4 URL'leri otomatik tanınır):</p>`;
+<p style="text-align: justify">Et harum quidem <mark>rerum facilis est</mark> et <span style="color: #8b5cf6"><strong>expedita distinctio</strong></span>. Building a modern rich text editor requires a careful balance of <em>state management</em>, <em>DOM serialization</em>, and <em>UX details</em>. Lexical brings the three together through an elegant API.</p>
+<blockquote><strong>Takeaway:</strong> The best editor is one that gets out of the user's way. Thoughts should flow; the tool should disappear into the <span style="background-color: #fef08a">flow</span>.</blockquote>
+<p style="text-align: center"><em>If you enjoyed this article, visit the <a href="https://lexical.dev" target="_blank" rel="noopener noreferrer">Lexical documentation</a> and <a href="https://github.com" target="_blank" rel="noopener noreferrer">star us on GitHub</a>. ★</em></p>
+<p>Embed examples — you can also insert via the Insert menu or by pasting a URL directly (YouTube, .mp3, .mp4 URLs are detected automatically):</p>`;
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Rich Text/Playground",
@@ -209,7 +209,7 @@ const meta: Meta<PlaygroundArgs> = {
     docs: {
       description: {
         component:
-          "Tek noktadan tüm özelliklerin canlı test edildiği master playground. Controls panelinden editör davranışı, slot'lar (toolbar, page size), content prop'ları (draggable, floatingToolbar), toolbar feature seçimi ve başlangıç içeriği değiştirilebilir.",
+          "Master playground for live-testing every feature in one place. Use the Controls panel to tweak editor behavior, slots (toolbar, page size), content props (draggable, floatingToolbar), the toolbar feature selection, and the initial content.",
       },
     },
   },
@@ -245,14 +245,14 @@ const meta: Meta<PlaygroundArgs> = {
       control: { type: "number", min: 0, max: 10000, step: 50 },
       table: { category: "Limit" },
       description:
-        "Karakter limiti. `0` = limitsiz. Limit aşıldığında metin kırmızı arka planlı OverflowNode'a sarılır.",
+        "Character limit. `0` = unlimited. When the limit is exceeded, the overflow text is wrapped in a red-background OverflowNode.",
     },
     charset: {
       control: "radio",
       options: ["UTF-8", "UTF-16"],
       table: { category: "Limit" },
       description:
-        "Karakter sayım modu. UTF-16 = `String.length`. UTF-8 = emoji/CJK için multi-byte.",
+        "Character counting mode. UTF-16 = `String.length`. UTF-8 = multi-byte counting for emoji/CJK.",
       if: { arg: "maxLength", neq: 0 },
     },
     // ── Slots ────────────────────────────
@@ -271,35 +271,35 @@ const meta: Meta<PlaygroundArgs> = {
       name: "Output panel",
       table: { category: "Slots" },
       description:
-        "Editör altında canlı HTML/Markdown/JSON/Text output paneli (onChange ile)",
+        "Live HTML/Markdown/JSON/Text output panel below the editor (subscribes via onChange).",
     },
     showSlashCommands: {
       control: "boolean",
       name: "Slash commands",
       table: { category: "Slots" },
       description:
-        "`/` yazınca açılan Notion-style komut menüsü (block ekleme).",
+        "Notion-style command menu that opens when you type `/` (for inserting blocks).",
     },
     showAutoEmbed: {
       control: "boolean",
       name: "Auto embed",
       table: { category: "Slots" },
       description:
-        "Yapıştırılan / yazılan URL'i otomatik tanır (YouTube vs.) ve embed önerir.",
+        "Auto-detects pasted/typed URLs (YouTube, etc.) and suggests an embed.",
     },
     showStats: {
       control: "boolean",
       name: "Stats bar",
       table: { category: "Slots" },
       description:
-        "Editör altında live word + character count gösterir (modern editör standardı).",
+        "Shows live word + character count below the editor (a modern editor standard).",
     },
     statsReadingTime: {
       control: "boolean",
       name: "+ Reading time",
       table: { category: "Slots" },
       description:
-        "Stats bar'a tahmini okuma süresi ekler (200 wpm).",
+        "Adds an estimated reading time to the stats bar (200 wpm).",
       if: { arg: "showStats", truthy: true },
     },
     showFindReplace: {
@@ -307,7 +307,7 @@ const meta: Meta<PlaygroundArgs> = {
       name: "Find & Replace",
       table: { category: "Slots" },
       description:
-        "Cmd/Ctrl+F ile açılan find & replace paneli (modern editör standardı).",
+        "Find & replace panel triggered by Cmd/Ctrl+F (a modern editor standard).",
     },
     // ── Content ──────────────────────────
     mode: {
@@ -315,13 +315,13 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["rich", "plain"],
       table: { category: "Content" },
       description:
-        "`plain` = sadece düz metin (PlainTextPlugin). Toolbar render olmaya devam ederken format komutları etkisiz olur.",
+        "`plain` = plain text only (PlainTextPlugin). The toolbar still renders but format commands become no-ops.",
     },
     placeholder: { control: "text", table: { category: "Content" } },
     minHeight: {
       control: "text",
       table: { category: "Content" },
-      description: "Tailwind min-height class (örn. `min-h-32`, `min-h-96`)",
+      description: "Tailwind min-height class (e.g. `min-h-32`, `min-h-96`)",
     },
     draggable: {
       control: "boolean",
@@ -331,7 +331,7 @@ const meta: Meta<PlaygroundArgs> = {
     floatingToolbar: {
       control: "boolean",
       table: { category: "Content" },
-      description: "Selection üstünde mini formatting bar",
+      description: "Mini formatting bar above the selection",
     },
     // ── Toolbar features ─────────────────
     features: {
@@ -339,7 +339,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: FEATURE_OPTIONS,
       table: { category: "Toolbar features" },
       description:
-        "Toolbar'da görünecek feature'lar. Separator'lar otomatik gruplara göre eklenir.",
+        "Features visible in the toolbar. Separators are inserted between active groups automatically.",
       if: { arg: "showToolbar", truthy: true },
     },
     // ── Heading dropdown ─────────────────
@@ -348,7 +348,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: HEADING_ITEM_OPTIONS,
       table: { category: "Heading dropdown" },
       description:
-        "Heading dropdown'ı içinde görünecek block tipleri (sadece `heading` feature aktifken etkili).",
+        "Block types shown inside the heading dropdown (only effective while the `heading` feature is active).",
       if: { arg: "showToolbar", truthy: true },
     },
     // ── Blocks ───────────────────────────
@@ -358,14 +358,14 @@ const meta: Meta<PlaygroundArgs> = {
       name: "Enabled blocks",
       table: { category: "Blocks" },
       description:
-        "Registry'den seçilen block key'leri. Filtre üç yüzeye birden uygulanır: Insert dropdown, slash menu (`/`) ve draggable `+` menüsü. Bir block kapatılırsa hiçbir yüzeyde görünmez.",
+        "Block keys selected from the registry. The filter applies to all three surfaces at once — Insert dropdown, slash menu (`/`), and the draggable `+` menu. Turning a block off hides it everywhere.",
     },
     // ── Initial content ──────────────────
     initialHtml: {
       control: "text",
       table: { category: "Initial content" },
       description:
-        "Editör mount olurken parse edilen HTML. Markdown'a göre daha kapsamlı (renk, hizalama, table, sub/sup vs. destekler).",
+        "HTML parsed when the editor mounts. More expressive than Markdown — supports color, alignment, tables, sub/sup, etc.",
     },
   },
 };
