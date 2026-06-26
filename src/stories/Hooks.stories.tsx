@@ -141,30 +141,36 @@ export function MyEditor() {
 const MY_CMS_SCHEMA: LegacyComponentSpec[] = [
   {
     type: "resim",
-    title: "Görsel",
-    description: "#resim#ID#value#",
-    fields: [{ name: "ID", label: "Görsel ID", inputType: "text", placeholder: "345456" }],
+    title: "Image",
+    description: "#resim#345456#",
+    // No field name in the output, just the value — e.g. submitting
+    // ID "345456" renders `#resim#345456#` instead of the default
+    // `#resim#ID#345456#`.
+    template: "#{type}#{ID}#",
+    fields: [{ name: "ID", label: "Image ID", inputType: "text", placeholder: "345456" }],
   },
   {
     type: "video",
     title: "Video",
     description: "#video#ID#value#",
+    template: "#{type}#{ID}#",
     fields: [{ name: "ID", label: "Video ID", inputType: "text", placeholder: "913597" }],
   },
   {
     type: "baslik",
-    title: "Başlık",
+    title: "Heading",
+    template: "#{type}#{fontsize}#{text}#{alignment}#",
     fields: [
-      { name: "boyut", label: "Boyut (px)", inputType: "number", placeholder: "26" },
-      { name: "metin", label: "Metin", inputType: "text" },
+      { name: "fontsize", label: "Size (px)", inputType: "number", placeholder: "26" },
+      { name: "text", label: "Text", inputType: "text" },
       {
-        name: "hizalama",
-        label: "Hizalama",
+        name: "alignment",
+        label: "Alignment",
         inputType: "select",
         options: [
-          { value: "left", label: "Sol" },
-          { value: "center", label: "Orta" },
-          { value: "right", label: "Sağ" },
+          { value: "left", label: "Left" },
+          { value: "center", label: "Center" },
+          { value: "right", label: "Right" },
         ],
       },
     ],
@@ -193,7 +199,7 @@ function LegacyComponentsDemo() {
       <div className="flex flex-wrap gap-2 px-2 py-1.5 border-b border-zinc-200 bg-zinc-50">
         <button
           type="button"
-          onClick={() => importLegacyComponents(SAMPLE_ITEMS)}
+          onClick={() => importLegacyComponents(SAMPLE_ITEMS, MY_CMS_SCHEMA)}
           className="px-3 py-1 text-sm bg-white border border-zinc-200 hover:border-zinc-400 rounded cursor-pointer"
         >
           Bulk-import sample array
@@ -235,7 +241,7 @@ export const LegacyComponentsGenericSchema: Story = {
     docs: {
       description: {
         story:
-          "The library has no built-in notion of `video`/`image`/etc. — `createLegacyComponentBlocks(schema)` turns *your own* `LegacyComponentSpec[]` into `BlockSpec`s that appear in the toolbar Insert “+” menu and the inline “/” menu, each opening a form built from that type's field list. Selecting one inserts the literal `#type#field#value#field#value#` string at the cursor. `importLegacyComponents()` / `getLegacyShortcodes()` do the same bulk, for array-in / array-out integration.",
+          "The library has no built-in notion of `video`/`image`/etc. — `createLegacyComponentBlocks(schema)` turns *your own* `LegacyComponentSpec[]` into `BlockSpec`s that appear in the toolbar Insert “+” menu and the inline “/” menu, each opening a form built from that type's field list. Selecting one inserts the literal shortcode string at the cursor — by default `#type#field#value#field#value#`, or your own layout via `spec.template` (e.g. `\"#{type}#{ID}#\"` → `#resim#345456#`, dropping the field name). `importLegacyComponents()` / `getLegacyShortcodes()` do the same bulk, for array-in / array-out integration — pass the same `schema` to `importLegacyComponents()` so its `template`s are honored too.",
       },
       source: {
         code: `import {
@@ -252,8 +258,10 @@ export const LegacyComponentsGenericSchema: Story = {
 const schema: LegacyComponentSpec[] = [
   {
     type: "resim",
-    title: "Görsel",
-    fields: [{ name: "ID", label: "Görsel ID", inputType: "text" }],
+    title: "Image",
+    fields: [{ name: "ID", label: "Image ID", inputType: "text" }],
+    // Optional — omit for the default "#resim#ID#345456#" layout.
+    template: "#{type}#{ID}#",
   },
 ];
 
@@ -267,7 +275,7 @@ export function MyEditor() {
       <RichTextSlashCommands blocks={blocks} />
     </RichTextEditor>
   );
-  // Selecting "Görsel" + filling ID "345456" inserts: #resim#ID#345456#
+  // Selecting "Image" + filling ID "345456" inserts: #resim#345456#
 }`,
       },
     },
