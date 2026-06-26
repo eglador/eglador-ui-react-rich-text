@@ -49,6 +49,9 @@ import {
   YouTubeIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
+import { $createLegacyComponentNodeFromInput } from "./legacy-component-node";
+import { LegacyComponentForm } from "./legacy-component-form";
+import type { LegacyComponentSpec } from "./legacy-schema";
 import { $createYouTubeNode } from "./youtube-node";
 import { YouTubeForm } from "./youtube-form";
 import { $createAudioNode } from "./audio-node";
@@ -142,6 +145,62 @@ const ICON_SIZE = "size-4";
 const icon = (Component: React.ComponentType<{ className?: string }>) => (
   <Component className={ICON_SIZE} />
 );
+
+/** Generic fallback icon for legacy component blocks that don't supply
+ *  their own `spec.icon`. */
+const LEGACY_FALLBACK_ICON = icon(FrameIcon);
+
+/**
+ * Turns a consumer-supplied `LegacyComponentSpec[]` into `BlockSpec[]` —
+ * one entry per spec, each opening a form (built from `spec.fields`) on
+ * the `"insert"` / `"slash"` surfaces. This library has no built-in
+ * notion of what types exist; call this with your own schema and merge
+ * the result into `defaultBlocks` (or pass it standalone) via the
+ * `blocks` prop on `RichTextToolbar` / `RichTextSlashCommands` /
+ * `RichTextDraggableBlock`.
+ *
+ * @example
+ * const blocks = [...defaultBlocks, ...createLegacyComponentBlocks(mySchema)];
+ * <RichTextToolbar insertBlocks={blocks} />
+ * <RichTextSlashCommands blocks={blocks} />
+ */
+export function createLegacyComponentBlocks(
+  schema: LegacyComponentSpec[],
+): BlockSpec[] {
+  return schema.map((spec) => legacyComponentBlock(spec));
+}
+
+function legacyComponentBlock(spec: LegacyComponentSpec): BlockSpec {
+  return {
+    key: `legacy-${spec.type}`,
+    label: spec.title,
+    description: spec.description ?? `#${spec.type}#...#`,
+    icon: spec.icon ?? LEGACY_FALLBACK_ICON,
+    keywords: [spec.type, "legacy", "shortcode"],
+    category: "embed",
+    surfaces: ["insert", "slash"],
+    renderForm: (editor, { onComplete, onCancel }) => (
+      <LegacyComponentForm
+        spec={spec}
+        onSubmit={(input) => {
+          editor.update(() => {
+            const node = $createLegacyComponentNodeFromInput(input);
+            $insertNodes([node]);
+            // Block-level decorator nodes give the caret nowhere to go
+            // when nothing follows them (e.g. inserted into an empty
+            // document) — without this, typing right after insert is a
+            // no-op because no valid text selection exists.
+            const paragraph = $createParagraphNode();
+            node.insertAfter(paragraph);
+            paragraph.selectEnd();
+          });
+          onComplete();
+        }}
+        onCancel={onCancel}
+      />
+    ),
+  };
+}
 
 /**
  * Default block registry. Pass a custom `blocks` prop to any surface to

@@ -143,7 +143,28 @@ export {
 export type { SerializedPageBreakNode } from "./page-break";
 
 export {
+  LegacyComponentNode,
+  $createLegacyComponentNode,
+  $createLegacyComponentNodeFromInput,
+  $isLegacyComponentNode,
+} from "./legacy-component-node";
+export type { SerializedLegacyComponentNode } from "./legacy-component-node";
+export {
+  legacyComponentToShortcode,
+  parseLegacyShortcode,
+} from "./legacy-shortcode";
+export type { LegacyComponentInput } from "./legacy-shortcode";
+export type {
+  LegacyComponentSpec,
+  LegacyFieldSpec,
+  LegacyFieldOption,
+} from "./legacy-schema";
+export { LegacyComponentForm } from "./legacy-component-form";
+export type { LegacyComponentFormProps } from "./legacy-component-form";
+
+export {
   defaultBlocks,
+  createLegacyComponentBlocks,
   getBlocksForSurface,
 } from "./blocks-registry";
 export type {
