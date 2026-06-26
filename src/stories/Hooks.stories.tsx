@@ -9,7 +9,13 @@ import {
   RichTextEditor,
   RichTextContent,
   RichTextToolbar,
+  RichTextSlashCommands,
   useRichTextEditor,
+  defaultBlocks,
+  RichTextOutput,
+  createLegacyComponentBlocks,
+  type LegacyComponentInput,
+  type LegacyComponentSpec,
 } from "../components/rich-text";
 
 const meta: Meta = {
@@ -117,6 +123,159 @@ export function MyEditor() {
         <RichTextToolbar />
         <TemplateButtons />
         <RichTextContent placeholder="Click the buttons above to load templates..." />
+      </RichTextEditor>
+    </div>
+  ),
+};
+
+// ─── Legacy CMS components — fully generic, schema-driven ───────────────
+//
+// Nothing here is built into the library. The host app owns the schema
+// (which types exist, what fields each one has) and hands it to
+// `createLegacyComponentBlocks()`. The result is just more `BlockSpec`s —
+// they show up in the toolbar's Insert "+" menu and the inline "/" menu
+// exactly like Image, YouTube, etc. Swap this array for any other set of
+// types/fields and the popups, validation and `#type#field#value#`
+// output adapt automatically.
+
+const MY_CMS_SCHEMA: LegacyComponentSpec[] = [
+  {
+    type: "resim",
+    title: "Görsel",
+    description: "#resim#ID#value#",
+    fields: [{ name: "ID", label: "Görsel ID", inputType: "text", placeholder: "345456" }],
+  },
+  {
+    type: "video",
+    title: "Video",
+    description: "#video#ID#value#",
+    fields: [{ name: "ID", label: "Video ID", inputType: "text", placeholder: "913597" }],
+  },
+  {
+    type: "baslik",
+    title: "Başlık",
+    fields: [
+      { name: "boyut", label: "Boyut (px)", inputType: "number", placeholder: "26" },
+      { name: "metin", label: "Metin", inputType: "text" },
+      {
+        name: "hizalama",
+        label: "Hizalama",
+        inputType: "select",
+        options: [
+          { value: "left", label: "Sol" },
+          { value: "center", label: "Orta" },
+          { value: "right", label: "Sağ" },
+        ],
+      },
+    ],
+  },
+];
+
+const legacyBlocks = createLegacyComponentBlocks(MY_CMS_SCHEMA);
+const blocksWithLegacy = [...defaultBlocks, ...legacyBlocks];
+
+/** Same generic `{ type, fields }` shape — handed to `importLegacyComponents()`
+ *  for bulk insertion instead of going through the Insert/slash popups. */
+const SAMPLE_ITEMS: LegacyComponentInput[] = [
+  { type: "resim", fields: { ID: "345456" } },
+  { type: "video", fields: { ID: "913597" } },
+];
+
+function LegacyComponentsDemo() {
+  const { importLegacyComponents, getLegacyShortcodes, clear } =
+    useRichTextEditor();
+  const [shortcodes, setShortcodes] = React.useState<string[]>([]);
+
+  return (
+    <div className="space-y-3">
+      <RichTextToolbar insertBlocks={legacyBlocks} />
+
+      <div className="flex flex-wrap gap-2 px-2 py-1.5 border-b border-zinc-200 bg-zinc-50">
+        <button
+          type="button"
+          onClick={() => importLegacyComponents(SAMPLE_ITEMS)}
+          className="px-3 py-1 text-sm bg-white border border-zinc-200 hover:border-zinc-400 rounded cursor-pointer"
+        >
+          Bulk-import sample array
+        </button>
+        <button
+          type="button"
+          onClick={() => setShortcodes(getLegacyShortcodes())}
+          className="px-3 py-1 text-sm bg-white border border-zinc-200 hover:border-zinc-400 rounded cursor-pointer"
+        >
+          Export shortcodes
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            clear();
+            setShortcodes([]);
+          }}
+          className="px-3 py-1 text-sm bg-white border border-zinc-200 hover:border-zinc-400 rounded cursor-pointer"
+        >
+          Clear
+        </button>
+      </div>
+
+      <RichTextContent placeholder="Type “/” for the inline menu, use the Insert “+” above, or click “Bulk-import”..." />
+      <RichTextSlashCommands blocks={blocksWithLegacy} />
+      <RichTextOutput />
+      {shortcodes.length > 0 && (
+        <pre className="text-xs bg-zinc-50 border border-zinc-200 rounded p-3 max-h-64 overflow-auto whitespace-pre-wrap">
+          {shortcodes.join("\n")}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+export const LegacyComponentsGenericSchema: Story = {
+  name: "Legacy Components — Generic Schema",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The library has no built-in notion of `video`/`image`/etc. — `createLegacyComponentBlocks(schema)` turns *your own* `LegacyComponentSpec[]` into `BlockSpec`s that appear in the toolbar Insert “+” menu and the inline “/” menu, each opening a form built from that type's field list. Selecting one inserts the literal `#type#field#value#field#value#` string at the cursor. `importLegacyComponents()` / `getLegacyShortcodes()` do the same bulk, for array-in / array-out integration.",
+      },
+      source: {
+        code: `import {
+  RichTextEditor,
+  RichTextContent,
+  RichTextToolbar,
+  RichTextSlashCommands,
+  defaultBlocks,
+  createLegacyComponentBlocks,
+  type LegacyComponentSpec,
+} from "eglador-ui-react-rich-text";
+
+// Entirely up to you — any types, any fields.
+const schema: LegacyComponentSpec[] = [
+  {
+    type: "resim",
+    title: "Görsel",
+    fields: [{ name: "ID", label: "Görsel ID", inputType: "text" }],
+  },
+];
+
+const blocks = [...defaultBlocks, ...createLegacyComponentBlocks(schema)];
+
+export function MyEditor() {
+  return (
+    <RichTextEditor>
+      <RichTextToolbar insertBlocks={blocks} />
+      <RichTextContent />
+      <RichTextSlashCommands blocks={blocks} />
+    </RichTextEditor>
+  );
+  // Selecting "Görsel" + filling ID "345456" inserts: #resim#ID#345456#
+}`,
+      },
+    },
+  },
+  render: () => (
+    <div className="max-w-2xl">
+      <RichTextEditor>
+        <LegacyComponentsDemo />
       </RichTextEditor>
     </div>
   ),

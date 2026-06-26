@@ -15,6 +15,7 @@ import { ImageNode } from "./image-node";
 import { IframeNode } from "./iframe-node";
 import { ImageComparisonNode } from "./image-comparison-node";
 import { ColumnsNode, ColumnNode } from "./columns-node";
+import { LegacyComponentNode } from "./legacy-component-node";
 
 /**
  * Default Lexical nodes registered with the composer.
@@ -45,4 +46,5 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   ColumnsNode,
   ColumnNode,
   PageBreakNode,
+  LegacyComponentNode,
 ];

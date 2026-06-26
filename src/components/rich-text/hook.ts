@@ -12,6 +12,7 @@ import {
   $generateNodesFromDOM,
 } from "@lexical/html";
 import {
+  $createParagraphNode,
   $getRoot,
   $getSelection,
   $setSelection,
@@ -20,6 +21,11 @@ import {
   type LexicalEditor,
 } from "lexical";
 import { $createOffsetView } from "@lexical/offset";
+import {
+  $createLegacyComponentNodeFromInput,
+  $isLegacyComponentNode,
+} from "./legacy-component-node";
+import type { LegacyComponentInput } from "./legacy-shortcode";
 
 export type RichTextEditorApi = {
   /** Underlying Lexical editor instance — for advanced commands */
@@ -32,12 +38,20 @@ export type RichTextEditorApi = {
   getMarkdown: () => string;
   /** Get plain text content */
   getText: () => string;
+  /** Get every legacy `#type#field#field#` component currently in the
+   *  document, as an array of shortcode strings (one per component, in
+   *  document order). Non-component content is ignored. */
+  getLegacyShortcodes: () => string[];
   /** Replace state from Lexical JSON */
   setJson: (json: string) => void;
   /** Replace state from HTML */
   setHtml: (html: string) => void;
   /** Replace state from Markdown */
   setMarkdown: (markdown: string) => void;
+  /** Append legacy components (image, video, embed link, etc.) to the
+   *  document from typed `LegacyComponentInput` objects — see
+   *  legacy-shortcode.ts for the full union and field shapes. */
+  importLegacyComponents: (items: LegacyComponentInput[]) => void;
   /** Empty the editor */
   clear: () => void;
   /** Move browser focus into the editor */
@@ -86,6 +100,16 @@ export function useRichTextEditor(): RichTextEditorApi {
         return result;
       },
 
+      getLegacyShortcodes: () => {
+        const result: string[] = [];
+        editor.read(() => {
+          for (const node of $getRoot().getChildren()) {
+            if ($isLegacyComponentNode(node)) result.push(node.getShortcode());
+          }
+        });
+        return result;
+      },
+
       setJson: (json: string) => {
         const state = editor.parseEditorState(json);
         editor.setEditorState(state);
@@ -105,6 +129,22 @@ export function useRichTextEditor(): RichTextEditorApi {
       setMarkdown: (markdown: string) => {
         editor.update(() => {
           $convertFromMarkdownString(markdown, TRANSFORMERS);
+        });
+      },
+
+      importLegacyComponents: (items: LegacyComponentInput[]) => {
+        if (items.length === 0) return;
+        editor.update(() => {
+          const root = $getRoot();
+          for (const item of items) {
+            root.append($createLegacyComponentNodeFromInput(item));
+          }
+          // Same reasoning as the Insert/slash form path — a trailing
+          // block-level decorator node leaves no valid place for the
+          // caret, which makes the editor look "stuck" right after import.
+          const paragraph = $createParagraphNode();
+          root.append(paragraph);
+          paragraph.selectEnd();
         });
       },
 

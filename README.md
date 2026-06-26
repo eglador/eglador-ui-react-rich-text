@@ -171,6 +171,51 @@ import {
 } from "eglador-ui-react-rich-text";
 ```
 
+## Legacy Components
+
+Embeds a legacy CMS shortcode — a generic `#type#field#value#field#value#` block — without the library having any built-in notion of what a "video" or "image" component is. The available types and their form fields are entirely defined by your own `LegacyComponentSpec[]` schema, passed at the call site.
+
+```tsx
+import {
+  RichTextEditor,
+  RichTextToolbar,
+  RichTextContent,
+  RichTextSlashCommands,
+  defaultBlocks,
+  createLegacyComponentBlocks,
+  type LegacyComponentSpec,
+} from "eglador-ui-react-rich-text";
+
+const legacySchema: LegacyComponentSpec[] = [
+  {
+    type: "resim",
+    title: "Image (legacy)",
+    fields: [
+      { name: "src", label: "URL", inputType: "url" },
+      { name: "alt", label: "Alt text", inputType: "text", optional: true },
+    ],
+  },
+];
+
+const blocks = [...defaultBlocks, ...createLegacyComponentBlocks(legacySchema)];
+
+export function MyEditor() {
+  return (
+    <RichTextEditor>
+      <RichTextToolbar insertItems={["horizontalRule", "pageBreak", "table"]} />
+      <RichTextContent draggable />
+      <RichTextSlashCommands blocks={blocks} />
+    </RichTextEditor>
+  );
+}
+```
+
+- `createLegacyComponentBlocks(schema)` turns each `LegacyComponentSpec` into a `BlockSpec` that opens a form (built from `spec.fields`) on the `"insert"` / `"slash"` surfaces — merge the result into `defaultBlocks` and pass it to `RichTextToolbar`, `RichTextSlashCommands`, and `RichTextDraggableBlock` via the `blocks` prop.
+- In the editor, a legacy component renders as the literal shortcode string (e.g. `#resim#src#https://...#alt#Cover#`) in a monospace pill — this is CMS-internal markup, not a previewable embed.
+- `getHtml()` / `getMarkdown()` / `getText()` (from `useRichTextEditor()`) all serialize the node as that same shortcode string, so round-tripping through HTML preserves it exactly as typed.
+- `editorRef.current?.getLegacyShortcodes()` returns every legacy component currently in the document as an array of shortcode strings, in document order.
+- `editorRef.current?.importLegacyComponents(items)` appends typed `LegacyComponentInput` objects (`{ type, fields }`) programmatically — useful for migrating existing shortcode content into the editor.
+
 ## Imperative API
 
 ```tsx
