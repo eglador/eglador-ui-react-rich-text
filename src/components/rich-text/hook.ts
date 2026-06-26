@@ -13,6 +13,7 @@ import {
 } from "@lexical/html";
 import {
   $createParagraphNode,
+  $createTextNode,
   $getRoot,
   $getSelection,
   $setSelection,
@@ -21,11 +22,13 @@ import {
   type LexicalEditor,
 } from "lexical";
 import { $createOffsetView } from "@lexical/offset";
+import { $isLegacyComponentNode } from "./legacy-component-node";
 import {
-  $createLegacyComponentNodeFromInput,
-  $isLegacyComponentNode,
-} from "./legacy-component-node";
-import type { LegacyComponentInput } from "./legacy-shortcode";
+  isLegacyShortcodeLine,
+  legacyComponentToShortcode,
+  type LegacyComponentInput,
+} from "./legacy-shortcode";
+import type { LegacyComponentSpec } from "./legacy-schema";
 
 export type RichTextEditorApi = {
   /** Underlying Lexical editor instance — for advanced commands */
@@ -50,8 +53,14 @@ export type RichTextEditorApi = {
   setMarkdown: (markdown: string) => void;
   /** Append legacy components (image, video, embed link, etc.) to the
    *  document from typed `LegacyComponentInput` objects — see
-   *  legacy-shortcode.ts for the full union and field shapes. */
-  importLegacyComponents: (items: LegacyComponentInput[]) => void;
+   *  legacy-shortcode.ts for the full union and field shapes. Pass the
+   *  same `schema` you hand to `createLegacyComponentBlocks()` so each
+   *  item's type-specific `template` (if any) is honored — without it,
+   *  every item renders in the default `#type#field#value#` layout. */
+  importLegacyComponents: (
+    items: LegacyComponentInput[],
+    schema?: LegacyComponentSpec[],
+  ) => void;
   /** Empty the editor */
   clear: () => void;
   /** Move browser focus into the editor */
@@ -104,7 +113,18 @@ export function useRichTextEditor(): RichTextEditorApi {
         const result: string[] = [];
         editor.read(() => {
           for (const node of $getRoot().getChildren()) {
-            if ($isLegacyComponentNode(node)) result.push(node.getShortcode());
+            // Decorator form — only present in documents created before
+            // legacy components became plain editable text.
+            if ($isLegacyComponentNode(node)) {
+              result.push(node.getShortcode());
+              continue;
+            }
+            // Plain-text form — a block whose entire text content looks
+            // like a `#type#...#` shortcode line (default layout or a
+            // custom `template`).
+            if (isLegacyShortcodeLine(node.getTextContent())) {
+              result.push(node.getTextContent().trim());
+            }
           }
         });
         return result;
@@ -132,19 +152,24 @@ export function useRichTextEditor(): RichTextEditorApi {
         });
       },
 
-      importLegacyComponents: (items: LegacyComponentInput[]) => {
+      importLegacyComponents: (
+        items: LegacyComponentInput[],
+        schema?: LegacyComponentSpec[],
+      ) => {
         if (items.length === 0) return;
         editor.update(() => {
           const root = $getRoot();
+          let lastParagraph: ReturnType<typeof $createParagraphNode> | null = null;
           for (const item of items) {
-            root.append($createLegacyComponentNodeFromInput(item));
+            const template = schema?.find((s) => s.type === item.type)?.template;
+            const paragraph = $createParagraphNode();
+            paragraph.append(
+              $createTextNode(legacyComponentToShortcode(item, template)),
+            );
+            root.append(paragraph);
+            lastParagraph = paragraph;
           }
-          // Same reasoning as the Insert/slash form path — a trailing
-          // block-level decorator node leaves no valid place for the
-          // caret, which makes the editor look "stuck" right after import.
-          const paragraph = $createParagraphNode();
-          root.append(paragraph);
-          paragraph.selectEnd();
+          lastParagraph?.selectEnd();
         });
       },
 

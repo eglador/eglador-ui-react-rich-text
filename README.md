@@ -211,10 +211,22 @@ export function MyEditor() {
 ```
 
 - `createLegacyComponentBlocks(schema)` turns each `LegacyComponentSpec` into a `BlockSpec` that opens a form (built from `spec.fields`) on the `"insert"` / `"slash"` surfaces — merge the result into `defaultBlocks` and pass it to `RichTextToolbar`, `RichTextSlashCommands`, and `RichTextDraggableBlock` via the `blocks` prop.
-- In the editor, a legacy component renders as the literal shortcode string (e.g. `#resim#src#https://...#alt#Cover#`) in a monospace pill — this is CMS-internal markup, not a previewable embed.
-- `getHtml()` / `getMarkdown()` / `getText()` (from `useRichTextEditor()`) all serialize the node as that same shortcode string, so round-tripping through HTML preserves it exactly as typed.
-- `editorRef.current?.getLegacyShortcodes()` returns every legacy component currently in the document as an array of shortcode strings, in document order.
-- `editorRef.current?.importLegacyComponents(items)` appends typed `LegacyComponentInput` objects (`{ type, fields }`) programmatically — useful for migrating existing shortcode content into the editor.
+- Submitting the form inserts the shortcode string as plain, ordinary editable text — not a locked decorator — so the user can revise it by hand afterwards (fix a typo, tweak a value) like any other text in the document.
+- By default a type renders as `#type#field#value#field#value#...#` (e.g. `#resim#src#https://...#alt#Cover#`). Give a `LegacyComponentSpec` its own `template` to control the exact output instead — `{type}` and `{fieldName}` placeholders are substituted with the submitted values, and any field not referenced is simply omitted:
+  ```ts
+  {
+    type: "resim",
+    title: "Image (legacy)",
+    template: "#{type}#{src}#", // → "#resim#https://...#" (alt text dropped)
+    fields: [
+      { name: "src", label: "URL", inputType: "url" },
+      { name: "alt", label: "Alt text", inputType: "text", optional: true },
+    ],
+  }
+  ```
+- `getHtml()` / `getMarkdown()` / `getText()` (from `useRichTextEditor()`) all preserve the shortcode string exactly as inserted, template or not.
+- `editorRef.current?.getLegacyShortcodes()` returns every legacy shortcode line currently in the document as an array of strings, in document order — works regardless of which types use a custom `template`.
+- `editorRef.current?.importLegacyComponents(items, schema)` appends typed `LegacyComponentInput` objects (`{ type, fields }`) programmatically — pass the same `schema` you gave `createLegacyComponentBlocks()` so each item's `template` (if any) is honored; omit it to always use the default layout.
 
 ## Imperative API
 

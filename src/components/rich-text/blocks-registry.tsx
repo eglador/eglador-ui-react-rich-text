@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   $createParagraphNode,
+  $createTextNode,
   $getSelection,
   $isRangeSelection,
   $insertNodes,
@@ -49,8 +50,8 @@ import {
   YouTubeIcon,
 } from "../../lib/icons";
 import { INSERT_PAGE_BREAK_COMMAND } from "./page-break";
-import { $createLegacyComponentNodeFromInput } from "./legacy-component-node";
 import { LegacyComponentForm } from "./legacy-component-form";
+import { legacyComponentToShortcode } from "./legacy-shortcode";
 import type { LegacyComponentSpec } from "./legacy-schema";
 import { $createYouTubeNode } from "./youtube-node";
 import { YouTubeForm } from "./youtube-form";
@@ -184,14 +185,15 @@ function legacyComponentBlock(spec: LegacyComponentSpec): BlockSpec {
         spec={spec}
         onSubmit={(input) => {
           editor.update(() => {
-            const node = $createLegacyComponentNodeFromInput(input);
-            $insertNodes([node]);
-            // Block-level decorator nodes give the caret nowhere to go
-            // when nothing follows them (e.g. inserted into an empty
-            // document) — without this, typing right after insert is a
-            // no-op because no valid text selection exists.
+            // Inserted as plain editable text (not a decorator node) so
+            // the user can revise the shortcode by hand afterwards —
+            // the structured form is only used to produce the initial
+            // string.
             const paragraph = $createParagraphNode();
-            node.insertAfter(paragraph);
+            paragraph.append(
+              $createTextNode(legacyComponentToShortcode(input, spec.template)),
+            );
+            $insertNodes([paragraph]);
             paragraph.selectEnd();
           });
           onComplete();

@@ -104,9 +104,12 @@ export class LegacyComponentNode extends DecoratorNode<React.ReactElement> {
   /** `createDOM()`'s element is the editor-only decorator host — React
    *  fills it via `decorate()`, which `$generateHtmlFromNodes` never
    *  calls. Export the shortcode text directly so HTML output matches
-   *  what the editor shows. */
+   *  what the editor shows. Exported as a plain `<p>` (not the `<div>`
+   *  used by `createDOM()`) so re-importing the HTML lands on an
+   *  ordinary editable paragraph the user can revise, instead of being
+   *  re-parsed back into a non-editable decorator node. */
   exportDOM(_editor: LexicalEditor): DOMExportOutput {
-    const element = document.createElement("div");
+    const element = document.createElement("p");
     element.textContent = this.getShortcode();
     return { element };
   }

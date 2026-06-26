@@ -152,6 +152,8 @@ export type { SerializedLegacyComponentNode } from "./legacy-component-node";
 export {
   legacyComponentToShortcode,
   parseLegacyShortcode,
+  isLegacyShortcodeLine,
+  renderLegacyShortcodeTemplate,
 } from "./legacy-shortcode";
 export type { LegacyComponentInput } from "./legacy-shortcode";
 export type {

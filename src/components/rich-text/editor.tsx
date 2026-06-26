@@ -14,12 +14,13 @@ import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin";
 import { ClickableLinkPlugin } from "@lexical/react/LexicalClickableLinkPlugin";
-import { HashtagPlugin } from "@lexical/react/LexicalHashtagPlugin";
+import { registerLexicalHashtag } from "@lexical/hashtag";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
 import { SelectionAlwaysOnDisplay } from "@lexical/react/LexicalSelectionAlwaysOnDisplay";
 import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
+import { isLegacyShortcodeLine } from "./legacy-shortcode";
 import { CharacterCount } from "./character-count";
 import {
   TRANSFORMERS,
@@ -124,6 +125,41 @@ function DragonSupportPlugin(): null {
   return null;
 }
 
+// Lexical's own hashtag regex, narrowed to ASCII/digits/underscore (good
+// enough for `#word` hashtags; the giant Unicode range table the default
+// matcher uses isn't exported, so it can't be reused here as a fallback).
+const HASHTAG_MATCH_REGEX =
+  /(^|$|[^&/\p{L}\p{N}_])([#＃])([\p{L}\p{N}_]*\p{L}[\p{L}\p{N}_]*)/u;
+
+function getHashtagMatch(text: string) {
+  const match = HASHTAG_MATCH_REGEX.exec(text);
+  if (match === null) return null;
+  const hashtagLength = match[3].length + 1;
+  const startOffset = match.index + match[1].length;
+  return { start: startOffset, end: startOffset + hashtagLength };
+}
+
+/**
+ * Same as `<HashtagPlugin />`, except it never turns the leading
+ * `#type` of a `#type#field#value#` legacy shortcode line into a
+ * hashtag chip — without this, typing/importing legacy component text
+ * (which always starts with `#`) gets visually split into a styled
+ * "#resim" pill plus plain trailing text instead of one plain,
+ * uniformly editable run.
+ */
+function LegacySafeHashtagPlugin(): null {
+  const [editor] = useLexicalComposerContext();
+  React.useEffect(
+    () =>
+      registerLexicalHashtag(editor, {
+        getHashtagMatch: (text) =>
+          isLegacyShortcodeLine(text.trim()) ? null : getHashtagMatch(text),
+      }),
+    [editor],
+  );
+  return null;
+}
+
 
 const URL_REGEX =
   /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/;
@@ -222,7 +258,7 @@ export function RichTextEditor({
         <HorizontalRulePlugin />
         <TablePlugin hasCellMerge hasCellBackgroundColor hasTabHandler />
         <PageBreakPlugin />
-        <HashtagPlugin />
+        <LegacySafeHashtagPlugin />
         <TabIndentationPlugin />
         <SelectionAlwaysOnDisplay />
         <DragonSupportPlugin />
