@@ -36,7 +36,7 @@ import type {
   InitialEditorStateType,
 } from "@lexical/react/LexicalComposer";
 import type { EditorState, LexicalEditor } from "lexical";
-import { $getRoot, $insertNodes } from "lexical";
+import { $getRoot, $insertNodes, SKIP_DOM_SELECTION_TAG } from "lexical";
 import { cn } from "../../lib/utils";
 import { defaultTheme } from "./theme";
 import { defaultNodes } from "./nodes";
@@ -72,14 +72,22 @@ function InitialHtmlPlugin({ html }: { html: string }) {
     if (typeof window === "undefined") return;
     appliedRef.current = true;
 
-    editor.update(() => {
-      const dom = new DOMParser().parseFromString(html, "text/html");
-      const nodes = $generateNodesFromDOM(editor, dom);
-      const root = $getRoot();
-      root.clear();
-      root.select();
-      $insertNodes(nodes);
-    });
+    editor.update(
+      () => {
+        const dom = new DOMParser().parseFromString(html, "text/html");
+        const nodes = $generateNodesFromDOM(editor, dom);
+        const root = $getRoot();
+        root.clear();
+        root.select();
+        $insertNodes(nodes);
+      },
+      // Hydrating initial content shouldn't move the native selection
+      // into the editor — that's what implicitly focuses the
+      // contenteditable (and, in turn, scrolls the page to bring it
+      // into view). Only desired when `autoFocus` is explicitly
+      // requested (handled separately below).
+      { tag: SKIP_DOM_SELECTION_TAG },
+    );
   }, [editor, html]);
 
   return null;

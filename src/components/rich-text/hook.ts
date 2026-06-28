@@ -19,6 +19,7 @@ import {
   $setSelection,
   $insertNodes,
   $isRangeSelection,
+  SKIP_DOM_SELECTION_TAG,
   type LexicalEditor,
 } from "lexical";
 import { $createOffsetView } from "@lexical/offset";
@@ -136,14 +137,21 @@ export function useRichTextEditor(): RichTextEditorApi {
       },
 
       setHtml: (html: string) => {
-        editor.update(() => {
-          const dom = new DOMParser().parseFromString(html, "text/html");
-          const nodes = $generateNodesFromDOM(editor, dom);
-          const root = $getRoot();
-          root.clear();
-          root.select();
-          $insertNodes(nodes);
-        });
+        editor.update(
+          () => {
+            const dom = new DOMParser().parseFromString(html, "text/html");
+            const nodes = $generateNodesFromDOM(editor, dom);
+            const root = $getRoot();
+            root.clear();
+            root.select();
+            $insertNodes(nodes);
+          },
+          // Replacing content programmatically shouldn't move the native
+          // selection into the editor (which implicitly focuses it and
+          // can scroll the page) — call `.focus()` afterwards if that's
+          // wanted.
+          { tag: SKIP_DOM_SELECTION_TAG },
+        );
       },
 
       setMarkdown: (markdown: string) => {
