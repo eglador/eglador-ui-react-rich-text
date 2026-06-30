@@ -104,6 +104,7 @@ export function LinkEditForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         apply();
       }}
       className="space-y-3"

@@ -41,6 +41,10 @@ export function LegacyComponentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // This form is portaled to document.body, so React's synthetic submit
+    // event would otherwise still bubble to a host <form> wrapping the
+    // editor (React propagates along the component tree, not the DOM tree).
+    e.stopPropagation();
     if (!valid) return;
 
     const fields: Record<string, string | number> = {};

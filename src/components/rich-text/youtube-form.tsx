@@ -75,6 +75,7 @@ export function YouTubeForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!match) {
       setError("Couldn't find a YouTube video ID in this URL");
       return;

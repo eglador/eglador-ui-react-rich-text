@@ -72,22 +72,36 @@ function InitialHtmlPlugin({ html }: { html: string }) {
     if (typeof window === "undefined") return;
     appliedRef.current = true;
 
-    editor.update(
-      () => {
-        const dom = new DOMParser().parseFromString(html, "text/html");
-        const nodes = $generateNodesFromDOM(editor, dom);
-        const root = $getRoot();
-        root.clear();
-        root.select();
-        $insertNodes(nodes);
-      },
-      // Hydrating initial content shouldn't move the native selection
-      // into the editor — that's what implicitly focuses the
-      // contenteditable (and, in turn, scrolls the page to bring it
-      // into view). Only desired when `autoFocus` is explicitly
-      // requested (handled separately below).
-      { tag: SKIP_DOM_SELECTION_TAG },
-    );
+    try {
+      editor.update(
+        () => {
+          const dom = new DOMParser().parseFromString(html, "text/html");
+          const nodes = $generateNodesFromDOM(editor, dom);
+          const root = $getRoot();
+          root.clear();
+          root.select();
+          $insertNodes(nodes);
+        },
+        // Hydrating initial content shouldn't move the native selection
+        // into the editor — that's what implicitly focuses the
+        // contenteditable (and, in turn, scrolls the page to bring it
+        // into view). Only desired when `autoFocus` is explicitly
+        // requested (handled separately below).
+        { tag: SKIP_DOM_SELECTION_TAG },
+      );
+    } catch (error) {
+      // $generateNodesFromDOM can throw on malformed/non-standard HTML
+      // (e.g. content migrated from a legacy editor), which would
+      // otherwise bubble into RichTextEditor's onError and crash the
+      // whole page. The editor already mounted with an empty paragraph
+      // (initialHtml makes editorState null), so no extra reset needed —
+      // we just stop the throw from taking down the page.
+      console.error(
+        "[eglador-ui-react-rich-text] failed to import initialHtml, content may be malformed/unsupported HTML:",
+        error,
+        html.slice(0, 500),
+      );
+    }
   }, [editor, html]);
 
   return null;
