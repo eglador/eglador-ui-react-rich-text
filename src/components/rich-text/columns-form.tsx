@@ -45,6 +45,7 @@ export function ColumnsForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onSubmit({ count, gap, mobileStack });
   };
 

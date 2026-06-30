@@ -101,6 +101,7 @@ export function DateTimeForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onSubmit(preview);
       }}
       className="w-72 p-3"

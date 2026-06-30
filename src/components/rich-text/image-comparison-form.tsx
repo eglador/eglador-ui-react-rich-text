@@ -64,6 +64,7 @@ export function ImageComparisonForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!valid) {
       setError("Both Before and After URLs are required");
       return;
