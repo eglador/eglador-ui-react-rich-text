@@ -21,6 +21,7 @@ import { $createAudioNode } from "./audio-node";
 import { $createIframeNode } from "./iframe-node";
 import { $createImageComparisonNode } from "./image-comparison-node";
 import { $createCmsNode, CMS_BLOCK_SCHEMA } from "./cms";
+import { $createEmptyNewsMomentNode } from "./news-moment-node";
 import type { CmsBlockSpec, CmsFieldSpec } from "./cms";
 
 /**
@@ -47,6 +48,11 @@ export interface AllComponentsSample {
   cmsImageUrl: string;
   /** URL used by CMS types whose URL is a plain link, not an image. */
   cmsLinkUrl: string;
+  /** `newsMoment` date, `YYYY-MM-DD`. Defaults to today. */
+  newsMomentDate: string;
+  /** `newsMoment` time, `HH:mm`. */
+  newsMomentTime: string;
+  newsMomentTitle: string;
 }
 
 export const ALL_COMPONENTS_DEFAULT_SAMPLE: AllComponentsSample = {
@@ -62,6 +68,9 @@ export const ALL_COMPONENTS_DEFAULT_SAMPLE: AllComponentsSample = {
   mediaIds: ["345456", "345457", "345458"],
   cmsImageUrl: "https://picsum.photos/id/1025/1200/675",
   cmsLinkUrl: "https://www.eglador.com/haber/345456",
+  newsMomentDate: "",
+  newsMomentTime: "18:00",
+  newsMomentTitle: "Canlı gelişme başlığı",
 };
 
 export interface AllComponentsOptions {
@@ -275,12 +284,34 @@ export function $buildAllComponentNodes(
   const specs = cmsTypes
     ? CMS_BLOCK_SCHEMA.filter((spec) => cmsTypes.includes(spec.type))
     : CMS_BLOCK_SCHEMA;
+  const withNewsMoment = !cmsTypes || cmsTypes.includes("newsMoment");
 
-  if (specs.length > 0) {
+  if (specs.length > 0 || withNewsMoment) {
     section("CMS bileşenleri");
     for (const spec of specs) {
       const node = $createCmsNode(spec.type, sampleFields(spec, sample));
       if (node) nodes.push(node);
+    }
+
+    // News moment isn't in the schema — it's an ElementNode with an
+    // inline-editable body, so it's built directly with real children.
+    if (withNewsMoment) {
+      const newsMoment = $createEmptyNewsMomentNode({
+        // Empty `newsMomentDate` means "today" — a hardcoded date would
+        // read as stale the moment the demo is opened.
+        date:
+          sample.newsMomentDate || new Date().toISOString().slice(0, 10),
+        time: sample.newsMomentTime,
+        title: sample.newsMomentTitle,
+        images: sample.mediaIds.join(", "),
+      });
+      newsMoment.append(
+        $para(
+          "Bu gövde doğrudan editörde düzenlenebilir — kalın, italik, " +
+            "liste, bağlantı, hepsi normal metin gibi çalışır.",
+        ),
+      );
+      nodes.push(newsMoment);
     }
   }
 

@@ -123,50 +123,28 @@ export function ImageQuotePreview(fields: CmsFieldValues) {
   );
 }
 
-/** Rich card for `newsMoment` — date/time header, title, body excerpt,
- *  and a thumbnail strip built from the `images` ID list. */
-export function NewsMomentPreview(fields: CmsFieldValues) {
-  const ids = parseIdList(fields.images);
-  const stamp = [fields.date, fields.time].filter(Boolean).join(" · ");
+const LINK_COLOR_CLASS: Record<string, string> = {
+  kirmizi: "border-red-500 bg-red-50 text-red-700",
+  mavi: "border-blue-500 bg-blue-50 text-blue-700",
+  yesil: "border-emerald-500 bg-emerald-50 text-emerald-700",
+};
 
+/** Coloured call-to-action link (`sabitlink`). */
+export function FixedLinkPreview(fields: CmsFieldValues) {
+  const tone = LINK_COLOR_CLASS[fields.color] ?? LINK_COLOR_CLASS.mavi;
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 border-b border-zinc-200">
-        <span className="inline-block size-1.5 rounded-full bg-red-500 shrink-0" />
-        <span className="text-[10px] uppercase tracking-wider text-zinc-500">
-          News moment
-        </span>
-        {stamp && (
-          <span className="ml-auto text-[11px] font-mono tabular-nums text-zinc-500">
-            {stamp}
-          </span>
-        )}
-      </div>
-
-      <div className="p-3">
-        {fields.title && (
-          <div className="text-sm font-semibold text-zinc-900 mb-1">
-            {fields.title}
-          </div>
-        )}
-        {fields.content && (
-          <p className="text-xs text-zinc-600 line-clamp-3 whitespace-pre-wrap">
-            {fields.content}
-          </p>
-        )}
-        {ids.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {ids.map((id) => (
-              <div
-                key={id}
-                className="size-14 shrink-0 overflow-hidden rounded border border-zinc-200"
-              >
-                <MediaThumb id={id} />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border-l-4 px-3 py-2.5 pr-12",
+        tone,
+      )}
+    >
+      <span className="truncate text-sm font-medium">
+        {fields.text || "Bağlantı metni girilmedi"}
+      </span>
+      <span className="ml-auto truncate font-mono text-[11px] opacity-70">
+        {fields.url}
+      </span>
     </div>
   );
 }

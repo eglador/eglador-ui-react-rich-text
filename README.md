@@ -205,7 +205,9 @@ They are already in `defaultNodes` and `defaultBlocks`, so a plain `<RichTextEdi
 
 ### Types
 
-`360resim` · `baslik` · `canliyayin` · `countdown` · `depomkacadolar` · `depremler` · `dikeyciftli` · `dikeylink` · `flourish` · `galeri` · `habericionecikanlar` · `habericireklam` · `havadurumu` · `kredihesaplama` · `kurcevirici` · `linkEmbed` · `mansethaberresim` · `newsMoment` · `ozelharf` · `piyasa` · `quato1` · `resimliquato` · `sabitlink` · `videooynat` · `yatayciftli` · `yataytekli`
+`360resim` · `canliyayin` · `countdown` · `depomkacadolar` · `depremler` · `dikeyciftli` · `dikeylink` · `flourish` · `galeri` · `habericionecikanlar` · `habericireklam` · `havadurumu` · `kredihesaplama` · `kurcevirici` · `linkEmbed` · `mansethaberresim` · `ozelharf` · `piyasa` · `quato1` · `resimliquato` · `sabitlink` · `yatayciftli` · `yataytekli`
+
+…plus `newsMoment`, which is a different shape — see [News moment](#news-moment).
 
 Read the authoritative field list at runtime instead of hardcoding it:
 
@@ -214,6 +216,18 @@ import { CMS_BLOCK_SCHEMA } from "eglador-ui-react-rich-text";
 
 CMS_BLOCK_SCHEMA.map((s) => ({ type: s.type, fields: s.fields.map((f) => f.name) }));
 ```
+
+Several types carry a fixed option list whose **values are the CMS IDs** that reach the JSON:
+
+| Type | Field | Values |
+|---|---|---|
+| `canliyayin` | `channel` | `300` BHT TV · `100` HT TV · `10` SHOWTV |
+| `piyasa` | `usd_eur` | `88` Dolar · `89` Euro · `1` BIST 100 |
+| `havadurumu` | `widget` | `100` |
+| `depomkacadolar`, `kredihesaplama` | `widget` | `hesaplayici` |
+| `kurcevirici` | `widget` | `cevirici` |
+| `depremler` | `view` | `harita` · `liste` |
+| `sabitlink` | `color` | `kirmizi` · `mavi` · `yesil` |
 
 **Two naming caveats when mapping back to legacy shortcodes:**
 
@@ -247,6 +261,38 @@ With `options.imageId` set, `exportJSON()` omits `src` entirely:
 ```
 
 Leave the ID blank and paste a URL to get the original URL behaviour back (`src` is serialized as before).
+
+### News moment
+
+`newsMoment` is the one CMS type that is **not** a decorator. It's an `ElementNode`, so its body is edited inline like any other text: typing, inline formatting, lists, links, undo/redo and selection all behave natively, and the body serializes as an ordinary Lexical `children` array rather than an opaque string.
+
+```json
+{
+  "type": "newsMoment", "version": 1,
+  "date": "2026-08-06", "time": "18:00",
+  "title": "Canlı gelişme", "images": "345456, 345457",
+  "children": [
+    { "type": "paragraph", "children": [{ "type": "text", "text": "Gövde metni" }] }
+  ]
+}
+```
+
+The metadata (date / time / title / image IDs) is edited from the gear in the block's own header, which is rendered by `RichTextNewsMomentChrome` — mounted automatically by `RichTextContent`, so there is nothing to wire up.
+
+Programmatically:
+
+```tsx
+import { $createNewsMomentNode, $createEmptyNewsMomentNode } from "eglador-ui-react-rich-text";
+
+// with a starter paragraph (what the Insert menu uses)
+$createNewsMomentNode({ date: "2026-08-06", time: "18:00", title: "…", images: "345456" });
+
+// no children — when you supply the body yourself
+const node = $createEmptyNewsMomentNode({ title: "…" });
+node.append(myParagraph);
+```
+
+When mapping to the legacy shortcode, read the body from the node's children (`node.getTextContent()`, or serialize them to HTML) rather than from a `content` field — that field no longer exists.
 
 ### Creating blocks programmatically
 

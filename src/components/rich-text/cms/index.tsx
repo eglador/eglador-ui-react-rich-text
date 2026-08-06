@@ -51,7 +51,7 @@ export const cmsBlocks: BlockSpec[] = CMS_ENTRIES.map(
     icon: spec.icon,
     keywords: [spec.type, ...(spec.keywords ?? [])],
     category: "embed",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <CmsForm
         spec={spec}

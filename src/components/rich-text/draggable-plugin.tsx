@@ -5,8 +5,11 @@ import { DraggableBlockPlugin_EXPERIMENTAL } from "@lexical/react/LexicalDraggab
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getNearestNodeFromDOMNode,
+  $getNodeByKey,
   $createParagraphNode,
+  $isParagraphNode,
   type LexicalEditor,
+  type NodeKey,
 } from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
@@ -24,18 +27,18 @@ function isOnMenu(element: HTMLElement): boolean {
 }
 
 /**
- * Insert a fresh paragraph after the target block, focus into it, then
- * run the spec's action (which typically converts the focused block via
- * `$setBlocksType`, or dispatches an insert command). This unifies the
- * "insert after hovered block" semantics with the registry's
- * selection-based action contract.
+ * Put an empty paragraph right after the hovered block and place the
+ * caret in it, so a subsequent `action` (which converts the focused
+ * block) or `renderForm` submit (which inserts at the selection) lands
+ * below that block rather than wherever the caret happened to be.
+ *
+ * @returns the placeholder's key, so a cancelled form can clean it up.
  */
-function insertBlockAfter(
+function anchorAfter(
   editor: LexicalEditor,
   domElement: HTMLElement,
-  spec: BlockSpec,
-) {
-  if (typeof spec.action !== "function") return;
+): NodeKey | null {
+  let key: NodeKey | null = null;
   editor.update(() => {
     const node = $getNearestNodeFromDOMNode(domElement);
     if (!node) return;
@@ -44,8 +47,20 @@ function insertBlockAfter(
     const placeholder = $createParagraphNode();
     target.insertAfter(placeholder);
     placeholder.selectEnd();
+    key = placeholder.getKey();
   });
-  spec.action(editor);
+  return key;
+}
+
+/** Drop a placeholder paragraph that was never filled in (form cancelled). */
+function removeIfEmptyPlaceholder(editor: LexicalEditor, key: NodeKey | null) {
+  if (!key) return;
+  editor.update(() => {
+    const node = $getNodeByKey(key);
+    if ($isParagraphNode(node) && node.getTextContentSize() === 0) {
+      node.remove();
+    }
+  });
 }
 
 interface RichTextDraggableBlockProps {
@@ -91,15 +106,47 @@ export function RichTextDraggableBlock({
     if (!open) insertTargetRef.current = activeElement;
   }, [open, activeElement]);
 
-  const handleInsert = React.useCallback(
+  // Spec whose form is showing as a sub-view, plus the placeholder
+  // paragraph its submit will fill.
+  const [formSpec, setFormSpec] = React.useState<BlockSpec | null>(null);
+  const placeholderKeyRef = React.useRef<NodeKey | null>(null);
+
+  React.useEffect(() => {
+    if (!open) setFormSpec(null);
+  }, [open]);
+
+  const closeAll = React.useCallback(() => {
+    setFormSpec(null);
+    setOpen(false);
+  }, []);
+
+  const handleSelect = React.useCallback(
     (spec: BlockSpec) => {
-      setOpen(false);
       const target = insertTargetRef.current;
       if (!target) return;
-      insertBlockAfter(editor, target, spec);
+
+      // Form wins when both exist — same precedence as the toolbar
+      // Insert dropdown and the slash menu.
+      if (typeof spec.renderForm === "function") {
+        placeholderKeyRef.current = anchorAfter(editor, target);
+        setFormSpec(spec);
+        return;
+      }
+
+      setOpen(false);
+      if (typeof spec.action === "function") {
+        anchorAfter(editor, target);
+        spec.action(editor);
+      }
     },
     [editor],
   );
+
+  const cancelForm = React.useCallback(() => {
+    removeIfEmptyPlaceholder(editor, placeholderKeyRef.current);
+    placeholderKeyRef.current = null;
+    closeAll();
+  }, [editor, closeAll]);
 
   return (
     <DraggableBlockPlugin_EXPERIMENTAL
@@ -132,20 +179,29 @@ export function RichTextDraggableBlock({
                   <PlusIcon className="size-4" />
                 </button>
               }
-              contentClassName="w-56 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 max-h-80 overflow-y-auto"
+              contentClassName="rounded-lg border border-zinc-200 bg-white shadow-lg overflow-hidden"
             >
-              {draggableBlocks.map((spec) => (
-                <button
-                  key={spec.key}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => handleInsert(spec)}
-                  className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-zinc-700 hover:bg-zinc-100 cursor-pointer"
-                >
-                  <span className="text-zinc-500">{spec.icon}</span>
-                  <span className="truncate">{spec.label}</span>
-                </button>
-              ))}
+              {formSpec && formSpec.renderForm ? (
+                formSpec.renderForm(editor, {
+                  onComplete: closeAll,
+                  onCancel: cancelForm,
+                })
+              ) : (
+                <div className="w-56 p-1 max-h-80 overflow-y-auto">
+                  {draggableBlocks.map((spec) => (
+                    <button
+                      key={spec.key}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => handleSelect(spec)}
+                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+                    >
+                      <span className="text-zinc-500">{spec.icon}</span>
+                      <span className="truncate">{spec.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </Popover>
           )}
           <div
