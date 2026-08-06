@@ -68,7 +68,13 @@ import { ImageComparisonForm } from "./image-comparison-form";
 import { $createColumnNode, $createColumnsNode } from "./columns-node";
 import { ColumnsForm } from "./columns-form";
 import { TableSizePicker } from "./table-size-picker";
-import { cmsBlocks } from "./cms";
+import {
+  $createNewsMomentNode,
+  NEWS_MOMENT_SPEC,
+  nowMeta,
+  type NewsMomentMeta,
+} from "./news-moment-node";
+import { cmsBlocks, CmsForm } from "./cms";
 
 /**
  * Where a block can be invoked from. Each surface has its own UX
@@ -180,7 +186,7 @@ function legacyComponentBlock(spec: LegacyComponentSpec): BlockSpec {
     icon: spec.icon ?? LEGACY_FALLBACK_ICON,
     keywords: [spec.type, "legacy", "shortcode"],
     category: "embed",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <LegacyComponentForm
         spec={spec}
@@ -214,8 +220,8 @@ export const defaultBlocks: BlockSpec[] = [
   // ── text ───────────────────────────────────────
   {
     key: "paragraph",
-    label: "Paragraph",
-    description: "Plain text",
+    label: "Paragraf",
+    description: "Düz metin",
     icon: icon(PilcrowIcon),
     keywords: ["text", "p", "paragraph"],
     category: "text",
@@ -224,8 +230,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "heading-1",
-    label: "Heading 1",
-    description: "Large section heading",
+    label: "Başlık 1",
+    description: "Büyük bölüm başlığı",
     icon: icon(Heading1Icon),
     keywords: ["h1", "title", "heading"],
     category: "text",
@@ -234,8 +240,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "heading-2",
-    label: "Heading 2",
-    description: "Medium section heading",
+    label: "Başlık 2",
+    description: "Orta bölüm başlığı",
     icon: icon(Heading2Icon),
     keywords: ["h2", "subtitle", "heading"],
     category: "text",
@@ -244,8 +250,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "heading-3",
-    label: "Heading 3",
-    description: "Small section heading",
+    label: "Başlık 3",
+    description: "Küçük bölüm başlığı",
     icon: icon(Heading3Icon),
     keywords: ["h3", "heading"],
     category: "text",
@@ -254,40 +260,40 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "heading-4",
-    label: "Heading 4",
-    description: "Sub-subsection heading",
+    label: "Başlık 4",
+    description: "Alt bölüm başlığı",
     icon: icon(Heading4Icon),
     keywords: ["h4", "heading"],
     category: "text",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h4")),
   },
   {
     key: "heading-5",
-    label: "Heading 5",
-    description: "Deep heading",
+    label: "Başlık 5",
+    description: "Derin başlık",
     icon: icon(Heading5Icon),
     keywords: ["h5", "heading"],
     category: "text",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h5")),
   },
   {
     key: "heading-6",
-    label: "Heading 6",
-    description: "Deepest heading",
+    label: "Başlık 6",
+    description: "En derin başlık",
     icon: icon(Heading6Icon),
     keywords: ["h6", "heading"],
     category: "text",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h6")),
   },
 
   // ── list ───────────────────────────────────────
   {
     key: "bullet-list",
-    label: "Bullet list",
-    description: "Unordered items",
+    label: "Madde listesi",
+    description: "Sırasız maddeler",
     icon: icon(ListBulletIcon),
     keywords: ["ul", "unordered", "list", "bullet"],
     category: "list",
@@ -297,8 +303,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "numbered-list",
-    label: "Numbered list",
-    description: "Ordered items",
+    label: "Numaralı liste",
+    description: "Sıralı maddeler",
     icon: icon(ListOrderedIcon),
     keywords: ["ol", "ordered", "list", "number"],
     category: "list",
@@ -308,8 +314,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "check-list",
-    label: "Check list",
-    description: "Tasks with checkboxes",
+    label: "Yapılacaklar listesi",
+    description: "Onay kutulu görevler",
     icon: icon(ListCheckIcon),
     keywords: ["check", "todo", "task", "checkbox"],
     category: "list",
@@ -321,8 +327,8 @@ export const defaultBlocks: BlockSpec[] = [
   // ── block ──────────────────────────────────────
   {
     key: "quote",
-    label: "Quote",
-    description: "Highlighted block of text",
+    label: "Alıntı",
+    description: "Vurgulanmış metin bloğu",
     icon: icon(QuoteIcon),
     keywords: ["quote", "blockquote", "citation"],
     category: "block",
@@ -331,8 +337,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "code-block",
-    label: "Code block",
-    description: "Syntax-highlighted code",
+    label: "Kod bloğu",
+    description: "Sözdizimi renklendirmeli kod",
     icon: icon(CodeIcon),
     keywords: ["code", "snippet", "pre"],
     category: "block",
@@ -343,8 +349,8 @@ export const defaultBlocks: BlockSpec[] = [
   // ── inline utility (text-level) ────────────────
   {
     key: "date-time",
-    label: "Date / time",
-    description: "Insert current date or time",
+    label: "Tarih / saat",
+    description: "Güncel tarih veya saati ekle",
     icon: icon(CalendarClockIcon),
     keywords: ["date", "time", "datetime", "today", "now", "timestamp"],
     category: "text",
@@ -373,8 +379,8 @@ export const defaultBlocks: BlockSpec[] = [
   // ── separator ──────────────────────────────────
   {
     key: "horizontal-rule",
-    label: "Divider",
-    description: "Horizontal separator",
+    label: "Ayırıcı",
+    description: "Yatay ayraç",
     icon: icon(HorizontalRuleIcon),
     keywords: ["hr", "rule", "divider", "separator"],
     category: "separator",
@@ -384,8 +390,8 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "page-break",
-    label: "Page break",
-    description: "Print / PDF page break",
+    label: "Sayfa sonu",
+    description: "Yazdırma / PDF sayfa sonu",
     icon: icon(PageBreakIcon),
     keywords: ["pagebreak", "print", "pdf"],
     category: "separator",
@@ -397,8 +403,8 @@ export const defaultBlocks: BlockSpec[] = [
   // ── table (action default = 3×3, form = grid picker) ──
   {
     key: "table",
-    label: "Table",
-    description: "Rows and columns",
+    label: "Tablo",
+    description: "Satır ve sütunlar",
     icon: icon(TableIcon),
     keywords: ["table", "grid", "cells"],
     category: "block",
@@ -428,11 +434,11 @@ export const defaultBlocks: BlockSpec[] = [
   {
     key: "youtube",
     label: "YouTube",
-    description: "Embed YouTube video",
+    description: "YouTube videosu göm",
     icon: icon(YouTubeIcon),
     keywords: ["youtube", "video"],
     category: "media",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <YouTubeForm
         mode="insert"
@@ -448,12 +454,12 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "audio",
-    label: "Audio",
-    description: "Embed audio file",
+    label: "Ses",
+    description: "Ses dosyası göm",
     icon: icon(AudioLinesIcon),
     keywords: ["audio", "mp3", "podcast", "sound"],
     category: "media",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <AudioForm
         mode="insert"
@@ -470,11 +476,11 @@ export const defaultBlocks: BlockSpec[] = [
   {
     key: "video",
     label: "Video",
-    description: "Embed video file",
+    description: "Video dosyası göm",
     icon: icon(VideoIcon),
     keywords: ["video", "mp4", "clip"],
     category: "media",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <VideoForm
         mode="insert"
@@ -490,12 +496,12 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "image",
-    label: "Image",
-    description: "Embed image (jpg, png, webp, gif, ...)",
+    label: "Resim",
+    description: "Resim göm (jpg, png, webp, gif, ...)",
     icon: icon(ImageIcon),
     keywords: ["image", "photo", "picture", "gif"],
     category: "media",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <ImageForm
         mode="insert"
@@ -514,11 +520,11 @@ export const defaultBlocks: BlockSpec[] = [
   {
     key: "iframe",
     label: "Iframe",
-    description: "Generic embed (Figma, CodePen, ...)",
+    description: "Genel gömme (Figma, CodePen, ...)",
     icon: icon(FrameIcon),
     keywords: ["iframe", "embed", "figma", "codepen"],
     category: "embed",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <IframeForm
         mode="insert"
@@ -536,12 +542,12 @@ export const defaultBlocks: BlockSpec[] = [
   // ── layout ─────────────────────────────────────
   {
     key: "image-comparison",
-    label: "Image comparison",
-    description: "Before / after slider",
+    label: "Görsel karşılaştırma",
+    description: "Önce / sonra sürgüsü",
     icon: icon(SplitViewIcon),
     keywords: ["comparison", "before", "after", "slider"],
     category: "layout",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <ImageComparisonForm
         mode="insert"
@@ -559,12 +565,12 @@ export const defaultBlocks: BlockSpec[] = [
   },
   {
     key: "columns",
-    label: "Columns layout",
-    description: "Multi-column responsive grid",
+    label: "Sütun düzeni",
+    description: "Çok sütunlu duyarlı ızgara",
     icon: icon(Columns3Icon),
     keywords: ["columns", "grid", "layout"],
     category: "layout",
-    surfaces: ["insert", "slash"],
+    surfaces: ["insert", "slash", "draggable"],
     renderForm: (editor, { onComplete, onCancel }) => (
       <ColumnsForm
         onSubmit={(data) => {
@@ -591,21 +597,52 @@ export const defaultBlocks: BlockSpec[] = [
   // ── Eglador CMS blocks ─────────────────────────
   // One real Lexical node per CMS type — see cms/cms-schema.tsx.
   ...cmsBlocks,
+
+  // News moment is an ElementNode, not a decorator: the form collects
+  // the metadata up front, then the body is typed inline in the
+  // document. The same form reopens from the block's own header.
+  {
+    key: "cms-newsMoment",
+    label: NEWS_MOMENT_SPEC.title,
+    description: NEWS_MOMENT_SPEC.description,
+    icon: NEWS_MOMENT_SPEC.icon,
+    keywords: NEWS_MOMENT_SPEC.keywords,
+    category: "embed",
+    surfaces: ["insert", "slash", "draggable"],
+    renderForm: (editor, { onComplete, onCancel }) => (
+      <CmsForm
+        spec={NEWS_MOMENT_SPEC}
+        mode="insert"
+        // Prefilled with "now" — still editable, and a live-blog entry
+        // is almost always stamped at the moment it's written.
+        initialValues={{ ...nowMeta(), title: "", images: "" }}
+        onSubmit={(values) => {
+          editor.update(() => {
+            const node = $createNewsMomentNode(values as Partial<NewsMomentMeta>);
+            $insertNodes([node]);
+            // Drop the caret straight into the body so the author can
+            // start typing the content immediately.
+            node.selectStart();
+          });
+          onComplete();
+        }}
+        onCancel={onCancel}
+      />
+    ),
+  },
 ];
 
-/** Filter the default registry to a specific surface. Includes only
- *  blocks that can actually be invoked on that surface — `insert` and
- *  `slash` accept both `action` and `renderForm`; `draggable` requires
- *  an `action` (selection-based conversion semantics). */
+/** Filter the registry to a specific surface. All three surfaces accept
+ *  both `action` and `renderForm`, so given the same `blocks` array they
+ *  return identical lists in identical order — the toolbar Insert menu,
+ *  the `/` menu and the drag-handle `+` menu never drift apart. */
 export function getBlocksForSurface(
   surface: BlockSurface,
   blocks: BlockSpec[] = defaultBlocks,
 ): BlockSpec[] {
-  return blocks.filter((b) => {
-    if (!b.surfaces.includes(surface)) return false;
-    if (surface === "draggable") return typeof b.action === "function";
-    return (
-      typeof b.action === "function" || typeof b.renderForm === "function"
-    );
-  });
+  return blocks.filter(
+    (b) =>
+      b.surfaces.includes(surface) &&
+      (typeof b.action === "function" || typeof b.renderForm === "function"),
+  );
 }

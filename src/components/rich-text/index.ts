@@ -122,6 +122,21 @@ export {
 } from "./columns-form";
 export type { ColumnsFormSubmit } from "./columns-form";
 export { RichTextColumnsToolbar } from "./columns-toolbar";
+export {
+  NewsMomentNode,
+  $createNewsMomentNode,
+  $createEmptyNewsMomentNode,
+  $isNewsMomentNode,
+  NEWS_MOMENT_META_FIELDS,
+  NEWS_MOMENT_DEFAULT_META,
+  NEWS_MOMENT_SPEC,
+  nowMeta,
+} from "./news-moment-node";
+export type {
+  NewsMomentMeta,
+  SerializedNewsMomentNode,
+} from "./news-moment-node";
+export { RichTextNewsMomentChrome } from "./news-moment-chrome";
 export { RichTextStats } from "./stats";
 export type { RichTextStatsProps, RichTextStatsValue } from "./stats";
 export { RichTextFindReplace } from "./find-replace";

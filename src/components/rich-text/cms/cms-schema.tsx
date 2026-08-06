@@ -6,7 +6,6 @@ import {
   CaseSensitiveIcon,
   Columns3Icon,
   FrameIcon,
-  Heading2Icon,
   ImageIcon,
   LinkIcon,
   MaximizeIcon,
@@ -15,8 +14,8 @@ import {
   VideoIcon,
 } from "../../../lib/icons";
 import {
+  FixedLinkPreview,
   ImageQuotePreview,
-  NewsMomentPreview,
   QuotePreview,
   SingleMediaPreview,
   UrlImagePreview,
@@ -43,6 +42,27 @@ const CONTENT_TYPE_OPTIONS: CmsFieldOption[] = [
   { value: "haber", label: "Haber" },
   { value: "galeri", label: "Galeri" },
   { value: "video", label: "Video" },
+];
+
+/** Live-stream channels. The option *values* are the CMS channel IDs
+ *  that end up in the serialized JSON. */
+const CHANNEL_OPTIONS: CmsFieldOption[] = [
+  { value: "300", label: "BHT TV" },
+  { value: "100", label: "HT TV" },
+  { value: "10", label: "SHOWTV" },
+];
+
+/** Market widgets. Values mirror the CMS `usd_eur` select. */
+const MARKET_OPTIONS: CmsFieldOption[] = [
+  { value: "88", label: "$ - Dolar" },
+  { value: "89", label: "€ - Euro" },
+  { value: "1", label: "BIST 100" },
+];
+
+const LINK_COLOR_OPTIONS: CmsFieldOption[] = [
+  { value: "kirmizi", label: "Kırmızı" },
+  { value: "mavi", label: "Mavi" },
+  { value: "yesil", label: "Yeşil" },
 ];
 
 const EMBED_OPTIONS: CmsFieldOption[] = [
@@ -75,34 +95,17 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     renderPreview: UrlImagePreview("url"),
   },
   {
-    type: "baslik",
-    title: "Başlık",
-    icon: icon(Heading2Icon),
-    keywords: ["baslik", "başlık", "heading"],
-    fields: [
-      { name: "id", label: "ID", inputType: "text" },
-      {
-        name: "text",
-        label: "Başlık metni",
-        inputType: "text",
-        optional: true,
-      },
-      {
-        name: "position",
-        label: "Hizalama",
-        inputType: "select",
-        options: POSITION_LEFT_RIGHT,
-        optional: true,
-      },
-    ],
-  },
-  {
     type: "canliyayin",
     title: "Canlı Yayın",
     icon: icon(VideoIcon),
-    keywords: ["canli", "canlı", "yayin", "live"],
+    keywords: ["canli", "canlı", "yayin", "live", "tv", "kanal"],
     fields: [
-      { name: "id", label: "ID", inputType: "text" },
+      {
+        name: "channel",
+        label: "Kanal",
+        inputType: "select",
+        options: CHANNEL_OPTIONS,
+      },
       {
         name: "position",
         label: "Hizalama",
@@ -132,19 +135,29 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     title: "Depo Mu Kaç Dolar",
     icon: icon(FrameIcon),
     keywords: ["depo", "dolar", "yakit", "yakıt"],
-    fields: [{ name: "id", label: "ID", inputType: "text" }],
+    fields: [
+      {
+        name: "widget",
+        label: "Görünüm",
+        inputType: "select",
+        options: [{ value: "hesaplayici", label: "Hesaplayıcıyı ekle" }],
+      },
+    ],
   },
   {
     type: "depremler",
     title: "Depremler Haritası",
     icon: icon(MaximizeIcon),
-    keywords: ["deprem", "harita", "map"],
+    keywords: ["deprem", "harita", "map", "liste"],
     fields: [
       {
         name: "view",
         label: "Görünüm",
-        inputType: "text",
-        placeholder: "harita",
+        inputType: "select",
+        options: [
+          { value: "harita", label: "Harita" },
+          { value: "liste", label: "Liste" },
+        ],
       },
     ],
   },
@@ -248,7 +261,6 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
         inputType: "text",
         placeholder: "300x250",
       },
-      { name: "id", label: "ID", inputType: "text" },
       {
         name: "position",
         label: "Hizalama",
@@ -262,21 +274,42 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     title: "Hava Durumu",
     icon: icon(FrameIcon),
     keywords: ["hava", "durumu", "weather"],
-    fields: [{ name: "id", label: "ID", inputType: "text" }],
+    fields: [
+      {
+        name: "widget",
+        label: "Görünüm",
+        inputType: "select",
+        options: [{ value: "100", label: "Hava durumu ekle" }],
+      },
+    ],
   },
   {
     type: "kredihesaplama",
     title: "Kredi Hesaplama",
     icon: icon(FrameIcon),
     keywords: ["kredi", "hesaplama", "loan"],
-    fields: [{ name: "id", label: "ID", inputType: "text" }],
+    fields: [
+      {
+        name: "widget",
+        label: "Görünüm",
+        inputType: "select",
+        options: [{ value: "hesaplayici", label: "Hesaplayıcıyı ekle" }],
+      },
+    ],
   },
   {
     type: "kurcevirici",
     title: "Kur Çevirici",
     icon: icon(FrameIcon),
     keywords: ["kur", "cevirici", "çevirici", "currency"],
-    fields: [{ name: "id", label: "ID", inputType: "text" }],
+    fields: [
+      {
+        name: "widget",
+        label: "Görünüm",
+        inputType: "select",
+        options: [{ value: "cevirici", label: "Çeviriciyi ekle" }],
+      },
+    ],
   },
   {
     // NOT `link`: `@lexical/link`'s LinkNode already owns that registry
@@ -311,8 +344,9 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     title: "Manşet Haber Resmi",
     icon: icon(ImageIcon),
     keywords: ["manset", "manşet", "resim"],
-    fields: [{ name: "id", label: "Resim ID", inputType: "text" }],
-    renderPreview: SingleMediaPreview("id"),
+    // Plain content ID, not a media ID — so no `resolveImageSrc`
+    // preview here; it wouldn't resolve to anything.
+    fields: [{ name: "id", label: "ID", inputType: "text" }],
   },
   {
     type: "ozelharf",
@@ -324,9 +358,19 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
   {
     type: "piyasa",
     title: "Piyasa",
+    description: "USD/TRY · EUR/TRY · BIST 100",
     icon: icon(FrameIcon),
-    keywords: ["piyasa", "borsa", "market"],
-    fields: [{ name: "id", label: "ID", inputType: "text" }],
+    keywords: ["piyasa", "borsa", "market", "dolar", "euro", "bist"],
+    fields: [
+      {
+        // Field name matches the CMS form control (`name="usd_eur"`);
+        // the option values are the market IDs themselves.
+        name: "usd_eur",
+        label: "Piyasa verisi",
+        inputType: "select",
+        options: MARKET_OPTIONS,
+      },
+    ],
   },
   {
     type: "quato1",
@@ -369,15 +413,18 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     type: "sabitlink",
     title: "Sabit Link",
     icon: icon(LinkIcon),
-    keywords: ["sabit", "link"],
-    fields: [{ name: "url", label: "URL", inputType: "url" }],
-  },
-  {
-    type: "videooynat",
-    title: "Video Oynat",
-    icon: icon(VideoIcon),
-    keywords: ["video", "oynat", "play"],
-    fields: [{ name: "id", label: "Video ID", inputType: "text" }],
+    keywords: ["sabit", "link", "renk"],
+    fields: [
+      {
+        name: "color",
+        label: "Renk",
+        inputType: "select",
+        options: LINK_COLOR_OPTIONS,
+      },
+      { name: "url", label: "Bağlantı", inputType: "url" },
+      { name: "text", label: "Metin", inputType: "text" },
+    ],
+    renderPreview: FixedLinkPreview,
   },
   {
     type: "yatayciftli",
@@ -429,26 +476,5 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
         options: POSITION_LEFT_CENTER_RIGHT,
       },
     ],
-  },
-  {
-    type: "newsMoment",
-    title: "News Moment",
-    description: "Tarih, saat, başlık, içerik ve görseller",
-    icon: icon(CalendarClockIcon),
-    keywords: ["news", "moment", "an", "haber", "canli", "canlı"],
-    fields: [
-      { name: "date", label: "Tarih", inputType: "date" },
-      { name: "time", label: "Saat", inputType: "time" },
-      { name: "title", label: "Başlık", inputType: "text" },
-      { name: "content", label: "İçerik", inputType: "textarea" },
-      {
-        name: "images",
-        label: "Resimler",
-        inputType: "image-ids",
-        placeholder: "345456, 345457",
-        optional: true,
-      },
-    ],
-    renderPreview: NewsMomentPreview,
   },
 ];

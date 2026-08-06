@@ -11,6 +11,7 @@ import { RichTextFloatingToolbar } from "./floating-toolbar";
 import { RichTextTableActions } from "./table-actions";
 import { RichTextLinkEditor } from "./link-editor";
 import { RichTextColumnsToolbar } from "./columns-toolbar";
+import { RichTextNewsMomentChrome } from "./news-moment-chrome";
 import { usePageSize } from "./page-size-context";
 import type { BlockSpec } from "./blocks-registry";
 
@@ -115,6 +116,9 @@ export function RichTextContent({
       {anchorElem !== null && (
         <RichTextColumnsToolbar anchorElem={anchorElem} />
       )}
+      {/* Portals each news moment's header into the slot its node
+          reserves — no anchor needed, it renders in place. */}
+      <RichTextNewsMomentChrome />
     </div>
   );
 }
