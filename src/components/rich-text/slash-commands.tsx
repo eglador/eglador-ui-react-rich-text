@@ -93,18 +93,19 @@ export function RichTextSlashCommands({
       });
 
       const spec = selected.spec;
-      // Quick action wins when both exist (slash favors speed; the
-      // toolbar Insert dropdown gets the form).
-      if (typeof spec.action === "function") {
-        spec.action(editor);
-        closeMenu();
-        return;
-      }
-
+      // Form wins when both exist — same precedence as the toolbar
+      // Insert dropdown (insert-menu.tsx), so a block behaves
+      // identically no matter which surface invoked it.
       if (typeof spec.renderForm === "function") {
         const anchor = getCaretAnchor();
         setFormAnchor(anchor);
         setPendingSpec(spec);
+        closeMenu();
+        return;
+      }
+
+      if (typeof spec.action === "function") {
+        spec.action(editor);
       }
       closeMenu();
     },

@@ -41,6 +41,7 @@ import { cn } from "../../lib/utils";
 import { defaultTheme } from "./theme";
 import { defaultNodes } from "./nodes";
 import { PageSizeProvider } from "./page-size-context";
+import { MediaResolverProvider } from "./media-resolver-context";
 import type { RichTextEditorProps } from "./types";
 
 function buildInitialState(
@@ -222,6 +223,7 @@ export function RichTextEditor({
   namespace = "eglador-rich-text",
   maxLength,
   charset = "UTF-16",
+  resolveImageSrc,
   editorRef,
   className,
   children,
@@ -270,7 +272,13 @@ export function RichTextEditor({
     >
       <LexicalComposer initialConfig={initialConfig}>
         {shouldApplyInitialHtml && <InitialHtmlPlugin html={initialHtml!} />}
-        <PageSizeProvider>{children}</PageSizeProvider>
+        {/* Wraps `children` so decorator nodes reach the resolver:
+            Lexical renders them via createPortal from inside
+            RichTextPlugin, and portals inherit context from the
+            component tree rather than the DOM tree. */}
+        <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
+          <PageSizeProvider>{children}</PageSizeProvider>
+        </MediaResolverProvider>
         <HistoryPlugin />
         <ListPlugin />
         <CheckListPlugin />

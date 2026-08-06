@@ -130,6 +130,28 @@ export { RichTextOutput } from "./output";
 export type { RichTextOutputProps, RichTextOutputTab } from "./output";
 export { usePageSize } from "./page-size-context";
 export type { PageSize, PageSizeName } from "./page-size-context";
+export {
+  MediaResolverProvider,
+  useMediaResolver,
+  useResolvedSrc,
+} from "./media-resolver-context";
+export type {
+  MediaResolver,
+  ResolvedSrc,
+  ResolvedSrcStatus,
+} from "./media-resolver-context";
+export {
+  RichTextDevGlobals,
+  insertAllComponents,
+  $buildAllComponentNodes,
+  ALL_COMPONENTS_DEFAULT_SAMPLE,
+} from "./all-components";
+export type {
+  AllComponentsOptions,
+  AllComponentsSample,
+  AllComponentsGlobal,
+  RichTextDevGlobalsProps,
+} from "./all-components";
 export { useRichTextEditor } from "./hook";
 export { defaultTheme } from "./theme";
 export { defaultNodes } from "./nodes";
@@ -163,6 +185,31 @@ export type {
 } from "./legacy-schema";
 export { LegacyComponentForm } from "./legacy-component-form";
 export type { LegacyComponentFormProps } from "./legacy-component-form";
+
+export {
+  cmsNodes,
+  cmsBlocks,
+  $createCmsNode,
+  $isCmsBlockNode,
+  createCmsNodeClass,
+  CmsBlockNode,
+  CmsBlock,
+  CmsForm,
+  MediaThumb,
+  initialCmsValues,
+  parseIdList,
+  CMS_BLOCK_SCHEMA,
+} from "./cms";
+export type {
+  CmsBlockSpec,
+  CmsFieldSpec,
+  CmsFieldOption,
+  CmsFieldInputType,
+  CmsFieldValues,
+  CmsBlockProps,
+  CmsFormProps,
+  SerializedCmsBlockNode,
+} from "./cms";
 
 export {
   defaultBlocks,

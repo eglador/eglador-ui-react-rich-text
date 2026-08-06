@@ -1,5 +1,6 @@
 import type * as React from "react";
 import type { LexicalEditor } from "lexical";
+import type { MediaResolver } from "./media-resolver-context";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -34,6 +35,16 @@ export interface RichTextEditorProps
   /** Charset for character counting (default `"UTF-16"`). UTF-8 counts
    *  emoji and CJK characters as multiple bytes; UTF-16 matches `String.length`. */
   charset?: "UTF-8" | "UTF-16";
+  /**
+   * Turns a CMS media ID into a displayable URL. Called by any block
+   * that stores an ID instead of a URL — the `image` / `video` blocks in
+   * ID mode, and CMS blocks with `image-ids` fields (e.g. `newsMoment`).
+   *
+   * May be sync (an in-memory map) or async (a fetch). Return `null`
+   * when the ID has no media, and the block renders a placeholder
+   * instead of a broken image.
+   */
+  resolveImageSrc?: MediaResolver;
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>

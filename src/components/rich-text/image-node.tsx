@@ -18,7 +18,8 @@ import {
 } from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
-import { SettingsIcon } from "../../lib/icons";
+import { ImageIcon, SettingsIcon } from "../../lib/icons";
+import { useResolvedSrc } from "./media-resolver-context";
 import { ImageForm } from "./image-form";
 
 export interface ImageOptions {
@@ -28,16 +29,25 @@ export interface ImageOptions {
   caption?: string;
   /** Maximum display width in pixels. `0` = natural / responsive. */
   maxWidth?: number;
+  /**
+   * CMS media ID. When set, this node is ID-addressed: `src` is treated
+   * as a transient preview value, resolved at render time through the
+   * `resolveImageSrc` callback given to `RichTextEditor`, and is
+   * deliberately left out of `exportJSON()` — the host app owns the URL,
+   * the document only stores the ID.
+   */
+  imageId?: string;
 }
 
 const DEFAULT_OPTIONS: Required<ImageOptions> = {
   alt: "",
   caption: "",
   maxWidth: 0,
+  imageId: "",
 };
 
 export type SerializedImageNode = Spread<
-  { src: string; options?: ImageOptions },
+  { src?: string; options?: ImageOptions },
   SerializedDecoratorBlockNode
 >;
 
@@ -64,17 +74,20 @@ export class ImageNode extends DecoratorBlockNode {
   }
 
   static importJSON(serialized: SerializedImageNode): ImageNode {
-    const node = $createImageNode(serialized.src, serialized.options);
+    const node = $createImageNode(serialized.src ?? "", serialized.options);
     node.setFormat(serialized.format);
     return node;
   }
 
+  /** ID-addressed images omit `src` entirely — the URL belongs to the
+   *  host app's media service, not to the document. URL-addressed
+   *  images serialize exactly as before. */
   exportJSON(): SerializedImageNode {
-    return {
+    const base = {
       ...super.exportJSON(),
-      src: this.__src,
       options: this.__options,
     };
+    return this.__options.imageId ? base : { ...base, src: this.__src };
   }
 
   constructor(
@@ -117,7 +130,7 @@ export class ImageNode extends DecoratorBlockNode {
   }
 
   getTextContent(): string {
-    return this.__options.alt || this.__src;
+    return this.__options.alt || this.__src || this.__options.imageId;
   }
 
   decorate(_editor: LexicalEditor, config: EditorConfig): React.ReactElement {
@@ -178,18 +191,41 @@ function ImageBlock({ src, options, nodeKey }: ImageBlockProps) {
   const widthStyle =
     options.maxWidth > 0 ? { maxWidth: `${options.maxWidth}px` } : undefined;
 
+  // ID-addressed images have no stored URL — ask the host to resolve it.
+  const resolved = useResolvedSrc(options.imageId);
+  const displaySrc = options.imageId ? resolved.src : src;
+
   return (
     <figure className="text-center">
       {/* Inline-block wrapper sizes to the image, so the gear button
           stays anchored to the image's top-right corner regardless of
           maxWidth or alignment. */}
       <span className="relative group inline-block max-w-full">
-        <img
-          src={src}
-          alt={options.alt || ""}
-          className="block max-w-full h-auto rounded-lg border border-zinc-200 mx-auto"
-          style={widthStyle}
-        />
+        {displaySrc ? (
+          <img
+            src={displaySrc}
+            alt={options.alt || ""}
+            className="block max-w-full h-auto rounded-lg border border-zinc-200 mx-auto"
+            style={widthStyle}
+          />
+        ) : (
+          <span
+            className={cn(
+              "flex flex-col items-center justify-center gap-1.5 w-64 aspect-video rounded-lg border border-dashed border-zinc-300 bg-zinc-50 text-zinc-400",
+              resolved.status === "loading" && "animate-pulse",
+            )}
+            style={widthStyle}
+          >
+            <ImageIcon className="size-6" />
+            <span className="text-[11px] font-mono">
+              {resolved.status === "loading"
+                ? "Yükleniyor…"
+                : options.imageId
+                  ? `#${options.imageId} bulunamadı`
+                  : "Görsel yok"}
+            </span>
+          </span>
+        )}
         <Popover
           open={open}
           onOpenChange={setOpen}

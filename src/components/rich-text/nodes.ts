@@ -16,11 +16,13 @@ import { IframeNode } from "./iframe-node";
 import { ImageComparisonNode } from "./image-comparison-node";
 import { ColumnsNode, ColumnNode } from "./columns-node";
 import { LegacyComponentNode } from "./legacy-component-node";
+import { cmsNodes } from "./cms";
 
 /**
  * Default Lexical nodes registered with the composer.
  * Covers heading, quote, list, link, code, horizontal rule, page break,
- * table, hashtag and overflow (used by the optional character-limit plugin).
+ * table, hashtag and overflow (used by the optional character-limit plugin),
+ * plus one node per Eglador CMS block type (see `cms/cms-schema.tsx`).
  */
 export const defaultNodes: Klass<LexicalNode>[] = [
   HeadingNode,
@@ -47,4 +49,23 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   ColumnNode,
   PageBreakNode,
   LegacyComponentNode,
+  ...cmsNodes,
 ];
+
+// Lexical keys its node registry by `getType()` and the map is
+// last-write-wins, so two nodes claiming one type silently replace each
+// other — and every existing node of the losing type stops parsing.
+// This bit twice already: `text` belongs to TextNode, and the CMS
+// `link` type shadowed @lexical/link's LinkNode. Fail loudly here
+// rather than corrupting documents at runtime.
+const seenTypes = new Set<string>();
+for (const node of defaultNodes) {
+  const type = node.getType();
+  if (seenTypes.has(type)) {
+    throw new Error(
+      `[eglador-ui-react-rich-text] duplicate Lexical node type "${type}" in defaultNodes — ` +
+        "pick a unique `type` for the offending CMS block (see cms/cms-schema.tsx).",
+    );
+  }
+  seenTypes.add(type);
+}
