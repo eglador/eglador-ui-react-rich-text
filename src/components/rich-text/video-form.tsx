@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { TrashIcon, VideoIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
+import { useResolvedSrc } from "./media-resolver-context";
 import type {
   VideoAspectRatio,
   VideoOptions,
@@ -24,6 +25,7 @@ export const VIDEO_DEFAULT_OPTIONS: Required<VideoOptions> = {
   muted: false,
   controls: true,
   preload: "metadata",
+  videoId: "",
 };
 
 interface VideoFormProps {
@@ -53,18 +55,26 @@ export function VideoForm({
   );
   const [error, setError] = React.useState<string | null>(null);
 
-  const valid = src.trim().length > 0;
+  const videoId = opts.videoId.trim();
+  const byId = videoId.length > 0;
+  // An ID-addressed video doesn't need a URL — the host resolves it.
+  const valid = byId || src.trim().length > 0;
+
+  const resolved = useResolvedSrc(byId ? videoId : null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!valid) {
-      setError("URL is required");
+      setError("Video ID veya URL gerekli");
       return;
     }
     onSubmit({
-      src: src.trim(),
+      // Transient preview only when addressing by ID —
+      // `VideoNode.exportJSON()` drops it in that case.
+      src: byId ? (resolved.src ?? "") : src.trim(),
       options: {
+        videoId,
         title: opts.title.trim(),
         poster: opts.poster.trim(),
         aspectRatio: opts.aspectRatio,
@@ -97,22 +107,54 @@ export function VideoForm({
         )}
       </div>
 
-      <Field label="URL">
+      <Field label="Video ID">
         <input
-          type="url"
+          type="text"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={mode === "insert"}
-          value={src}
+          value={opts.videoId}
           onChange={(e) => {
-            setSrc(e.target.value);
+            setOpts((s) => ({ ...s, videoId: e.target.value }));
             if (error) setError(null);
           }}
-          placeholder="https://cdn.example.com/video.mp4"
+          placeholder="913597"
           className={cn(
             "w-full px-2 py-1.5 text-sm border rounded outline-none",
             error
               ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
               : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+          )}
+        />
+        <p className="mt-1 text-[10px] text-zinc-500">
+          {byId
+            ? "URL belgeye kaydedilmez — önizleme ID’den çözülür."
+            : "ID girersen URL alanı devre dışı kalır."}
+        </p>
+      </Field>
+
+      <Field label={byId ? "Çözümlenen URL" : "URL"}>
+        <input
+          type={byId ? "text" : "url"}
+          readOnly={byId}
+          value={byId ? (resolved.src ?? "") : src}
+          onChange={(e) => {
+            setSrc(e.target.value);
+            if (error) setError(null);
+          }}
+          placeholder={
+            byId
+              ? resolved.status === "loading"
+                ? "Çözümleniyor…"
+                : "Bu ID için video bulunamadı"
+              : "https://cdn.example.com/video.mp4"
+          }
+          className={cn(
+            "w-full px-2 py-1.5 text-sm border rounded outline-none",
+            byId
+              ? "border-zinc-200 bg-zinc-50 text-zinc-500 cursor-not-allowed"
+              : error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
           )}
         />
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

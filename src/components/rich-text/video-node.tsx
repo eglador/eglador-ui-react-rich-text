@@ -18,7 +18,8 @@ import {
 } from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
-import { SettingsIcon } from "../../lib/icons";
+import { SettingsIcon, VideoIcon } from "../../lib/icons";
+import { useResolvedSrc } from "./media-resolver-context";
 import { VideoForm } from "./video-form";
 
 export type VideoPreload = "none" | "metadata" | "auto";
@@ -42,6 +43,12 @@ export interface VideoOptions {
   controls?: boolean;
   /** Preload behaviour (default `"metadata"`). */
   preload?: VideoPreload;
+  /**
+   * CMS media ID. When set, the node is ID-addressed: `src` is resolved
+   * at render time via `resolveImageSrc` on `RichTextEditor` and is left
+   * out of `exportJSON()` — the document stores only the ID.
+   */
+  videoId?: string;
 }
 
 const DEFAULT_OPTIONS: Required<VideoOptions> = {
@@ -53,10 +60,11 @@ const DEFAULT_OPTIONS: Required<VideoOptions> = {
   muted: false,
   controls: true,
   preload: "metadata",
+  videoId: "",
 };
 
 export type SerializedVideoNode = Spread<
-  { src: string; options?: VideoOptions },
+  { src?: string; options?: VideoOptions },
   SerializedDecoratorBlockNode
 >;
 
@@ -93,17 +101,18 @@ export class VideoNode extends DecoratorBlockNode {
   }
 
   static importJSON(serialized: SerializedVideoNode): VideoNode {
-    const node = $createVideoNode(serialized.src, serialized.options);
+    const node = $createVideoNode(serialized.src ?? "", serialized.options);
     node.setFormat(serialized.format);
     return node;
   }
 
+  /** ID-addressed videos omit `src` — see `ImageNode.exportJSON()`. */
   exportJSON(): SerializedVideoNode {
-    return {
+    const base = {
       ...super.exportJSON(),
-      src: this.__src,
       options: this.__options,
     };
+    return this.__options.videoId ? base : { ...base, src: this.__src };
   }
 
   constructor(
@@ -146,7 +155,7 @@ export class VideoNode extends DecoratorBlockNode {
   }
 
   getTextContent(): string {
-    return this.__src;
+    return this.__src || this.__options.videoId;
   }
 
   decorate(_editor: LexicalEditor, config: EditorConfig): React.ReactElement {
@@ -204,6 +213,10 @@ function VideoBlock({ src, options, nodeKey }: VideoBlockProps) {
     setOpen(false);
   }, [editor, nodeKey]);
 
+  // ID-addressed videos have no stored URL — ask the host to resolve it.
+  const resolved = useResolvedSrc(options.videoId);
+  const displaySrc = options.videoId ? resolved.src : src;
+
   return (
     <div
       className={cn(
@@ -211,9 +224,26 @@ function VideoBlock({ src, options, nodeKey }: VideoBlockProps) {
         ASPECT_CLASS[options.aspectRatio],
       )}
     >
+      {!displaySrc && (
+        <div
+          className={cn(
+            "absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-zinc-900 text-zinc-500",
+            resolved.status === "loading" && "animate-pulse",
+          )}
+        >
+          <VideoIcon className="size-6" />
+          <span className="text-[11px] font-mono">
+            {resolved.status === "loading"
+              ? "Yükleniyor…"
+              : options.videoId
+                ? `#${options.videoId} bulunamadı`
+                : "Video yok"}
+          </span>
+        </div>
+      )}
       <video
-        key={src}
-        src={src}
+        key={displaySrc ?? ""}
+        src={displaySrc ?? undefined}
         poster={options.poster || undefined}
         controls={options.controls}
         autoPlay={options.autoplay}

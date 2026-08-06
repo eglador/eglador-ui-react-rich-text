@@ -68,6 +68,7 @@ import { ImageComparisonForm } from "./image-comparison-form";
 import { $createColumnNode, $createColumnsNode } from "./columns-node";
 import { ColumnsForm } from "./columns-form";
 import { TableSizePicker } from "./table-size-picker";
+import { cmsBlocks } from "./cms";
 
 /**
  * Where a block can be invoked from. Each surface has its own UX
@@ -218,7 +219,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(PilcrowIcon),
     keywords: ["text", "p", "paragraph"],
     category: "text",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createParagraphNode()),
   },
   {
@@ -228,7 +229,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading1Icon),
     keywords: ["h1", "title", "heading"],
     category: "text",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h1")),
   },
   {
@@ -238,7 +239,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading2Icon),
     keywords: ["h2", "subtitle", "heading"],
     category: "text",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h2")),
   },
   {
@@ -248,7 +249,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading3Icon),
     keywords: ["h3", "heading"],
     category: "text",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h3")),
   },
   {
@@ -258,7 +259,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading4Icon),
     keywords: ["h4", "heading"],
     category: "text",
-    surfaces: ["slash"],
+    surfaces: ["insert", "slash"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h4")),
   },
   {
@@ -268,7 +269,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading5Icon),
     keywords: ["h5", "heading"],
     category: "text",
-    surfaces: ["slash"],
+    surfaces: ["insert", "slash"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h5")),
   },
   {
@@ -278,7 +279,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(Heading6Icon),
     keywords: ["h6", "heading"],
     category: "text",
-    surfaces: ["slash"],
+    surfaces: ["insert", "slash"],
     action: (editor) => convertBlock(editor, () => $createHeadingNode("h6")),
   },
 
@@ -290,7 +291,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(ListBulletIcon),
     keywords: ["ul", "unordered", "list", "bullet"],
     category: "list",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) =>
       editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined),
   },
@@ -301,7 +302,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(ListOrderedIcon),
     keywords: ["ol", "ordered", "list", "number"],
     category: "list",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) =>
       editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined),
   },
@@ -312,7 +313,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(ListCheckIcon),
     keywords: ["check", "todo", "task", "checkbox"],
     category: "list",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) =>
       editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined),
   },
@@ -325,7 +326,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(QuoteIcon),
     keywords: ["quote", "blockquote", "citation"],
     category: "block",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createQuoteNode()),
   },
   {
@@ -335,7 +336,7 @@ export const defaultBlocks: BlockSpec[] = [
     icon: icon(CodeIcon),
     keywords: ["code", "snippet", "pre"],
     category: "block",
-    surfaces: ["slash", "draggable"],
+    surfaces: ["insert", "slash", "draggable"],
     action: (editor) => convertBlock(editor, () => $createCodeNode()),
   },
 
@@ -586,6 +587,10 @@ export const defaultBlocks: BlockSpec[] = [
       />
     ),
   },
+
+  // ── Eglador CMS blocks ─────────────────────────
+  // One real Lexical node per CMS type — see cms/cms-schema.tsx.
+  ...cmsBlocks,
 ];
 
 /** Filter the default registry to a specific surface. Includes only

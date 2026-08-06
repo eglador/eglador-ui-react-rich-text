@@ -23,6 +23,10 @@ import {
   type LexicalEditor,
 } from "lexical";
 import { $createOffsetView } from "@lexical/offset";
+import {
+  insertAllComponents,
+  type AllComponentsOptions,
+} from "./all-components";
 import { $isLegacyComponentNode } from "./legacy-component-node";
 import {
   isLegacyShortcodeLine,
@@ -62,6 +66,11 @@ export type RichTextEditorApi = {
     items: LegacyComponentInput[],
     schema?: LegacyComponentSpec[],
   ) => void;
+  /** Fill the document with one of every component the editor ships —
+   *  a one-click way to eyeball an integration. Defaults to clearing
+   *  first; pass `{ mode: "append" }` to keep existing content and add
+   *  the blocks at the end. Returns how many blocks were inserted. */
+  insertAllComponents: (options?: AllComponentsOptions) => number;
   /** Empty the editor */
   clear: () => void;
   /** Move browser focus into the editor */
@@ -180,6 +189,9 @@ export function useRichTextEditor(): RichTextEditorApi {
           lastParagraph?.selectEnd();
         });
       },
+
+      insertAllComponents: (options?: AllComponentsOptions) =>
+        insertAllComponents(editor, options),
 
       clear: () => {
         editor.update(() => {

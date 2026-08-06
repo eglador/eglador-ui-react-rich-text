@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { ImageIcon, TrashIcon } from "../../lib/icons";
 import { Field } from "./form-fields";
+import { useResolvedSrc } from "./media-resolver-context";
 import type { ImageOptions } from "./image-node";
 
 export interface ImageFormSubmit {
@@ -15,6 +16,7 @@ export const IMAGE_DEFAULT_OPTIONS: Required<ImageOptions> = {
   alt: "",
   caption: "",
   maxWidth: 0,
+  imageId: "",
 };
 
 interface ImageFormProps {
@@ -44,21 +46,29 @@ export function ImageForm({
   );
   const [error, setError] = React.useState<string | null>(null);
 
-  const valid = src.trim().length > 0;
+  const imageId = opts.imageId.trim();
+  const byId = imageId.length > 0;
+  // An ID-addressed image doesn't need a URL — the host resolves it.
+  const valid = byId || src.trim().length > 0;
+
+  const resolved = useResolvedSrc(byId ? imageId : null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!valid) {
-      setError("URL is required");
+      setError("Resim ID veya URL gerekli");
       return;
     }
     onSubmit({
-      src: src.trim(),
+      // Kept only as a transient preview when addressing by ID —
+      // `ImageNode.exportJSON()` drops it in that case.
+      src: byId ? (resolved.src ?? "") : src.trim(),
       options: {
         alt: opts.alt.trim(),
         caption: opts.caption.trim(),
         maxWidth: opts.maxWidth || 0,
+        imageId,
       },
     });
   };
@@ -82,22 +92,54 @@ export function ImageForm({
         )}
       </div>
 
-      <Field label="URL">
+      <Field label="Resim ID">
         <input
-          type="url"
+          type="text"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={mode === "insert"}
-          value={src}
+          value={opts.imageId}
           onChange={(e) => {
-            setSrc(e.target.value);
+            setOpts((s) => ({ ...s, imageId: e.target.value }));
             if (error) setError(null);
           }}
-          placeholder="https://cdn.example.com/image.jpg"
+          placeholder="345456"
           className={cn(
             "w-full px-2 py-1.5 text-sm border rounded outline-none",
             error
               ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
               : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+          )}
+        />
+        <p className="mt-1 text-[10px] text-zinc-500">
+          {byId
+            ? "URL belgeye kaydedilmez — önizleme ID’den çözülür."
+            : "ID girersen URL alanı devre dışı kalır."}
+        </p>
+      </Field>
+
+      <Field label={byId ? "Çözümlenen URL" : "URL"}>
+        <input
+          type={byId ? "text" : "url"}
+          readOnly={byId}
+          value={byId ? (resolved.src ?? "") : src}
+          onChange={(e) => {
+            setSrc(e.target.value);
+            if (error) setError(null);
+          }}
+          placeholder={
+            byId
+              ? resolved.status === "loading"
+                ? "Çözümleniyor…"
+                : "Bu ID için görsel bulunamadı"
+              : "https://cdn.example.com/image.jpg"
+          }
+          className={cn(
+            "w-full px-2 py-1.5 text-sm border rounded outline-none",
+            byId
+              ? "border-zinc-200 bg-zinc-50 text-zinc-500 cursor-not-allowed"
+              : error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
           )}
         />
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
