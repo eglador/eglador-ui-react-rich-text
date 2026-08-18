@@ -167,6 +167,23 @@ export type {
   AllComponentsGlobal,
   RichTextDevGlobalsProps,
 } from "./all-components";
+export {
+  TEXT_FORMAT_BITS,
+  hasTextFormat,
+  decodeTextFormat,
+  textFormatToCss,
+  textNodeCss,
+  parseCssText,
+  stringifyCss,
+  withInlineTextStyles,
+} from "./text-styles";
+export type {
+  TextFormatName,
+  TextCssOptions,
+  InlineTextStyleOptions,
+} from "./text-styles";
+export { TextStyleProvider, useInlineTextStyles, resolveInlineTextStyles } from "./text-style-context";
+export type { InlineTextStyleSetting } from "./text-style-context";
 export { useRichTextEditor } from "./hook";
 export { defaultTheme } from "./theme";
 export { defaultNodes } from "./nodes";

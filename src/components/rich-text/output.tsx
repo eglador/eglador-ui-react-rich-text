@@ -7,6 +7,14 @@ import { $generateHtmlFromNodes } from "@lexical/html";
 import { $getRoot } from "lexical";
 import { cn } from "../../lib/utils";
 import { CheckIcon, CopyIcon, DownloadIcon } from "../../lib/icons";
+import {
+  withInlineTextStyles,
+  type InlineTextStyleOptions,
+} from "./text-styles";
+import {
+  resolveInlineTextStyles,
+  useInlineTextStyles,
+} from "./text-style-context";
 
 export type RichTextOutputTab = "html" | "markdown" | "json" | "text";
 
@@ -31,6 +39,12 @@ export interface RichTextOutputProps
   downloadName?: string;
   /** Max content height (Tailwind class). Default: `max-h-72`. */
   maxHeight?: string;
+  /**
+   * Override the editor's `inlineTextStyles` setting for this panel.
+   * Omit to mirror what `onChange` / `getJson()` produce — which is the
+   * point of the panel. Pass `false` to inspect the raw Lexical shape.
+   */
+  inlineTextStyles?: boolean | InlineTextStyleOptions;
 }
 
 const TAB_LABELS: Record<RichTextOutputTab, string> = {
@@ -72,10 +86,18 @@ export function RichTextOutput({
   showDownload = true,
   downloadName = "richtext",
   maxHeight = "max-h-72",
+  inlineTextStyles,
   className,
   ...props
 }: RichTextOutputProps) {
   const [editor] = useLexicalComposerContext();
+  const editorSetting = useInlineTextStyles();
+  // Undefined prop → follow the editor, so the panel shows exactly what
+  // a consumer of `onChange` / `getJson()` receives.
+  const styleSetting =
+    inlineTextStyles === undefined
+      ? editorSetting
+      : resolveInlineTextStyles(inlineTextStyles);
   const [value, setValue] = React.useState<OutputValue>(EMPTY_VALUE);
   const [tab, setTab] = React.useState<RichTextOutputTab>(
     defaultTab ?? tabs[0],
@@ -100,13 +122,20 @@ export function RichTextOutput({
   const display = React.useMemo(() => {
     if (tab === "json" && value.json) {
       try {
-        return JSON.stringify(JSON.parse(value.json), null, 2);
+        const parsed = JSON.parse(value.json);
+        // Derived at display time rather than in the update listener, so
+        // toggling the prop doesn't re-subscribe the editor.
+        return JSON.stringify(
+          styleSetting ? withInlineTextStyles(parsed, styleSetting) : parsed,
+          null,
+          2,
+        );
       } catch {
         return value.json;
       }
     }
     return value[tab];
-  }, [tab, value]);
+  }, [tab, value, styleSetting]);
 
   const handleCopy = async () => {
     if (!display || typeof navigator === "undefined") return;

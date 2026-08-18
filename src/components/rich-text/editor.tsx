@@ -42,6 +42,11 @@ import { defaultTheme } from "./theme";
 import { defaultNodes } from "./nodes";
 import { PageSizeProvider } from "./page-size-context";
 import { MediaResolverProvider } from "./media-resolver-context";
+import {
+  TextStyleProvider,
+  resolveInlineTextStyles,
+} from "./text-style-context";
+import { withInlineTextStyles } from "./text-styles";
 import type { RichTextEditorProps } from "./types";
 
 function buildInitialState(
@@ -224,11 +229,16 @@ export function RichTextEditor({
   maxLength,
   charset = "UTF-16",
   resolveImageSrc,
+  inlineTextStyles,
   editorRef,
   className,
   children,
   ...props
 }: RichTextEditorProps) {
+  const styleSetting = React.useMemo(
+    () => resolveInlineTextStyles(inlineTextStyles),
+    [inlineTextStyles],
+  );
   const initialConfig = React.useMemo<InitialConfigType>(
     () => ({
       namespace,
@@ -252,14 +262,17 @@ export function RichTextEditor({
     (editorState: EditorState, editor: LexicalEditor) => {
       if (!onChange) return;
       editorState.read(() => {
-        const json = JSON.stringify(editorState.toJSON());
+        const state = editorState.toJSON();
+        const json = JSON.stringify(
+          styleSetting ? withInlineTextStyles(state, styleSetting) : state,
+        );
         const html = $generateHtmlFromNodes(editor);
         const text = $getRoot().getTextContent();
         const markdown = $convertToMarkdownString(TRANSFORMERS);
         onChange({ json, html, text, markdown });
       });
     },
-    [onChange],
+    [onChange, styleSetting],
   );
 
   return (
@@ -277,7 +290,9 @@ export function RichTextEditor({
             RichTextPlugin, and portals inherit context from the
             component tree rather than the DOM tree. */}
         <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
-          <PageSizeProvider>{children}</PageSizeProvider>
+          <TextStyleProvider value={styleSetting}>
+            <PageSizeProvider>{children}</PageSizeProvider>
+          </TextStyleProvider>
         </MediaResolverProvider>
         <HistoryPlugin />
         <ListPlugin />
