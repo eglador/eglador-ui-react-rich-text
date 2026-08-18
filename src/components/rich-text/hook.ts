@@ -27,6 +27,11 @@ import {
   insertAllComponents,
   type AllComponentsOptions,
 } from "./all-components";
+import {
+  withInlineTextStyles,
+  type InlineTextStyleOptions,
+} from "./text-styles";
+import { useInlineTextStyles } from "./text-style-context";
 import { $isLegacyComponentNode } from "./legacy-component-node";
 import {
   isLegacyShortcodeLine,
@@ -38,8 +43,15 @@ import type { LegacyComponentSpec } from "./legacy-schema";
 export type RichTextEditorApi = {
   /** Underlying Lexical editor instance — for advanced commands */
   editor: LexicalEditor;
-  /** Get current state as Lexical JSON */
+  /** Get current state as Lexical JSON. Every text node carries a
+   *  ready-to-use `css` string (format bitmask + `style` merged) unless
+   *  the editor sets `inlineTextStyles={false}`. */
   getJson: () => string;
+  /** `getJson()` with the `css` key forced on, whatever the editor's
+   *  `inlineTextStyles` setting is. */
+  getStyledJson: (options?: InlineTextStyleOptions) => string;
+  /** The untouched Lexical shape — no derived `css` key. */
+  getRawJson: () => string;
   /** Get current state as HTML */
   getHtml: () => string;
   /** Get current state as Markdown */
@@ -88,12 +100,25 @@ export type RichTextEditorApi = {
  */
 export function useRichTextEditor(): RichTextEditorApi {
   const [editor] = useLexicalComposerContext();
+  const styleSetting = useInlineTextStyles();
 
   return React.useMemo<RichTextEditorApi>(
     () => ({
       editor,
 
-      getJson: () => JSON.stringify(editor.getEditorState().toJSON()),
+      getJson: () => {
+        const state = editor.getEditorState().toJSON();
+        return JSON.stringify(
+          styleSetting ? withInlineTextStyles(state, styleSetting) : state,
+        );
+      },
+
+      getStyledJson: (options?: InlineTextStyleOptions) =>
+        JSON.stringify(
+          withInlineTextStyles(editor.getEditorState().toJSON(), options),
+        ),
+
+      getRawJson: () => JSON.stringify(editor.getEditorState().toJSON()),
 
       getHtml: () => {
         let result = "";
@@ -223,6 +248,6 @@ export function useRichTextEditor(): RichTextEditorApi {
         });
       },
     }),
-    [editor],
+    [editor, styleSetting],
   );
 }

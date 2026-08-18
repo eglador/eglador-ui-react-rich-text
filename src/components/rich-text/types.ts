@@ -1,6 +1,7 @@
 import type * as React from "react";
 import type { LexicalEditor } from "lexical";
 import type { MediaResolver } from "./media-resolver-context";
+import type { InlineTextStyleOptions } from "./text-styles";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -45,6 +46,18 @@ export interface RichTextEditorProps
    * instead of a broken image.
    */
   resolveImageSrc?: MediaResolver;
+  /**
+   * Add a ready-to-use `css` string to every text node in the JSON —
+   * merging the `format` bitmask with the node's `style`, so consumers
+   * never decode `format: 9` by hand. **On by default**, affecting
+   * `onChange`'s `json`, `useRichTextEditor().getJson()` and the
+   * `RichTextOutput` JSON tab.
+   *
+   * The key is additive: the JSON still imports cleanly via
+   * `initialJson` / `setJson`. Pass `false` for the raw Lexical shape,
+   * or an options object to tune the `highlight` / `code` colours.
+   */
+  inlineTextStyles?: boolean | InlineTextStyleOptions;
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>

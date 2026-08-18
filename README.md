@@ -445,6 +445,72 @@ export function MyEditor() {
 - `editorRef.current?.getLegacyShortcodes()` returns every legacy shortcode line currently in the document as an array of strings, in document order — works regardless of which types use a custom `template`.
 - `editorRef.current?.importLegacyComponents(items, schema)` appends typed `LegacyComponentInput` objects (`{ type, fields }`) programmatically — pass the same `schema` you gave `createLegacyComponentBlocks()` so each item's `template` (if any) is honored; omit it to always use the default layout.
 
+## Inline text styling (`format` bitmask)
+
+Lexical splits inline formatting across two fields on every text node:
+
+| Field | Holds | Written by |
+|---|---|---|
+| `format` | a **bitmask** of the toggles | `FORMAT_TEXT_COMMAND` (bold, italic, …) |
+| `style` | a CSS string | `$patchStyleText` (colour, background, font size) |
+
+So `{"format": 9, "style": "color: #ef4444;"}` means bold + underline + red. The bits:
+
+| Format | Bit | Format | Bit |
+|---|---|---|---|
+| `bold` | 1 | `superscript` | 64 |
+| `italic` | 2 | `highlight` | 128 |
+| `strikethrough` | 4 | `lowercase` | 256 |
+| `underline` | 8 | `uppercase` | 512 |
+| `code` | 16 | `capitalize` | 1024 |
+| `subscript` | 32 | | |
+
+### You get one CSS string for free
+
+**Every text node already carries a ready-to-use `css` key** — no opt-in, no post-processing. It merges both halves, so whatever you send to your API is directly renderable:
+
+```ts
+const { json } = value;            // from onChange
+// or useRichTextEditor().getJson()
+
+// { type: "text", text: "Merhaba", format: 9, style: "color: #ef4444;",
+//   css: "font-weight: 700; text-decoration: underline; color: #ef4444" }
+```
+
+This applies to `onChange`'s `json`, `getJson()` and the `RichTextOutput` JSON tab.
+
+| Need | Use |
+|---|---|
+| The default — `css` included | `getJson()` / `onChange` |
+| The raw Lexical shape | `getRawJson()`, or `<RichTextEditor inlineTextStyles={false}>` |
+| `css` forced on regardless of the setting | `getStyledJson()` |
+| Transform a state you already have | `withInlineTextStyles(json)` |
+
+Tune the colours used for `highlight` / `code` with `<RichTextEditor inlineTextStyles={{ highlightColor: "#ffe08a" }}>`.
+
+The key is **additive**: the JSON still feeds back into `initialJson` / `setJson` unchanged, and importing it never writes the derived declarations into the node's real `style`.
+
+Lower-level helpers are exported too: `decodeTextFormat(9)` → `["bold","underline"]`, `hasTextFormat(format, "bold")`, `textFormatToCss(format)`, `textNodeCss(format, style)`.
+
+Two details this handles that hand-rolled decoding usually gets wrong:
+
+- **`underline` + `strikethrough` collapse into one `text-decoration`.** Emitting them as two declarations makes the second overwrite the first and silently drop one.
+- **An explicit `style` beats a format-implied value** — a custom background colour wins over `highlight`'s default yellow.
+
+### Why it isn't written into `style`
+
+The computed CSS goes under a separate `css` key, not into Lexical's own `style`. If it were merged into `style`, that JSON would still re-import — and the derived declarations would become *real* ones. Toggling bold off afterwards would no longer clear `font-weight: 700`, because that toggle only touches `format`. Text would be permanently bold with no way back.
+
+Keeping a separate key means the output stays safe to feed back into `initialJson` / `setJson`. You can override it with `withInlineTextStyles(json, { key: "style" })` if you're sure the JSON is write-only, but the round-trip breaks.
+
+### Colours are dropped by `initialHtml`
+
+Lexical's HTML importer only reads `font-weight`, `text-decoration`, `font-style` and `vertical-align` off a `<span style>`. **`color` and `background-color` are dropped on import**, so `<span style="color:#ef4444">bold</span>` comes back as plain text.
+
+Unaffected: colours picked in the toolbar (they write the node's `style` directly) and content loaded via `initialJson`. If you migrate existing HTML articles and need their colours, convert them to Lexical JSON rather than passing them through `initialHtml`.
+
+**If your frontend can consume HTML, you may not need any of this** — `getHtml()` already emits `<strong>`, `<em>`, `<span style="color: …">` with the formats resolved.
+
 ## Imperative API
 
 There are two ways in, and they are not interchangeable.
