@@ -207,6 +207,8 @@ They are already in `defaultNodes` and `defaultBlocks`, so a plain `<RichTextEdi
 
 `360resim` · `canliyayin` · `countdown` · `depomkacadolar` · `depremler` · `dikeyciftli` · `dikeylink` · `flourish` · `galeri` · `habericionecikanlar` · `habericireklam` · `havadurumu` · `kredihesaplama` · `kurcevirici` · `linkEmbed` · `mansethaberresim` · `ozelharf` · `piyasa` · `quato1` · `resimliquato` · `sabitlink` · `yatayciftli` · `yataytekli`
 
+Social / media embeds, each its own type: `twitter` · `instagram` · `soundcloud` · `googlemap` — all `url` + optional `position`. These were previously one `linkEmbed` block with an `embed` select; that select is gone and `linkEmbed` is now the plain-link case (`url` + `position`). **YouTube and audio are not among them** — the built-in `youtube` and `audio` blocks already cover those, with real players in the editor.
+
 …plus `newsMoment`, which is a different shape — see [News moment](#news-moment).
 
 Read the authoritative field list at runtime instead of hardcoding it:

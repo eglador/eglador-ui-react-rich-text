@@ -148,3 +148,38 @@ export function FixedLinkPreview(fields: CmsFieldValues) {
     </div>
   );
 }
+
+/**
+ * Card for social / media embeds. The real embed needs the platform's
+ * own script, which the editor deliberately doesn't load — so this shows
+ * the platform and the target URL instead of a broken frame.
+ */
+export function EmbedLinkPreview(
+  label: string,
+  tone: string,
+  urlField = "url",
+) {
+  return function Preview(fields: CmsFieldValues) {
+    const url = fields[urlField]?.trim();
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 pr-12",
+          tone,
+        )}
+      >
+        <span className="text-[10px] font-semibold uppercase tracking-wider shrink-0">
+          {label}
+        </span>
+        <span className="truncate font-mono text-[11px] opacity-80">
+          {url || "URL girilmedi"}
+        </span>
+        {fields.position && (
+          <span className="ml-auto shrink-0 text-[10px] opacity-60">
+            {fields.position}
+          </span>
+        )}
+      </div>
+    );
+  };
+}
