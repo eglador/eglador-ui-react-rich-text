@@ -7,13 +7,18 @@ import {
   Columns3Icon,
   FrameIcon,
   ImageIcon,
+  InstagramIcon,
   LinkIcon,
+  MapPinIcon,
   MaximizeIcon,
   QuoteIcon,
+  SoundCloudIcon,
   SplitViewIcon,
+  TwitterXIcon,
   VideoIcon,
 } from "../../../lib/icons";
 import {
+  EmbedLinkPreview,
   FixedLinkPreview,
   ImageQuotePreview,
   QuotePreview,
@@ -63,15 +68,6 @@ const LINK_COLOR_OPTIONS: CmsFieldOption[] = [
   { value: "kirmizi", label: "Kırmızı" },
   { value: "mavi", label: "Mavi" },
   { value: "yesil", label: "Yeşil" },
-];
-
-const EMBED_OPTIONS: CmsFieldOption[] = [
-  { value: "audio", label: "Ses" },
-  { value: "twitter", label: "Twitter / X" },
-  { value: "soundcloud", label: "SoundCloud" },
-  { value: "googlemap", label: "Google Harita" },
-  { value: "instagram", label: "Instagram" },
-  { value: "youtube", label: "YouTube" },
 ];
 
 /**
@@ -317,6 +313,10 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     // second `link` node silently replaces LinkNode and breaks every
     // hyperlink in the document. The CMS-side keyword is still `link`;
     // map it in your serializer.
+    //
+    // The platform-specific cases that used to live behind this block's
+    // `embed` select are their own types now (see the social/media group
+    // below), so this is the plain-link case only.
     type: "linkEmbed",
     title: "Bağlantı / Gömülü İçerik",
     icon: icon(LinkIcon),
@@ -324,11 +324,34 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
     fields: [
       { name: "url", label: "URL", inputType: "url" },
       {
-        name: "embed",
-        label: "Gömülü içerik türü",
+        name: "position",
+        label: "Hizalama",
         inputType: "select",
         optional: true,
-        options: EMBED_OPTIONS,
+        options: POSITION_LEFT_RIGHT,
+      },
+    ],
+    renderPreview: EmbedLinkPreview(
+      "Bağlantı",
+      "border-zinc-300 bg-zinc-50 text-zinc-700",
+    ),
+  },
+
+  // ── social / media embeds ──────────────────────
+  // Split out of `linkEmbed`'s old `embed` select so each platform has
+  // its own node type in the JSON. YouTube and audio are covered by the
+  // built-in `youtube` / `audio` blocks and deliberately absent here.
+  {
+    type: "twitter",
+    title: "Twitter / X",
+    icon: icon(TwitterXIcon),
+    keywords: ["twitter", "x", "tweet", "gomulu", "gömülü"],
+    fields: [
+      {
+        name: "url",
+        label: "Tweet URL",
+        inputType: "url",
+        placeholder: "https://x.com/kullanici/status/123456",
       },
       {
         name: "position",
@@ -338,6 +361,85 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
         options: POSITION_LEFT_RIGHT,
       },
     ],
+    renderPreview: EmbedLinkPreview(
+      "Twitter / X",
+      "border-sky-300 bg-sky-50 text-sky-800",
+    ),
+  },
+  {
+    type: "instagram",
+    title: "Instagram",
+    icon: icon(InstagramIcon),
+    keywords: ["instagram", "insta", "reels", "gomulu", "gömülü"],
+    fields: [
+      {
+        name: "url",
+        label: "Gönderi URL",
+        inputType: "url",
+        placeholder: "https://www.instagram.com/p/ABC123/",
+      },
+      {
+        name: "position",
+        label: "Hizalama",
+        inputType: "select",
+        optional: true,
+        options: POSITION_LEFT_RIGHT,
+      },
+    ],
+    renderPreview: EmbedLinkPreview(
+      "Instagram",
+      "border-pink-300 bg-pink-50 text-pink-800",
+    ),
+  },
+  {
+    type: "soundcloud",
+    title: "SoundCloud",
+    icon: icon(SoundCloudIcon),
+    keywords: ["soundcloud", "ses", "muzik", "müzik", "audio"],
+    fields: [
+      {
+        name: "url",
+        label: "Parça URL",
+        inputType: "url",
+        placeholder: "https://soundcloud.com/sanatci/parca",
+      },
+      {
+        name: "position",
+        label: "Hizalama",
+        inputType: "select",
+        optional: true,
+        options: POSITION_LEFT_RIGHT,
+      },
+    ],
+    renderPreview: EmbedLinkPreview(
+      "SoundCloud",
+      "border-orange-300 bg-orange-50 text-orange-800",
+    ),
+  },
+  {
+    type: "googlemap",
+    title: "Google Haritalar",
+    icon: icon(MapPinIcon),
+    keywords: ["google", "harita", "haritalar", "map", "maps", "konum"],
+    fields: [
+      {
+        name: "url",
+        label: "Harita URL",
+        inputType: "url",
+        placeholder: "https://www.google.com/maps/embed?pb=...",
+      },
+      {
+        name: "position",
+        label: "Hizalama",
+        inputType: "select",
+        optional: true,
+        options: POSITION_LEFT_RIGHT,
+      },
+    ],
+    renderPreview: EmbedLinkPreview(
+      "Google Haritalar",
+      "border-emerald-300 bg-emerald-50 text-emerald-800",
+    ),
   },
   {
     type: "mansethaberresim",

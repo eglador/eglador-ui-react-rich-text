@@ -805,3 +805,44 @@ export const DownloadIcon = icon(
     <line x1="12" x2="12" y1="15" y2="3" />
   </>,
 );
+
+// ─── platform marks ─────────────────────────────────────────────
+// Filled glyphs, so they carry no stroke and read correctly at 16px.
+
+export const TwitterXIcon = icon(
+  "TwitterXIcon",
+  0,
+  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />,
+  "currentColor",
+);
+
+export const InstagramIcon = icon(
+  "InstagramIcon",
+  2,
+  <>
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </>,
+);
+
+export const SoundCloudIcon = icon(
+  "SoundCloudIcon",
+  2,
+  <>
+    <path d="M2 14v3" />
+    <path d="M5.5 11v6" />
+    <path d="M9 9v8" />
+    <path d="M12.5 12v5" />
+    <path d="M12.5 12a5 5 0 0 1 9.4 2.2A2.8 2.8 0 0 1 21 17h-8.5" />
+  </>,
+);
+
+export const MapPinIcon = icon(
+  "MapPinIcon",
+  2,
+  <>
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0" />
+    <circle cx="12" cy="10" r="3" />
+  </>,
+);
