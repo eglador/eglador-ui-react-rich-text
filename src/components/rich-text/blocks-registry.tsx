@@ -74,6 +74,11 @@ import {
   nowMeta,
   type NewsMomentMeta,
 } from "./news-moment-node";
+import {
+  $createContextNoteNode,
+  CONTEXT_NOTE_SPEC,
+  type ContextNoteMeta,
+} from "./context-note-node";
 import { cmsBlocks, CmsForm } from "./cms";
 
 /**
@@ -618,7 +623,36 @@ export const defaultBlocks: BlockSpec[] = [
         initialValues={{ ...nowMeta(), title: "", images: "" }}
         onSubmit={(values) => {
           editor.update(() => {
-            const node = $createNewsMomentNode(values as Partial<NewsMomentMeta>);
+            const node = $createNewsMomentNode(values as NewsMomentMeta);
+            $insertNodes([node]);
+            // Drop the caret straight into the body so the author can
+            // start typing the content immediately.
+            node.selectStart();
+          });
+          onComplete();
+        }}
+        onCancel={onCancel}
+      />
+    ),
+  },
+
+  // Same shape as a news moment minus the timestamp — background
+  // information attached to a story rather than a dated live-blog entry.
+  {
+    key: "cms-contextNote",
+    label: CONTEXT_NOTE_SPEC.title,
+    description: CONTEXT_NOTE_SPEC.description,
+    icon: CONTEXT_NOTE_SPEC.icon,
+    keywords: CONTEXT_NOTE_SPEC.keywords,
+    category: "embed",
+    surfaces: ["insert", "slash", "draggable"],
+    renderForm: (editor, { onComplete, onCancel }) => (
+      <CmsForm
+        spec={CONTEXT_NOTE_SPEC}
+        mode="insert"
+        onSubmit={(values) => {
+          editor.update(() => {
+            const node = $createContextNoteNode(values as ContextNoteMeta);
             $insertNodes([node]);
             // Drop the caret straight into the body so the author can
             // start typing the content immediately.

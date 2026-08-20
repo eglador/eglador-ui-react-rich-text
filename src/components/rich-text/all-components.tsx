@@ -22,6 +22,7 @@ import { $createIframeNode } from "./iframe-node";
 import { $createImageComparisonNode } from "./image-comparison-node";
 import { $createCmsNode, CMS_BLOCK_SCHEMA } from "./cms";
 import { $createEmptyNewsMomentNode } from "./news-moment-node";
+import { $createEmptyContextNoteNode } from "./context-note-node";
 import type { CmsBlockSpec, CmsFieldSpec } from "./cms";
 
 /**
@@ -312,6 +313,20 @@ export function $buildAllComponentNodes(
         ),
       );
       nodes.push(newsMoment);
+    }
+
+    if (!cmsTypes || cmsTypes.includes("contextNote")) {
+      const note = $createEmptyContextNoteNode({
+        title: "Arka plan bilgisi",
+        images: sample.mediaIds.slice(0, 1).join(", "),
+      });
+      note.append(
+        $para(
+          "Context note da aynı şekilde çalışır — tarih/saat alanı yoktur, " +
+            "gövdesi doğrudan editörde düzenlenir.",
+        ),
+      );
+      nodes.push(note);
     }
   }
 
