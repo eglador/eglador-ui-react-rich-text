@@ -22,6 +22,7 @@ import {
   FixedLinkPreview,
   ImageQuotePreview,
   QuotePreview,
+  TitledQuotePreview,
   SingleMediaPreview,
   UrlImagePreview,
 } from "./cms-previews";
@@ -494,6 +495,30 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
       },
     ],
     renderPreview: QuotePreview,
+  },
+  {
+    // Sibling of `quato1`: a titled variant where the quote carries a
+    // heading plus an explanatory body instead of a single run of text.
+    type: "quato2",
+    title: "Başlıklı Alıntı",
+    description: "Başlık + açıklama",
+    icon: icon(QuoteIcon),
+    keywords: ["kota", "alinti", "alıntı", "quote", "baslik", "başlık"],
+    fields: [
+      {
+        name: "title",
+        label: "Başlık",
+        inputType: "text",
+        placeholder: "Alıntı başlığı",
+      },
+      {
+        name: "description",
+        label: "Açıklama",
+        inputType: "textarea",
+        placeholder: "Açıklama metni",
+      },
+    ],
+    renderPreview: TitledQuotePreview,
   },
   {
     type: "resimliquato",

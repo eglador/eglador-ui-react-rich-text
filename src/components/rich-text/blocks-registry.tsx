@@ -447,9 +447,9 @@ export const defaultBlocks: BlockSpec[] = [
     renderForm: (editor, { onComplete, onCancel }) => (
       <YouTubeForm
         mode="insert"
-        onSubmit={({ videoID, options }) => {
+        onSubmit={({ url, options }) => {
           editor.update(() => {
-            $insertNodes([$createYouTubeNode(videoID, options)]);
+            $insertNodes([$createYouTubeNode(url, options)]);
           });
           onComplete();
         }}

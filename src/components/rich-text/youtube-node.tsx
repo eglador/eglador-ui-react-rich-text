@@ -44,9 +44,39 @@ const DEFAULT_OPTIONS: Required<YouTubeOptions> = {
 };
 
 export type SerializedYouTubeNode = Spread<
-  { videoID: string; options?: YouTubeOptions },
+  {
+    /** The URL exactly as the author entered it. */
+    url?: string;
+    /**
+     * Legacy: documents written before the node stored URLs kept only
+     * the 11-character video ID. Still read on import, never written.
+     */
+    videoID?: string;
+    options?: YouTubeOptions;
+  },
   SerializedDecoratorBlockNode
 >;
+
+/** Build the canonical privacy-friendly embed URL for a bare video ID. */
+export function youTubeEmbedUrl(videoID: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoID}`;
+}
+
+/**
+ * The URL to actually put in the iframe.
+ *
+ * The stored URL is whatever the author typed; a `watch?v=` or
+ * `youtu.be` link can't be framed (YouTube refuses with
+ * `X-Frame-Options`), so those are normalized to their `/embed/` form
+ * for rendering only — the document keeps the original string.
+ */
+export function toYouTubeEmbedSrc(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/\/embed\//.test(trimmed)) return trimmed;
+  const match = parseYouTubeUrl(trimmed);
+  return match ? youTubeEmbedUrl(match.id) : trimmed;
+}
 
 /**
  * YouTube embed block. Wraps an iframe pointing to youtube-nocookie.com
@@ -59,7 +89,7 @@ export type SerializedYouTubeNode = Spread<
  * live or the embed removed.
  */
 export class YouTubeNode extends DecoratorBlockNode {
-  __id: string;
+  __url: string;
   __options: Required<YouTubeOptions>;
 
   static getType(): string {
@@ -68,7 +98,7 @@ export class YouTubeNode extends DecoratorBlockNode {
 
   static clone(node: YouTubeNode): YouTubeNode {
     return new YouTubeNode(
-      node.__id,
+      node.__url,
       node.__options,
       node.__format,
       node.__key,
@@ -76,7 +106,11 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   static importJSON(serialized: SerializedYouTubeNode): YouTubeNode {
-    const node = $createYouTubeNode(serialized.videoID, serialized.options);
+    // `videoID` keeps pre-URL documents loading; it is never written back.
+    const url =
+      serialized.url ??
+      (serialized.videoID ? youTubeEmbedUrl(serialized.videoID) : "");
+    const node = $createYouTubeNode(url, serialized.options);
     node.setFormat(serialized.format);
     return node;
   }
@@ -84,29 +118,29 @@ export class YouTubeNode extends DecoratorBlockNode {
   exportJSON(): SerializedYouTubeNode {
     return {
       ...super.exportJSON(),
-      videoID: this.__id,
+      url: this.__url,
       options: this.__options,
     };
   }
 
   constructor(
-    id: string,
+    url: string,
     options: YouTubeOptions = {},
     format?: ElementFormatType,
     key?: NodeKey,
   ) {
     super(format, key);
-    this.__id = id;
+    this.__url = url;
     this.__options = { ...DEFAULT_OPTIONS, ...options };
   }
 
-  getId(): string {
-    return this.__id;
+  getUrl(): string {
+    return this.getLatest().__url;
   }
 
-  setId(id: string): this {
+  setUrl(url: string): this {
     const writable = this.getWritable();
-    writable.__id = id;
+    writable.__url = url;
     return writable;
   }
 
@@ -129,7 +163,7 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   getTextContent(): string {
-    return `https://www.youtube.com/watch?v=${this.__id}`;
+    return this.__url;
   }
 
   decorate(_editor: LexicalEditor, config: EditorConfig): React.ReactElement {
@@ -147,7 +181,7 @@ export class YouTubeNode extends DecoratorBlockNode {
         nodeKey={this.getKey()}
       >
         <YouTubeBlock
-          videoID={this.__id}
+          url={this.__url}
           options={this.__options}
           nodeKey={this.getKey()}
         />
@@ -156,39 +190,63 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 }
 
-function buildEmbedParams(
-  videoID: string,
+/**
+ * Apply the player options on top of the author's URL.
+ *
+ * Params the author already put in the URL win — they typed them
+ * deliberately — so this only fills in what is missing. The node's
+ * stored URL is never modified; this is render-time only.
+ */
+function buildEmbedSrc(
+  rawUrl: string,
   options: Required<YouTubeOptions>,
 ): string {
-  const params = new URLSearchParams();
-  if (options.autoplay) params.set("autoplay", "1");
-  if (options.mute) params.set("mute", "1");
-  if (options.controls === false) params.set("controls", "0");
-  if (options.loop) {
-    params.set("loop", "1");
-    // YouTube requires `playlist` to be set for a single-video loop.
-    params.set("playlist", videoID);
+  const base = toYouTubeEmbedSrc(rawUrl);
+  if (!base) return "";
+
+  let url: URL;
+  try {
+    url = new URL(base);
+  } catch {
+    // Not absolute (or otherwise unparseable) — hand it through as-is
+    // rather than guessing.
+    return base;
   }
-  if (options.start > 0) params.set("start", String(options.start));
-  return params.toString();
+
+  const setIfAbsent = (key: string, value: string) => {
+    if (!url.searchParams.has(key)) url.searchParams.set(key, value);
+  };
+
+  if (options.autoplay) setIfAbsent("autoplay", "1");
+  if (options.mute) setIfAbsent("mute", "1");
+  if (options.controls === false) setIfAbsent("controls", "0");
+  if (options.loop) {
+    setIfAbsent("loop", "1");
+    // YouTube requires `playlist` to be set for a single-video loop.
+    const id = parseYouTubeUrl(base)?.id;
+    if (id) setIfAbsent("playlist", id);
+  }
+  if (options.start > 0) setIfAbsent("start", String(options.start));
+
+  return url.toString();
 }
 
 interface YouTubeBlockProps {
-  videoID: string;
+  url: string;
   options: Required<YouTubeOptions>;
   nodeKey: NodeKey;
 }
 
-function YouTubeBlock({ videoID, options, nodeKey }: YouTubeBlockProps) {
+function YouTubeBlock({ url, options, nodeKey }: YouTubeBlockProps) {
   const [editor] = useLexicalComposerContext();
   const [open, setOpen] = React.useState(false);
 
   const handleSave = React.useCallback(
-    (data: { videoID: string; options: YouTubeOptions }) => {
+    (data: { url: string; options: YouTubeOptions }) => {
       editor.update(() => {
         const node = $getNodeByKey(nodeKey);
         if (!(node instanceof YouTubeNode)) return;
-        if (data.videoID !== node.getId()) node.setId(data.videoID);
+        if (data.url !== node.getUrl()) node.setUrl(data.url);
         node.setOptions(data.options);
       });
       setOpen(false);
@@ -204,10 +262,7 @@ function YouTubeBlock({ videoID, options, nodeKey }: YouTubeBlockProps) {
     setOpen(false);
   }, [editor, nodeKey]);
 
-  const query = buildEmbedParams(videoID, options);
-  const src = query
-    ? `https://www.youtube-nocookie.com/embed/${videoID}?${query}`
-    : `https://www.youtube-nocookie.com/embed/${videoID}`;
+  const src = buildEmbedSrc(url, options);
 
   return (
     <div className="relative group">
@@ -244,7 +299,7 @@ function YouTubeBlock({ videoID, options, nodeKey }: YouTubeBlockProps) {
       >
         <YouTubeForm
           mode="edit"
-          initialUrl={`https://www.youtube.com/watch?v=${videoID}`}
+          initialUrl={url}
           initialOptions={options}
           onSubmit={handleSave}
           onCancel={() => setOpen(false)}
@@ -255,11 +310,12 @@ function YouTubeBlock({ videoID, options, nodeKey }: YouTubeBlockProps) {
   );
 }
 
+/** `url` is stored verbatim — whatever the author entered. */
 export function $createYouTubeNode(
-  id: string,
+  url: string,
   options: YouTubeOptions = {},
 ): YouTubeNode {
-  return new YouTubeNode(id, options);
+  return new YouTubeNode(url, options);
 }
 
 export function $isYouTubeNode(
