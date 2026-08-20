@@ -201,6 +201,20 @@ export class ColumnNode extends ElementNode {
   updateDOM(): boolean {
     return false;
   }
+
+  /**
+   * A column is an independent region that holds block-level children,
+   * so it has to declare itself a shadow root.
+   *
+   * Without this, `RangeSelection.insertNodes` treats a column as an
+   * inline-only element and flattens anything block-level being inserted
+   * into it to inline content — silently dropping nodes with no inline
+   * form (images, embeds, every CMS block). Slash-inserting a gallery
+   * into a column did nothing at all.
+   */
+  isShadowRoot(): boolean {
+    return true;
+  }
 }
 
 interface CreateColumnsOptions {

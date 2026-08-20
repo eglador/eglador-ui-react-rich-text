@@ -117,8 +117,19 @@ export class NoteBlockNode extends ElementNode {
     return false;
   }
 
+  /**
+   * The body is an independent editing region that may hold block-level
+   * children, so it has to declare itself a shadow root.
+   *
+   * Without this, `RangeSelection.insertNodes` reaches its "block ancestor
+   * whose parent is not a root or shadow root" branch and treats the note
+   * as an inline-only element: it flattens whatever is being inserted to
+   * inline content and **silently drops** anything with no inline form —
+   * which is every block-level CMS node. Slash-inserting a gallery inside
+   * the body did nothing at all.
+   */
   isShadowRoot(): boolean {
-    return false;
+    return true;
   }
 
   canIndent(): false {
