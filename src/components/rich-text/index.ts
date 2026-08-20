@@ -136,7 +136,35 @@ export type {
   NewsMomentMeta,
   SerializedNewsMomentNode,
 } from "./news-moment-node";
-export { RichTextNewsMomentChrome } from "./news-moment-chrome";
+export {
+  ContextNoteNode,
+  $createContextNoteNode,
+  $createEmptyContextNoteNode,
+  $isContextNoteNode,
+  CONTEXT_NOTE_META_FIELDS,
+  CONTEXT_NOTE_DEFAULT_META,
+  CONTEXT_NOTE_SPEC,
+} from "./context-note-node";
+export type {
+  ContextNoteMeta,
+  SerializedContextNoteNode,
+} from "./context-note-node";
+export {
+  NoteBlockNode,
+  createNoteNodeClass,
+  $isNoteBlockNode,
+  getNoteHeaderElement,
+  emptyNoteMeta,
+} from "./note-block-node";
+export type {
+  NoteMeta,
+  NoteNodeClass,
+  SerializedNoteBlockNode,
+} from "./note-block-node";
+export {
+  RichTextNoteChrome,
+  RichTextNewsMomentChrome,
+} from "./note-chrome";
 export { RichTextStats } from "./stats";
 export type { RichTextStatsProps, RichTextStatsValue } from "./stats";
 export { RichTextFindReplace } from "./find-replace";

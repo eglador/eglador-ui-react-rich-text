@@ -128,7 +128,7 @@ export const CMS_BLOCK_SCHEMA: CmsBlockSpec[] = [
   },
   {
     type: "depomkacadolar",
-    title: "Depo Mu Kaç Dolar",
+    title: "Depom kaça dolar?",
     icon: icon(FrameIcon),
     keywords: ["depo", "dolar", "yakit", "yakıt"],
     fields: [

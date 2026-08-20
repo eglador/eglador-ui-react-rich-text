@@ -17,6 +17,7 @@ import { ImageComparisonNode } from "./image-comparison-node";
 import { ColumnsNode, ColumnNode } from "./columns-node";
 import { LegacyComponentNode } from "./legacy-component-node";
 import { NewsMomentNode } from "./news-moment-node";
+import { ContextNoteNode } from "./context-note-node";
 import { cmsNodes } from "./cms";
 
 /**
@@ -51,6 +52,7 @@ export const defaultNodes: Klass<LexicalNode>[] = [
   PageBreakNode,
   LegacyComponentNode,
   NewsMomentNode,
+  ContextNoteNode,
   ...cmsNodes,
 ];
 
