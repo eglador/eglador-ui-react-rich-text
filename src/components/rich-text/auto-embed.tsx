@@ -48,7 +48,9 @@ const YouTubeEmbedConfig: AppEmbedConfig = {
     const data = result.data as { start?: number } | undefined;
     editor.update(() => {
       $insertNodes([
-        $createYouTubeNode(result.id, {
+        // The pasted URL is stored verbatim; the node normalizes it to
+        // an /embed/ form only when rendering the iframe.
+        $createYouTubeNode(result.url, {
           start: data?.start,
         }),
       ]);

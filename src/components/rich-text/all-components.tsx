@@ -37,8 +37,8 @@ export interface AllComponentsSample {
   imageId: string;
   /** ID for the ID-addressed video block. */
   videoId: string;
-  /** 11-character YouTube video ID. */
-  youtubeId: string;
+  /** YouTube URL, stored on the node verbatim. */
+  youtubeUrl: string;
   audioUrl: string;
   iframeUrl: string;
   compareBeforeUrl: string;
@@ -60,7 +60,7 @@ export const ALL_COMPONENTS_DEFAULT_SAMPLE: AllComponentsSample = {
   imageUrl: "https://picsum.photos/id/1015/1200/675",
   imageId: "345457",
   videoId: "913597",
-  youtubeId: "jNQXAC9IVRw",
+  youtubeUrl: "https://www.youtube-nocookie.com/embed/jNQXAC9IVRw",
   audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
   iframeUrl:
     "https://www.openstreetmap.org/export/embed.html?bbox=28.85%2C40.98%2C29.15%2C41.12&layer=mapnik",
@@ -264,7 +264,7 @@ export function $buildAllComponentNodes(
       $para("Video — ID ile:"),
       $createVideoNode("", { videoId: sample.videoId, title: "Örnek video" }),
       $para("YouTube:"),
-      $createYouTubeNode(sample.youtubeId),
+      $createYouTubeNode(sample.youtubeUrl),
       $para("Ses dosyası:"),
       $createAudioNode(sample.audioUrl, { title: "Örnek ses kaydı" }),
       $para("Iframe (genel gömme):"),

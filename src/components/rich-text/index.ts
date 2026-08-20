@@ -12,6 +12,8 @@ export {
   $createYouTubeNode,
   $isYouTubeNode,
   parseYouTubeUrl,
+  youTubeEmbedUrl,
+  toYouTubeEmbedSrc,
 } from "./youtube-node";
 export type {
   SerializedYouTubeNode,

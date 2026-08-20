@@ -183,3 +183,21 @@ export function EmbedLinkPreview(
     );
   };
 }
+
+/** Titled pull quote (`quato2`) — a heading over an explanatory body. */
+export function TitledQuotePreview(fields: CmsFieldValues) {
+  return (
+    <blockquote className="max-w-xl border-l-4 border-zinc-300 py-1 pl-4 pr-12">
+      <div className="text-base font-semibold text-zinc-900">
+        {fields.title || (
+          <span className="font-normal text-zinc-400">Başlık girilmedi</span>
+        )}
+      </div>
+      {fields.description && (
+        <p className="mt-1 whitespace-pre-wrap text-sm italic leading-snug text-zinc-700">
+          {fields.description}
+        </p>
+      )}
+    </blockquote>
+  );
+}

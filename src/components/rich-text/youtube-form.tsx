@@ -10,7 +10,8 @@ import {
 } from "./youtube-node";
 
 export interface YouTubeFormSubmit {
-  videoID: string;
+  /** The URL exactly as typed — stored verbatim on the node. */
+  url: string;
   options: YouTubeOptions;
 }
 
@@ -58,7 +59,11 @@ export function YouTubeForm({
   const userTouchedStart = React.useRef(mode === "edit");
 
   const match = parseYouTubeUrl(url);
-  const valid = url.trim().length > 0 && match !== null;
+  // Any non-empty URL is accepted: authors paste ready-made embed URLs,
+  // which may point at a custom host or carry their own params. A URL we
+  // can't recognise only costs the auto-filled start time and a hint.
+  const valid = url.trim().length > 0;
+  const looksLikeYouTube = match !== null;
 
   // Auto-populate `start` from `?t=` in URL — only in insert mode and
   // only if the user hasn't manually set it yet.
@@ -76,12 +81,12 @@ export function YouTubeForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!match) {
-      setError("Couldn't find a YouTube video ID in this URL");
+    if (!url.trim()) {
+      setError("URL gerekli");
       return;
     }
     onSubmit({
-      videoID: match.id,
+      url: url.trim(),
       options: {
         autoplay: opts.autoplay,
         // Autoplay requires mute in modern browsers.
@@ -131,6 +136,15 @@ export function YouTubeForm({
           )}
         />
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {!error && url.trim() && !looksLikeYouTube && (
+          <p className="mt-1 text-xs text-amber-600">
+            Bu bir YouTube adresine benzemiyor — yine de olduğu gibi
+            kaydedilecek.
+          </p>
+        )}
+        <p className="mt-1 text-[10px] text-zinc-500">
+          Girdiğin adres JSON’a birebir yazılır.
+        </p>
       </Field>
 
       <Field label="Player options">
