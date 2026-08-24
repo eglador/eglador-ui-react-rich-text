@@ -234,6 +234,14 @@ export type {
   MediaLibraryState,
   MediaLibraryStatus,
 } from "./media-library-context";
+export {
+  HiddenFieldsProvider,
+  useHiddenFields,
+  useHiddenFieldsConfig,
+  hiddenFieldsFor,
+  stripHiddenFields,
+} from "./hidden-fields-context";
+export type { HiddenFieldsConfig } from "./hidden-fields-context";
 export { ImagePicker } from "./image-picker";
 export { BlockPicker, filterBlocks } from "./block-picker";
 export type { BlockPickerProps } from "./block-picker";

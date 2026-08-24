@@ -477,6 +477,25 @@ imageLibrary={async () => (await fetch("/api/medya")).json()}
 
 Omit the prop entirely and the form keeps its current behaviour: ID and URL stay editable.
 
+## Hiding fields
+
+Drop fields you do not want authors to fill in — they disappear from the block's form **and** from the serialized payload:
+
+```tsx
+<RichTextEditor
+  hiddenFields={{
+    image: ["caption", "maxWidth"],
+    "*": ["position"],           // applies to every block
+  }}
+>
+```
+
+The key is the block type (`image`, `galeri`, `newsMoment`, …) as it appears in the JSON; `*` covers all of them. A field name matches whether the block stores it flat (CMS blocks) or nested under `options` (the built-in media blocks) — you name the field, not its nesting.
+
+Stripping applies to `onChange`, `getJson()` and the output panel. `getRawJson()` stays untouched, and Lexical's own structural keys (`type`, `children`, `format`, …) are never removed even if named.
+
+A hidden field is not validated either, so hiding a required one will not block submission.
+
 ## Inline text styling (`format` bitmask)
 
 Lexical splits inline formatting across two fields on every text node:

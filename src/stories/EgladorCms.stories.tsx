@@ -131,6 +131,10 @@ export function MyEditor() {
   ),
 };
 
+/** Demonstrates `hiddenFields`: the image block loses its caption and
+ *  max-width — from the form *and* from the payload. */
+const HIDDEN_FIELDS = { image: ["caption", "maxWidth"] };
+
 export const ImageById: Story = {
   name: "Resim — ID ile (src JSON’a yazılmaz)",
   parameters: {
@@ -159,7 +163,11 @@ export const ImageById: Story = {
           </code>
         ))}
       </div>
-      <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
+      <RichTextEditor
+        resolveImageSrc={resolveImageSrc}
+        imageLibrary={IMAGE_LIBRARY}
+        hiddenFields={HIDDEN_FIELDS}
+      >
         <RichTextToolbar insertBlocks={CMS_BLOCKS} />
         <RichTextContent
           placeholder="+ → Image → sadece “Resim ID” alanını doldur"

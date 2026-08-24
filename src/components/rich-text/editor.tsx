@@ -49,6 +49,10 @@ import {
 import { withInlineTextStyles } from "./text-styles";
 import { RichTextI18nProvider, resolveMessages } from "./i18n";
 import { MediaLibraryProvider } from "./media-library-context";
+import {
+  HiddenFieldsProvider,
+  stripHiddenFields,
+} from "./hidden-fields-context";
 import type { RichTextEditorProps } from "./types";
 
 function buildInitialState(
@@ -235,6 +239,7 @@ export function RichTextEditor({
   locale,
   messages,
   imageLibrary,
+  hiddenFields,
   editorRef,
   className,
   children,
@@ -271,7 +276,9 @@ export function RichTextEditor({
     (editorState: EditorState, editor: LexicalEditor) => {
       if (!onChange) return;
       editorState.read(() => {
-        const state = editorState.toJSON();
+        // Strip first so a hidden field can't pick up a derived
+        // `css` key on the way out either.
+        const state = stripHiddenFields(editorState.toJSON(), hiddenFields);
         const json = JSON.stringify(
           styleSetting ? withInlineTextStyles(state, styleSetting) : state,
         );
@@ -281,7 +288,7 @@ export function RichTextEditor({
         onChange({ json, html, text, markdown });
       });
     },
-    [onChange, styleSetting],
+    [onChange, styleSetting, hiddenFields],
   );
 
   return (
@@ -301,9 +308,11 @@ export function RichTextEditor({
         <RichTextI18nProvider messages={strings}>
           <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
             <MediaLibraryProvider library={imageLibrary}>
-              <TextStyleProvider value={styleSetting}>
-                <PageSizeProvider>{children}</PageSizeProvider>
-              </TextStyleProvider>
+              <HiddenFieldsProvider hiddenFields={hiddenFields}>
+                <TextStyleProvider value={styleSetting}>
+                  <PageSizeProvider>{children}</PageSizeProvider>
+                </TextStyleProvider>
+              </HiddenFieldsProvider>
             </MediaLibraryProvider>
           </MediaResolverProvider>
         </RichTextI18nProvider>

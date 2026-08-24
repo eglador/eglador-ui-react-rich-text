@@ -15,6 +15,10 @@ import {
   resolveInlineTextStyles,
   useInlineTextStyles,
 } from "./text-style-context";
+import {
+  stripHiddenFields,
+  useHiddenFieldsConfig,
+} from "./hidden-fields-context";
 
 export type RichTextOutputTab = "html" | "markdown" | "json" | "text";
 
@@ -92,6 +96,7 @@ export function RichTextOutput({
 }: RichTextOutputProps) {
   const [editor] = useLexicalComposerContext();
   const editorSetting = useInlineTextStyles();
+  const hiddenFields = useHiddenFieldsConfig();
   // Undefined prop → follow the editor, so the panel shows exactly what
   // a consumer of `onChange` / `getJson()` receives.
   const styleSetting =
@@ -122,7 +127,10 @@ export function RichTextOutput({
   const display = React.useMemo(() => {
     if (tab === "json" && value.json) {
       try {
-        const parsed = JSON.parse(value.json);
+        const parsed = stripHiddenFields(
+          JSON.parse(value.json),
+          hiddenFields,
+        );
         // Derived at display time rather than in the update listener, so
         // toggling the prop doesn't re-subscribe the editor.
         return JSON.stringify(
@@ -135,7 +143,7 @@ export function RichTextOutput({
       }
     }
     return value[tab];
-  }, [tab, value, styleSetting]);
+  }, [tab, value, styleSetting, hiddenFields]);
 
   const handleCopy = async () => {
     if (!display || typeof navigator === "undefined") return;

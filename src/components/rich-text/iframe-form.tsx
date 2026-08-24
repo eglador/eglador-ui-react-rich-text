@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMessages } from "./i18n";
+import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { FrameIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -41,6 +42,7 @@ export function IframeForm({
   onRemove,
 }: IframeFormProps) {
   const t = useMessages();
+  const isHidden = useHiddenFields("iframe");
   const [src, setSrc] = React.useState(initialSrc);
   const [opts, setOpts] = React.useState<Required<IframeOptions>>(
     initialOptions,
@@ -88,26 +90,28 @@ export function IframeForm({
         )}
       </div>
 
-      <Field label={t.url}>
-        <input
-          type="url"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={mode === "insert"}
-          value={src}
-          onChange={(e) => {
-            setSrc(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder="https://www.figma.com/embed?... or https://codepen.io/..."
-          className={cn(
-            "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            error
-              ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-          )}
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      </Field>
+      {!isHidden("url") && (
+        <Field label={t.url}>
+          <input
+            type="url"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={mode === "insert"}
+            value={src}
+            onChange={(e) => {
+              setSrc(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder="https://www.figma.com/embed?... or https://codepen.io/..."
+            className={cn(
+              "w-full px-2 py-1.5 text-sm border rounded outline-none",
+              error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            )}
+          />
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        </Field>
+      )}
 
       <Field label="Title (a11y)">
         <input

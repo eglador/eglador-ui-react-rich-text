@@ -4,6 +4,7 @@ import type { MediaResolver } from "./media-resolver-context";
 import type { InlineTextStyleOptions } from "./text-styles";
 import type { RichTextLocale, RichTextMessages } from "./i18n";
 import type { MediaLibrary } from "./media-library-context";
+import type { HiddenFieldsConfig } from "./hidden-fields-context";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -73,6 +74,15 @@ export interface RichTextEditorProps
    * become read-only — the document stores the chosen ID.
    */
   imageLibrary?: MediaLibrary;
+  /**
+   * Fields to drop, keyed by block type. The `*` key applies to every
+   * block. They disappear from the block's form **and** from the
+   * serialized payload (`onChange`, `getJson()`, the output panel).
+   *
+   * A name matches whether the block stores it flat (CMS blocks) or
+   * inside `options` (the built-in media blocks).
+   */
+  hiddenFields?: HiddenFieldsConfig;
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>
