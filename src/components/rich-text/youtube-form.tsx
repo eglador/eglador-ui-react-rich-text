@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMessages } from "./i18n";
+import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { TrashIcon, YouTubeIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -53,6 +54,7 @@ export function YouTubeForm({
   onRemove,
 }: YouTubeFormProps) {
   const t = useMessages();
+  const isHidden = useHiddenFields("youtube");
   const [url, setUrl] = React.useState(initialUrl);
   const [opts, setOpts] = React.useState<Required<YouTubeOptions>>(
     initialOptions,
@@ -119,89 +121,95 @@ export function YouTubeForm({
         )}
       </div>
 
-      <Field label={t.url}>
-        <input
-          type="url"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={mode === "insert"}
-          value={url}
-          onChange={(e) => {
-            setUrl(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder="https://youtube.com/watch?v=..."
-          className={cn(
-            "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            error
-              ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-          )}
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        {!error && url.trim() && !looksLikeYouTube && (
-          <p className="mt-1 text-xs text-amber-600">
-            Bu bir YouTube adresine benzemiyor — yine de olduğu gibi
-            kaydedilecek.
-          </p>
-        )}
-        <p className="mt-1 text-[10px] text-zinc-500">
-          Girdiğin adres JSON’a birebir yazılır.
-        </p>
-      </Field>
-
-      <Field label={t.playerOptions}>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          <Toggle
-            label={t.autoplay}
-            checked={opts.autoplay}
-            onChange={(v) =>
-              setOpts((s) => ({
-                ...s,
-                autoplay: v,
-                mute: v ? true : s.mute,
-              }))
-            }
-          />
-          <Toggle
-            label={t.mute}
-            checked={opts.mute}
-            disabled={opts.autoplay}
-            hint={opts.autoplay ? t.requiredByAutoplay : undefined}
-            onChange={(v) => setOpts((s) => ({ ...s, mute: v }))}
-          />
-          <Toggle
-            label={t.loop}
-            checked={opts.loop}
-            onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
-          />
-          <Toggle
-            label={t.showControls}
-            checked={opts.controls}
-            onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
-          />
-        </div>
-      </Field>
-
-      <Field label={t.startAt}>
-        <div className="inline-flex items-center gap-2">
+      {!isHidden("url") && (
+        <Field label={t.url}>
           <input
-            type="number"
-            min={0}
-            step={1}
-            value={opts.start || ""}
+            type="url"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={mode === "insert"}
+            value={url}
             onChange={(e) => {
-              userTouchedStart.current = true;
-              setOpts((s) => ({
-                ...s,
-                start: Math.max(0, parseInt(e.target.value, 10) || 0),
-              }));
+              setUrl(e.target.value);
+              if (error) setError(null);
             }}
-            placeholder="0"
-            className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            placeholder="https://youtube.com/watch?v=..."
+            className={cn(
+              "w-full px-2 py-1.5 text-sm border rounded outline-none",
+              error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            )}
           />
-          <span className="text-xs text-zinc-500">{t.seconds}</span>
-        </div>
-      </Field>
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+          {!error && url.trim() && !looksLikeYouTube && (
+            <p className="mt-1 text-xs text-amber-600">
+              Bu bir YouTube adresine benzemiyor — yine de olduğu gibi
+              kaydedilecek.
+            </p>
+          )}
+          <p className="mt-1 text-[10px] text-zinc-500">
+            Girdiğin adres JSON’a birebir yazılır.
+          </p>
+        </Field>
+      )}
+
+      {!isHidden("playerOptions") && (
+        <Field label={t.playerOptions}>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            <Toggle
+              label={t.autoplay}
+              checked={opts.autoplay}
+              onChange={(v) =>
+                setOpts((s) => ({
+                  ...s,
+                  autoplay: v,
+                  mute: v ? true : s.mute,
+                }))
+              }
+            />
+            <Toggle
+              label={t.mute}
+              checked={opts.mute}
+              disabled={opts.autoplay}
+              hint={opts.autoplay ? t.requiredByAutoplay : undefined}
+              onChange={(v) => setOpts((s) => ({ ...s, mute: v }))}
+            />
+            <Toggle
+              label={t.loop}
+              checked={opts.loop}
+              onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
+            />
+            <Toggle
+              label={t.showControls}
+              checked={opts.controls}
+              onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
+            />
+          </div>
+        </Field>
+      )}
+
+      {!isHidden("start") && (
+        <Field label={t.startAt}>
+          <div className="inline-flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={opts.start || ""}
+              onChange={(e) => {
+                userTouchedStart.current = true;
+                setOpts((s) => ({
+                  ...s,
+                  start: Math.max(0, parseInt(e.target.value, 10) || 0),
+                }));
+              }}
+              placeholder="0"
+              className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+            <span className="text-xs text-zinc-500">{t.seconds}</span>
+          </div>
+        </Field>
+      )}
 
       <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-zinc-100">
         <button

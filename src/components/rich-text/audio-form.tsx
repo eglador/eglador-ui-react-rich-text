@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMessages } from "./i18n";
+import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { AudioLinesIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -43,6 +44,7 @@ export function AudioForm({
   onRemove,
 }: AudioFormProps) {
   const t = useMessages();
+  const isHidden = useHiddenFields("audio");
   const [src, setSrc] = React.useState(initialSrc);
   const [opts, setOpts] = React.useState<Required<AudioOptions>>(
     initialOptions,
@@ -91,83 +93,91 @@ export function AudioForm({
         )}
       </div>
 
-      <Field label={t.url}>
-        <input
-          type="url"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={mode === "insert"}
-          value={src}
-          onChange={(e) => {
-            setSrc(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder="https://cdn.example.com/audio.mp3"
-          className={cn(
-            "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            error
-              ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-          )}
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      </Field>
+      {!isHidden("url") && (
+        <Field label={t.url}>
+          <input
+            type="url"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={mode === "insert"}
+            value={src}
+            onChange={(e) => {
+              setSrc(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder="https://cdn.example.com/audio.mp3"
+            className={cn(
+              "w-full px-2 py-1.5 text-sm border rounded outline-none",
+              error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            )}
+          />
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        </Field>
+      )}
 
-      <Field label={`${t.title} (${t.optional})`}>
-        <input
-          type="text"
-          value={opts.title}
-          onChange={(e) => setOpts((s) => ({ ...s, title: e.target.value }))}
-          placeholder="Episode title, track name, ..."
-          className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-      </Field>
+      {!isHidden("title") && (
+        <Field label={`${t.title} (${t.optional})`}>
+          <input
+            type="text"
+            value={opts.title}
+            onChange={(e) => setOpts((s) => ({ ...s, title: e.target.value }))}
+            placeholder="Episode title, track name, ..."
+            className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </Field>
+      )}
 
-      <Field label={t.playerOptions}>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          <Toggle
-            label={t.autoplay}
-            checked={opts.autoplay}
-            onChange={(v) =>
-              setOpts((s) => ({
-                ...s,
-                autoplay: v,
-                muted: v ? true : s.muted,
-              }))
+      {!isHidden("playerOptions") && (
+        <Field label={t.playerOptions}>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            <Toggle
+              label={t.autoplay}
+              checked={opts.autoplay}
+              onChange={(v) =>
+                setOpts((s) => ({
+                  ...s,
+                  autoplay: v,
+                  muted: v ? true : s.muted,
+                }))
+              }
+            />
+            <Toggle
+              label={t.mute}
+              checked={opts.muted}
+              disabled={opts.autoplay}
+              hint={opts.autoplay ? t.requiredByAutoplay : undefined}
+              onChange={(v) => setOpts((s) => ({ ...s, muted: v }))}
+            />
+            <Toggle
+              label={t.loop}
+              checked={opts.loop}
+              onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
+            />
+            <Toggle
+              label={t.showControls}
+              checked={opts.controls}
+              onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
+            />
+          </div>
+        </Field>
+      )}
+
+      {!isHidden("preload") && (
+        <Field label={t.preload}>
+          <select
+            value={opts.preload}
+            onChange={(e) =>
+              setOpts((s) => ({ ...s, preload: e.target.value as AudioPreload }))
             }
-          />
-          <Toggle
-            label={t.mute}
-            checked={opts.muted}
-            disabled={opts.autoplay}
-            hint={opts.autoplay ? t.requiredByAutoplay : undefined}
-            onChange={(v) => setOpts((s) => ({ ...s, muted: v }))}
-          />
-          <Toggle
-            label={t.loop}
-            checked={opts.loop}
-            onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
-          />
-          <Toggle
-            label={t.showControls}
-            checked={opts.controls}
-            onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
-          />
-        </div>
-      </Field>
-
-      <Field label={t.preload}>
-        <select
-          value={opts.preload}
-          onChange={(e) =>
-            setOpts((s) => ({ ...s, preload: e.target.value as AudioPreload }))
-          }
-          className="w-full px-2 py-1.5 text-xs border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-        >
-          <option value="none">None — load on play</option>
-          <option value="metadata">Metadata — duration only (default)</option>
-          <option value="auto">Auto — full file</option>
-        </select>
-      </Field>
+            className="w-full px-2 py-1.5 text-xs border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+          >
+            <option value="none">None — load on play</option>
+            <option value="metadata">Metadata — duration only (default)</option>
+            <option value="auto">Auto — full file</option>
+          </select>
+        </Field>
+      )}
 
       <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-zinc-100">
         <button

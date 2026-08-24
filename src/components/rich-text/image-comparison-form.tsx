@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMessages } from "./i18n";
+import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { SplitViewIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -55,6 +56,7 @@ export function ImageComparisonForm({
   onRemove,
 }: ImageComparisonFormProps) {
   const t = useMessages();
+  const isHidden = useHiddenFields("image-comparison");
   const [beforeSrc, setBeforeSrc] = React.useState(initialBeforeSrc);
   const [afterSrc, setAfterSrc] = React.useState(initialAfterSrc);
   const [opts, setOpts] = React.useState<Required<ImageComparisonOptions>>(
@@ -179,24 +181,26 @@ export function ImageComparisonForm({
         </select>
       </Field>
 
-      <Field label={t.aspectRatio}>
-        <select
-          value={opts.aspectRatio}
-          onChange={(e) =>
-            setOpts((s) => ({
-              ...s,
-              aspectRatio: e.target.value as ComparisonAspectRatio,
-            }))
-          }
-          className="w-full px-2 py-1.5 text-xs border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-        >
-          <option value="16:9">16:9 — widescreen (default)</option>
-          <option value="4:3">4:3 — classic</option>
-          <option value="1:1">1:1 — square</option>
-          <option value="9:16">9:16 — portrait / mobile</option>
-          <option value="custom">Custom — fixed height in px</option>
-        </select>
-      </Field>
+      {!isHidden("aspectRatio") && (
+        <Field label={t.aspectRatio}>
+          <select
+            value={opts.aspectRatio}
+            onChange={(e) =>
+              setOpts((s) => ({
+                ...s,
+                aspectRatio: e.target.value as ComparisonAspectRatio,
+              }))
+            }
+            className="w-full px-2 py-1.5 text-xs border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+          >
+            <option value="16:9">16:9 — widescreen (default)</option>
+            <option value="4:3">4:3 — classic</option>
+            <option value="1:1">1:1 — square</option>
+            <option value="9:16">9:16 — portrait / mobile</option>
+            <option value="custom">Custom — fixed height in px</option>
+          </select>
+        </Field>
+      )}
 
       {isCustomAspect && (
         <Field label="Height">

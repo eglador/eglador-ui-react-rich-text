@@ -8,6 +8,7 @@ import { useResolvedSrc } from "./media-resolver-context";
 import { useMediaLibrary } from "./media-library-context";
 import { ImagePicker } from "./image-picker";
 import { useMessages } from "./i18n";
+import { useHiddenFields } from "./hidden-fields-context";
 import type { ImageOptions } from "./image-node";
 
 export interface ImageFormSubmit {
@@ -49,6 +50,7 @@ export function ImageForm({
   );
   const [error, setError] = React.useState<string | null>(null);
   const t = useMessages();
+  const isHidden = useHiddenFields("image");
   const { configured: hasLibrary } = useMediaLibrary();
 
   const imageId = opts.imageId.trim();
@@ -109,107 +111,117 @@ export function ImageForm({
         </Field>
       )}
 
-      <Field label={t.imageId}>
-        <input
-          type="text"
-          // With a library configured the ID comes from the picker, so
-          // the field is a read-only readout rather than an input.
-          readOnly={hasLibrary}
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={mode === "insert" && !hasLibrary}
-          value={opts.imageId}
-          onChange={(e) => {
-            setOpts((s) => ({ ...s, imageId: e.target.value }));
-            if (error) setError(null);
-          }}
-          placeholder="345456"
-          className={cn(
-            "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            hasLibrary
-              ? "border-zinc-200 bg-zinc-50 text-zinc-500"
-              : error
-                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-          )}
-        />
-        <p className="mt-1 text-[10px] text-zinc-500">
-          {byId ? t.urlNotStoredHint : t.urlDisabledHint}
-        </p>
-      </Field>
-
-      <Field label={byId ? t.resolvedUrl : t.url}>
-        <input
-          type={byId || hasLibrary ? "text" : "url"}
-          // The URL is derived, never authored, once images come from a
-          // library — it isn't stored on the node either way.
-          readOnly={byId || hasLibrary}
-          value={byId ? (resolved.src ?? "") : src}
-          onChange={(e) => {
-            setSrc(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder={
-            byId
-              ? resolved.status === "loading"
-                ? t.resolving
-                : t.notFoundForId
-              : "https://cdn.example.com/image.jpg"
-          }
-          className={cn(
-            "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            byId || hasLibrary
-              ? "border-zinc-200 bg-zinc-50 text-zinc-500 cursor-not-allowed"
-              : error
-                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
-          )}
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      </Field>
-
-      <Field label={t.altText}>
-        <input
-          type="text"
-          value={opts.alt}
-          onChange={(e) => setOpts((s) => ({ ...s, alt: e.target.value }))}
-          placeholder={t.altTextHint}
-          className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-      </Field>
-
-      <Field label={`${t.caption} (${t.optional})`}>
-        <input
-          type="text"
-          value={opts.caption}
-          onChange={(e) =>
-            setOpts((s) => ({ ...s, caption: e.target.value }))
-          }
-          placeholder={t.captionHint}
-          className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-      </Field>
-
-      <Field label={t.maxWidth}>
-        <div className="inline-flex items-center gap-2">
+      {!isHidden("imageId") && (
+        <Field label={t.imageId}>
           <input
-            type="number"
-            min={0}
-            step={10}
-            value={opts.maxWidth || ""}
-            onChange={(e) =>
-              setOpts((s) => ({
-                ...s,
-                maxWidth: Math.max(0, parseInt(e.target.value, 10) || 0),
-              }))
-            }
-            placeholder={t.auto}
-            className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            type="text"
+            // With a library configured the ID comes from the picker, so
+            // the field is a read-only readout rather than an input.
+            readOnly={hasLibrary}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={mode === "insert" && !hasLibrary}
+            value={opts.imageId}
+            onChange={(e) => {
+              setOpts((s) => ({ ...s, imageId: e.target.value }));
+              if (error) setError(null);
+            }}
+            placeholder="345456"
+            className={cn(
+              "w-full px-2 py-1.5 text-sm border rounded outline-none",
+              hasLibrary
+                ? "border-zinc-200 bg-zinc-50 text-zinc-500"
+                : error
+                  ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            )}
           />
-          <span className="text-xs text-zinc-500">
-            px ({opts.maxWidth ? t.fixed : t.responsive})
-          </span>
-        </div>
-      </Field>
+          <p className="mt-1 text-[10px] text-zinc-500">
+            {byId ? t.urlNotStoredHint : t.urlDisabledHint}
+          </p>
+        </Field>
+      )}
+
+      {!isHidden("url") && (
+        <Field label={byId ? t.resolvedUrl : t.url}>
+          <input
+            type={byId || hasLibrary ? "text" : "url"}
+            // The URL is derived, never authored, once images come from a
+            // library — it isn't stored on the node either way.
+            readOnly={byId || hasLibrary}
+            value={byId ? (resolved.src ?? "") : src}
+            onChange={(e) => {
+              setSrc(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder={
+              byId
+                ? resolved.status === "loading"
+                  ? t.resolving
+                  : t.notFoundForId
+                : "https://cdn.example.com/image.jpg"
+            }
+            className={cn(
+              "w-full px-2 py-1.5 text-sm border rounded outline-none",
+              byId || hasLibrary
+                ? "border-zinc-200 bg-zinc-50 text-zinc-500 cursor-not-allowed"
+                : error
+                  ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            )}
+          />
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        </Field>
+      )}
+
+      {!isHidden("alt") && (
+        <Field label={t.altText}>
+          <input
+            type="text"
+            value={opts.alt}
+            onChange={(e) => setOpts((s) => ({ ...s, alt: e.target.value }))}
+            placeholder={t.altTextHint}
+            className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </Field>
+      )}
+
+      {!isHidden("caption") && (
+        <Field label={`${t.caption} (${t.optional})`}>
+          <input
+            type="text"
+            value={opts.caption}
+            onChange={(e) =>
+              setOpts((s) => ({ ...s, caption: e.target.value }))
+            }
+            placeholder={t.captionHint}
+            className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </Field>
+      )}
+
+      {!isHidden("maxWidth") && (
+        <Field label={t.maxWidth}>
+          <div className="inline-flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              step={10}
+              value={opts.maxWidth || ""}
+              onChange={(e) =>
+                setOpts((s) => ({
+                  ...s,
+                  maxWidth: Math.max(0, parseInt(e.target.value, 10) || 0),
+                }))
+              }
+              placeholder={t.auto}
+              className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+            <span className="text-xs text-zinc-500">
+              px ({opts.maxWidth ? t.fixed : t.responsive})
+            </span>
+          </div>
+        </Field>
+      )}
 
       <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-zinc-100">
         <button

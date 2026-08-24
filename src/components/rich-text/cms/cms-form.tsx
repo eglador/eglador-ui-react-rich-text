@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMessages } from "../i18n";
+import { useHiddenFields } from "../hidden-fields-context";
 import { cn } from "../../../lib/utils";
 import { TrashIcon } from "../../../lib/icons";
 import { Field } from "../form-fields";
@@ -51,11 +52,18 @@ export function CmsForm({
   onRemove,
 }: CmsFormProps) {
   const t = useMessages();
+  const isHidden = useHiddenFields(spec.type);
+  // A hidden field is neither rendered nor submitted, so it must not
+  // block validation either.
+  const visibleFields = React.useMemo(
+    () => spec.fields.filter((f) => !isHidden(f.name)),
+    [spec.fields, isHidden],
+  );
   const [values, setValues] = React.useState<CmsFieldValues>(
     () => initialValues ?? initialCmsValues(spec),
   );
 
-  const valid = spec.fields.every(
+  const valid = visibleFields.every(
     (field) => field.optional || values[field.name]?.trim(),
   );
 
@@ -71,7 +79,7 @@ export function CmsForm({
     if (!valid) return;
 
     const next: CmsFieldValues = {};
-    for (const field of spec.fields) {
+    for (const field of visibleFields) {
       const raw = values[field.name]?.trim() ?? "";
       if (!raw && field.optional) continue;
       next[field.name] = raw;
@@ -98,7 +106,7 @@ export function CmsForm({
         )}
       </div>
 
-      {spec.fields.map((field, index) => (
+      {visibleFields.map((field, index) => (
         <Field
           key={field.name}
           label={field.optional ? `${field.label} (opsiyonel)` : field.label}

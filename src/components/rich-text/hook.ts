@@ -32,6 +32,10 @@ import {
   type InlineTextStyleOptions,
 } from "./text-styles";
 import { useInlineTextStyles } from "./text-style-context";
+import {
+  stripHiddenFields,
+  useHiddenFieldsConfig,
+} from "./hidden-fields-context";
 import { $isLegacyComponentNode } from "./legacy-component-node";
 import {
   isLegacyShortcodeLine,
@@ -50,7 +54,8 @@ export type RichTextEditorApi = {
   /** `getJson()` with the `css` key forced on, whatever the editor's
    *  `inlineTextStyles` setting is. */
   getStyledJson: (options?: InlineTextStyleOptions) => string;
-  /** The untouched Lexical shape — no derived `css` key. */
+  /** The untouched Lexical shape — no derived `css` key and no
+   *  `hiddenFields` stripping. */
   getRawJson: () => string;
   /** Get current state as HTML */
   getHtml: () => string;
@@ -101,13 +106,17 @@ export type RichTextEditorApi = {
 export function useRichTextEditor(): RichTextEditorApi {
   const [editor] = useLexicalComposerContext();
   const styleSetting = useInlineTextStyles();
+  const hiddenFields = useHiddenFieldsConfig();
 
   return React.useMemo<RichTextEditorApi>(
     () => ({
       editor,
 
       getJson: () => {
-        const state = editor.getEditorState().toJSON();
+        const state = stripHiddenFields(
+          editor.getEditorState().toJSON(),
+          hiddenFields,
+        );
         return JSON.stringify(
           styleSetting ? withInlineTextStyles(state, styleSetting) : state,
         );
@@ -115,7 +124,10 @@ export function useRichTextEditor(): RichTextEditorApi {
 
       getStyledJson: (options?: InlineTextStyleOptions) =>
         JSON.stringify(
-          withInlineTextStyles(editor.getEditorState().toJSON(), options),
+          withInlineTextStyles(
+            stripHiddenFields(editor.getEditorState().toJSON(), hiddenFields),
+            options,
+          ),
         ),
 
       getRawJson: () => JSON.stringify(editor.getEditorState().toJSON()),
@@ -248,6 +260,6 @@ export function useRichTextEditor(): RichTextEditorApi {
         });
       },
     }),
-    [editor, styleSetting],
+    [editor, styleSetting, hiddenFields],
   );
 }
