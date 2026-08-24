@@ -85,7 +85,10 @@ export class ImageNode extends DecoratorBlockNode {
   exportJSON(): SerializedImageNode {
     const base = {
       ...super.exportJSON(),
-      options: this.__options,
+      // Copy, never the live object: `exportJSON()` output is handed
+      // to callers who may transform it, and sharing this reference
+      // let them edit the node's own state outside an update.
+      options: { ...this.__options },
     };
     return this.__options.imageId ? base : { ...base, src: this.__src };
   }

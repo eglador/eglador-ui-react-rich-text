@@ -87,7 +87,10 @@ export class IframeNode extends DecoratorBlockNode {
     return {
       ...super.exportJSON(),
       src: this.__src,
-      options: this.__options,
+      // Copy, never the live object: `exportJSON()` output is handed
+      // to callers who may transform it, and sharing this reference
+      // let them edit the node's own state outside an update.
+      options: { ...this.__options },
     };
   }
 

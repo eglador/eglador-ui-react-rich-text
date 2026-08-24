@@ -56,8 +56,12 @@ export function YouTubeForm({
   const t = useMessages();
   const isHidden = useHiddenFields("youtube");
   const [url, setUrl] = React.useState(initialUrl);
+  // Merge over the defaults rather than trusting `initialOptions` to be
+  // complete: a payload saved with `hiddenFields` (or by an older
+  // version) can be missing keys, and the submit handler calls
+  // `.trim()` on them.
   const [opts, setOpts] = React.useState<Required<YouTubeOptions>>(
-    initialOptions,
+    () => ({ ...YOUTUBE_DEFAULT_OPTIONS, ...initialOptions }),
   );
   const [error, setError] = React.useState<string | null>(null);
   const userTouchedStart = React.useRef(mode === "edit");

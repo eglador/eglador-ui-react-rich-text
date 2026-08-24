@@ -59,8 +59,12 @@ export function ImageComparisonForm({
   const isHidden = useHiddenFields("image-comparison");
   const [beforeSrc, setBeforeSrc] = React.useState(initialBeforeSrc);
   const [afterSrc, setAfterSrc] = React.useState(initialAfterSrc);
+  // Merge over the defaults rather than trusting `initialOptions` to be
+  // complete: a payload saved with `hiddenFields` (or by an older
+  // version) can be missing keys, and the submit handler calls
+  // `.trim()` on them.
   const [opts, setOpts] = React.useState<Required<ImageComparisonOptions>>(
-    initialOptions,
+    () => ({ ...IMAGE_COMPARISON_DEFAULT_OPTIONS, ...initialOptions }),
   );
   const [error, setError] = React.useState<string | null>(null);
 
