@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { TrashIcon, YouTubeIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -51,6 +52,7 @@ export function YouTubeForm({
   onCancel,
   onRemove,
 }: YouTubeFormProps) {
+  const t = useMessages();
   const [url, setUrl] = React.useState(initialUrl);
   const [opts, setOpts] = React.useState<Required<YouTubeOptions>>(
     initialOptions,
@@ -82,7 +84,7 @@ export function YouTubeForm({
     e.preventDefault();
     e.stopPropagation();
     if (!url.trim()) {
-      setError("URL gerekli");
+      setError(t.urlRequired);
       return;
     }
     onSubmit({
@@ -112,12 +114,12 @@ export function YouTubeForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Delete
+            {t.delete}
           </button>
         )}
       </div>
 
-      <Field label="URL">
+      <Field label={t.url}>
         <input
           type="url"
           // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -147,10 +149,10 @@ export function YouTubeForm({
         </p>
       </Field>
 
-      <Field label="Player options">
+      <Field label={t.playerOptions}>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <Toggle
-            label="Autoplay"
+            label={t.autoplay}
             checked={opts.autoplay}
             onChange={(v) =>
               setOpts((s) => ({
@@ -161,26 +163,26 @@ export function YouTubeForm({
             }
           />
           <Toggle
-            label="Mute"
+            label={t.mute}
             checked={opts.mute}
             disabled={opts.autoplay}
-            hint={opts.autoplay ? "required by autoplay" : undefined}
+            hint={opts.autoplay ? t.requiredByAutoplay : undefined}
             onChange={(v) => setOpts((s) => ({ ...s, mute: v }))}
           />
           <Toggle
-            label="Loop"
+            label={t.loop}
             checked={opts.loop}
             onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
           />
           <Toggle
-            label="Show controls"
+            label={t.showControls}
             checked={opts.controls}
             onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
           />
         </div>
       </Field>
 
-      <Field label="Start at">
+      <Field label={t.startAt}>
         <div className="inline-flex items-center gap-2">
           <input
             type="number"
@@ -197,7 +199,7 @@ export function YouTubeForm({
             placeholder="0"
             className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
-          <span className="text-xs text-zinc-500">seconds</span>
+          <span className="text-xs text-zinc-500">{t.seconds}</span>
         </div>
       </Field>
 
@@ -207,7 +209,7 @@ export function YouTubeForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -218,7 +220,7 @@ export function YouTubeForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Embed" : "Save"}
+          {mode === "insert" ? t.embed : t.save}
         </button>
       </div>
     </form>

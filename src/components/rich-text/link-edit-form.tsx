@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelection,
@@ -76,6 +77,7 @@ export function LinkEditForm({
   showCancel = true,
   onClose,
 }: LinkEditFormProps) {
+  const t = useMessages();
   const [editor] = useLexicalComposerContext();
   const [state, setState] = React.useState<LinkState>(() =>
     readSelectionLink(editor),
@@ -109,7 +111,7 @@ export function LinkEditForm({
       }}
       className="space-y-3"
     >
-      <Field label="URL">
+      <Field label={t.url}>
         <input
           type="url"
           // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -175,7 +177,7 @@ export function LinkEditForm({
             onClick={remove}
             className="text-xs text-red-600 hover:underline cursor-pointer"
           >
-            Remove link
+            {t.removeLink}
           </button>
         ) : (
           <span />
@@ -199,7 +201,7 @@ export function LinkEditForm({
               "disabled:bg-zinc-300 disabled:cursor-not-allowed",
             )}
           >
-            {state.hasExisting ? "Update" : "Add"}
+            {state.hasExisting ? t.update : t.add}
           </button>
         </div>
       </div>

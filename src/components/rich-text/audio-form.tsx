@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { AudioLinesIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -41,6 +42,7 @@ export function AudioForm({
   onCancel,
   onRemove,
 }: AudioFormProps) {
+  const t = useMessages();
   const [src, setSrc] = React.useState(initialSrc);
   const [opts, setOpts] = React.useState<Required<AudioOptions>>(
     initialOptions,
@@ -84,12 +86,12 @@ export function AudioForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Delete
+            {t.delete}
           </button>
         )}
       </div>
 
-      <Field label="URL">
+      <Field label={t.url}>
         <input
           type="url"
           // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -110,7 +112,7 @@ export function AudioForm({
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </Field>
 
-      <Field label="Title (optional)">
+      <Field label={`${t.title} (${t.optional})`}>
         <input
           type="text"
           value={opts.title}
@@ -120,10 +122,10 @@ export function AudioForm({
         />
       </Field>
 
-      <Field label="Player options">
+      <Field label={t.playerOptions}>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <Toggle
-            label="Autoplay"
+            label={t.autoplay}
             checked={opts.autoplay}
             onChange={(v) =>
               setOpts((s) => ({
@@ -134,26 +136,26 @@ export function AudioForm({
             }
           />
           <Toggle
-            label="Muted"
+            label={t.mute}
             checked={opts.muted}
             disabled={opts.autoplay}
-            hint={opts.autoplay ? "required by autoplay" : undefined}
+            hint={opts.autoplay ? t.requiredByAutoplay : undefined}
             onChange={(v) => setOpts((s) => ({ ...s, muted: v }))}
           />
           <Toggle
-            label="Loop"
+            label={t.loop}
             checked={opts.loop}
             onChange={(v) => setOpts((s) => ({ ...s, loop: v }))}
           />
           <Toggle
-            label="Show controls"
+            label={t.showControls}
             checked={opts.controls}
             onChange={(v) => setOpts((s) => ({ ...s, controls: v }))}
           />
         </div>
       </Field>
 
-      <Field label="Preload">
+      <Field label={t.preload}>
         <select
           value={opts.preload}
           onChange={(e) =>
@@ -173,7 +175,7 @@ export function AudioForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -184,7 +186,7 @@ export function AudioForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Embed" : "Save"}
+          {mode === "insert" ? t.embed : t.save}
         </button>
       </div>
     </form>

@@ -5,6 +5,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import { PlusIcon } from "../../lib/icons";
+import { BlockPicker } from "./block-picker";
+import { useMessages } from "./i18n";
 import {
   type BlockSpec,
   defaultBlocks,
@@ -38,6 +40,7 @@ export function InsertMenu({
   blocks = defaultBlocks,
 }: InsertMenuProps) {
   const [editor] = useLexicalComposerContext();
+  const t = useMessages();
   const [open, setOpen] = React.useState(false);
   const [activeKey, setActiveKey] = React.useState<string | null>(null);
 
@@ -85,8 +88,8 @@ export function InsertMenu({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setOpen((o) => !o)}
-          title="Insert"
-          aria-label="Insert"
+          title={t.insertBlock}
+          aria-label={t.insertBlock}
           aria-haspopup="menu"
           aria-expanded={open}
           className={cn(
@@ -104,20 +107,12 @@ export function InsertMenu({
       {activeSpec && activeSpec.renderForm ? (
         activeSpec.renderForm(editor, { onComplete: close, onCancel: back })
       ) : (
-        <div className="w-56 p-1 max-h-80 overflow-y-auto">
-          {insertBlocks.map((spec) => (
-            <button
-              key={spec.key}
-              type="button"
-              role="menuitem"
-              onClick={() => handleSelect(spec)}
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-zinc-700 hover:bg-zinc-100 cursor-pointer"
-            >
-              <span className="text-zinc-500">{spec.icon}</span>
-              <span className="truncate">{spec.label}</span>
-            </button>
-          ))}
-        </div>
+        <BlockPicker
+          blocks={insertBlocks}
+          onSelect={handleSelect}
+          searchPlaceholder={t.searchBlocks}
+          emptyLabel={t.noBlocksFound}
+        />
       )}
     </Popover>
   );

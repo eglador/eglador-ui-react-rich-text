@@ -5,6 +5,9 @@ import { cn } from "../../lib/utils";
 import { ImageIcon, TrashIcon } from "../../lib/icons";
 import { Field } from "./form-fields";
 import { useResolvedSrc } from "./media-resolver-context";
+import { useMediaLibrary } from "./media-library-context";
+import { ImagePicker } from "./image-picker";
+import { useMessages } from "./i18n";
 import type { ImageOptions } from "./image-node";
 
 export interface ImageFormSubmit {
@@ -45,6 +48,8 @@ export function ImageForm({
     initialOptions,
   );
   const [error, setError] = React.useState<string | null>(null);
+  const t = useMessages();
+  const { configured: hasLibrary } = useMediaLibrary();
 
   const imageId = opts.imageId.trim();
   const byId = imageId.length > 0;
@@ -57,7 +62,7 @@ export function ImageForm({
     e.preventDefault();
     e.stopPropagation();
     if (!valid) {
-      setError("Resim ID veya URL gerekli");
+      setError(t.idOrUrlRequired);
       return;
     }
     onSubmit({
@@ -78,7 +83,7 @@ export function ImageForm({
       <div className="flex items-center justify-between mb-3">
         <div className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-900">
           <ImageIcon className="size-3.5 text-zinc-700" />
-          {mode === "insert" ? "Embed image" : "Image"}
+          {mode === "insert" ? t.insertImage : t.imageBlock}
         </div>
         {mode === "edit" && onRemove && (
           <button
@@ -87,16 +92,31 @@ export function ImageForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Delete
+            {t.delete}
           </button>
         )}
       </div>
 
-      <Field label="Resim ID">
+      {hasLibrary && (
+        <Field label={t.chooseImage}>
+          <ImagePicker
+            value={opts.imageId}
+            onSelect={(id) => {
+              setOpts((s) => ({ ...s, imageId: id }));
+              if (error) setError(null);
+            }}
+          />
+        </Field>
+      )}
+
+      <Field label={t.imageId}>
         <input
           type="text"
+          // With a library configured the ID comes from the picker, so
+          // the field is a read-only readout rather than an input.
+          readOnly={hasLibrary}
           // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={mode === "insert"}
+          autoFocus={mode === "insert" && !hasLibrary}
           value={opts.imageId}
           onChange={(e) => {
             setOpts((s) => ({ ...s, imageId: e.target.value }));
@@ -105,22 +125,24 @@ export function ImageForm({
           placeholder="345456"
           className={cn(
             "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            error
-              ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+            hasLibrary
+              ? "border-zinc-200 bg-zinc-50 text-zinc-500"
+              : error
+                ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                : "border-zinc-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
           )}
         />
         <p className="mt-1 text-[10px] text-zinc-500">
-          {byId
-            ? "URL belgeye kaydedilmez — önizleme ID’den çözülür."
-            : "ID girersen URL alanı devre dışı kalır."}
+          {byId ? t.urlNotStoredHint : t.urlDisabledHint}
         </p>
       </Field>
 
-      <Field label={byId ? "Çözümlenen URL" : "URL"}>
+      <Field label={byId ? t.resolvedUrl : t.url}>
         <input
-          type={byId ? "text" : "url"}
-          readOnly={byId}
+          type={byId || hasLibrary ? "text" : "url"}
+          // The URL is derived, never authored, once images come from a
+          // library — it isn't stored on the node either way.
+          readOnly={byId || hasLibrary}
           value={byId ? (resolved.src ?? "") : src}
           onChange={(e) => {
             setSrc(e.target.value);
@@ -129,13 +151,13 @@ export function ImageForm({
           placeholder={
             byId
               ? resolved.status === "loading"
-                ? "Çözümleniyor…"
-                : "Bu ID için görsel bulunamadı"
+                ? t.resolving
+                : t.notFoundForId
               : "https://cdn.example.com/image.jpg"
           }
           className={cn(
             "w-full px-2 py-1.5 text-sm border rounded outline-none",
-            byId
+            byId || hasLibrary
               ? "border-zinc-200 bg-zinc-50 text-zinc-500 cursor-not-allowed"
               : error
                 ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
@@ -145,29 +167,29 @@ export function ImageForm({
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </Field>
 
-      <Field label="Alt text">
+      <Field label={t.altText}>
         <input
           type="text"
           value={opts.alt}
           onChange={(e) => setOpts((s) => ({ ...s, alt: e.target.value }))}
-          placeholder="Describe the image for screen readers"
+          placeholder={t.altTextHint}
           className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
       </Field>
 
-      <Field label="Caption (optional)">
+      <Field label={`${t.caption} (${t.optional})`}>
         <input
           type="text"
           value={opts.caption}
           onChange={(e) =>
             setOpts((s) => ({ ...s, caption: e.target.value }))
           }
-          placeholder="Shown below the image"
+          placeholder={t.captionHint}
           className="w-full px-2 py-1.5 text-sm border border-zinc-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
       </Field>
 
-      <Field label="Max width">
+      <Field label={t.maxWidth}>
         <div className="inline-flex items-center gap-2">
           <input
             type="number"
@@ -180,11 +202,11 @@ export function ImageForm({
                 maxWidth: Math.max(0, parseInt(e.target.value, 10) || 0),
               }))
             }
-            placeholder="auto"
+            placeholder={t.auto}
             className="w-20 px-2 py-1 text-xs font-mono border border-zinc-300 rounded text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
           <span className="text-xs text-zinc-500">
-            px ({opts.maxWidth ? "fixed" : "responsive / natural"})
+            px ({opts.maxWidth ? t.fixed : t.responsive})
           </span>
         </div>
       </Field>
@@ -195,7 +217,7 @@ export function ImageForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -206,7 +228,7 @@ export function ImageForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Embed" : "Save"}
+          {mode === "insert" ? t.embed : t.save}
         </button>
       </div>
     </form>

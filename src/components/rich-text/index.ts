@@ -214,6 +214,29 @@ export type {
 } from "./text-styles";
 export { TextStyleProvider, useInlineTextStyles, resolveInlineTextStyles } from "./text-style-context";
 export type { InlineTextStyleSetting } from "./text-style-context";
+export {
+  RichTextI18nProvider,
+  useMessages,
+  resolveMessages,
+  trMessages,
+  enMessages,
+  LOCALE_MESSAGES,
+  DEFAULT_LOCALE,
+} from "./i18n";
+export type { RichTextMessages, RichTextLocale } from "./i18n";
+export {
+  MediaLibraryProvider,
+  useMediaLibrary,
+} from "./media-library-context";
+export type {
+  MediaLibrary,
+  MediaLibraryItem,
+  MediaLibraryState,
+  MediaLibraryStatus,
+} from "./media-library-context";
+export { ImagePicker } from "./image-picker";
+export { BlockPicker, filterBlocks } from "./block-picker";
+export type { BlockPickerProps } from "./block-picker";
 export { useRichTextEditor } from "./hook";
 export { defaultTheme } from "./theme";
 export { defaultNodes } from "./nodes";

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { Field } from "./form-fields";
 import type { LegacyComponentSpec } from "./legacy-schema";
@@ -26,6 +27,7 @@ export function LegacyComponentForm({
   onSubmit,
   onCancel,
 }: LegacyComponentFormProps) {
+  const t = useMessages();
   const [values, setValues] = React.useState<Record<string, string>>(() =>
     Object.fromEntries(
       spec.fields.map((field) => [field.name, field.options?.[0]?.value ?? ""]),
@@ -107,7 +109,7 @@ export function LegacyComponentForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -118,7 +120,7 @@ export function LegacyComponentForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          Embed
+          {t.embed}
         </button>
       </div>
     </form>
