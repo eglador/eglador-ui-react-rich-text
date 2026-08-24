@@ -47,6 +47,8 @@ import {
   resolveInlineTextStyles,
 } from "./text-style-context";
 import { withInlineTextStyles } from "./text-styles";
+import { RichTextI18nProvider, resolveMessages } from "./i18n";
+import { MediaLibraryProvider } from "./media-library-context";
 import type { RichTextEditorProps } from "./types";
 
 function buildInitialState(
@@ -230,6 +232,9 @@ export function RichTextEditor({
   charset = "UTF-16",
   resolveImageSrc,
   inlineTextStyles,
+  locale,
+  messages,
+  imageLibrary,
   editorRef,
   className,
   children,
@@ -238,6 +243,10 @@ export function RichTextEditor({
   const styleSetting = React.useMemo(
     () => resolveInlineTextStyles(inlineTextStyles),
     [inlineTextStyles],
+  );
+  const strings = React.useMemo(
+    () => resolveMessages(locale, messages),
+    [locale, messages],
   );
   const initialConfig = React.useMemo<InitialConfigType>(
     () => ({
@@ -289,11 +298,15 @@ export function RichTextEditor({
             Lexical renders them via createPortal from inside
             RichTextPlugin, and portals inherit context from the
             component tree rather than the DOM tree. */}
-        <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
-          <TextStyleProvider value={styleSetting}>
-            <PageSizeProvider>{children}</PageSizeProvider>
-          </TextStyleProvider>
-        </MediaResolverProvider>
+        <RichTextI18nProvider messages={strings}>
+          <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
+            <MediaLibraryProvider library={imageLibrary}>
+              <TextStyleProvider value={styleSetting}>
+                <PageSizeProvider>{children}</PageSizeProvider>
+              </TextStyleProvider>
+            </MediaLibraryProvider>
+          </MediaResolverProvider>
+        </RichTextI18nProvider>
         <HistoryPlugin />
         <ListPlugin />
         <CheckListPlugin />

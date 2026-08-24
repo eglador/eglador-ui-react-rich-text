@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 
 export type DateTimeFormat =
@@ -85,6 +86,7 @@ export function DateTimeForm({
   onSubmit,
   onCancel,
 }: DateTimeFormProps) {
+  const t = useMessages();
   const [format, setFormat] = React.useState<DateTimeFormat>(initialFormat);
   const [now, setNow] = React.useState(() => new Date());
 
@@ -144,13 +146,13 @@ export function DateTimeForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs font-medium rounded text-zinc-600 hover:bg-zinc-100 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
           className="px-3 py-1.5 text-xs font-medium rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
         >
-          Insert
+          {t.insert}
         </button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "../i18n";
 import { cn } from "../../../lib/utils";
 import { TrashIcon } from "../../../lib/icons";
 import { Field } from "../form-fields";
@@ -49,6 +50,7 @@ export function CmsForm({
   onCancel,
   onRemove,
 }: CmsFormProps) {
+  const t = useMessages();
   const [values, setValues] = React.useState<CmsFieldValues>(
     () => initialValues ?? initialCmsValues(spec),
   );
@@ -91,7 +93,7 @@ export function CmsForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Sil
+            {t.delete}
           </button>
         )}
       </div>
@@ -116,7 +118,7 @@ export function CmsForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Vazgeç
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -127,7 +129,7 @@ export function CmsForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Ekle" : "Kaydet"}
+          {mode === "insert" ? t.insert : t.save}
         </button>
       </div>
     </form>

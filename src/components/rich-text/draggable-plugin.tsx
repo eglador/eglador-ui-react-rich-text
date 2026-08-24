@@ -14,6 +14,8 @@ import {
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import { GripVerticalIcon, PlusIcon } from "../../lib/icons";
+import { BlockPicker } from "./block-picker";
+import { useMessages } from "./i18n";
 import {
   type BlockSpec,
   defaultBlocks,
@@ -85,6 +87,7 @@ export function RichTextDraggableBlock({
   blocks = defaultBlocks,
 }: RichTextDraggableBlockProps) {
   const [editor] = useLexicalComposerContext();
+  const t = useMessages();
   const menuRef = React.useRef<HTMLDivElement>(null);
   const targetLineRef = React.useRef<HTMLDivElement>(null);
   const [activeElement, setActiveElement] =
@@ -115,10 +118,31 @@ export function RichTextDraggableBlock({
     if (!open) setFormSpec(null);
   }, [open]);
 
+  const discardPlaceholder = React.useCallback(() => {
+    removeIfEmptyPlaceholder(editor, placeholderKeyRef.current);
+    placeholderKeyRef.current = null;
+  }, [editor]);
+
   const closeAll = React.useCallback(() => {
+    placeholderKeyRef.current = null;
     setFormSpec(null);
     setOpen(false);
   }, []);
+
+  /**
+   * Any close that isn't a successful insert drops the placeholder
+   * paragraph the form was going to fill. Escape and outside-clicks come
+   * through here, which is why the cleanup can't live in the form's
+   * Cancel handler alone — pressing Escape used to leave a blank line
+   * behind.
+   */
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!next) discardPlaceholder();
+      setOpen(next);
+    },
+    [discardPlaceholder],
+  );
 
   const handleSelect = React.useCallback(
     (spec: BlockSpec) => {
@@ -143,10 +167,9 @@ export function RichTextDraggableBlock({
   );
 
   const cancelForm = React.useCallback(() => {
-    removeIfEmptyPlaceholder(editor, placeholderKeyRef.current);
-    placeholderKeyRef.current = null;
+    discardPlaceholder();
     closeAll();
-  }, [editor, closeAll]);
+  }, [discardPlaceholder, closeAll]);
 
   return (
     <DraggableBlockPlugin_EXPERIMENTAL
@@ -165,7 +188,7 @@ export function RichTextDraggableBlock({
           {!hideInsertButton && (
             <Popover
               open={open}
-              onOpenChange={setOpen}
+              onOpenChange={handleOpenChange}
               placement="bottom-start"
               trigger={
                 <button
@@ -187,20 +210,12 @@ export function RichTextDraggableBlock({
                   onCancel: cancelForm,
                 })
               ) : (
-                <div className="w-56 p-1 max-h-80 overflow-y-auto">
-                  {draggableBlocks.map((spec) => (
-                    <button
-                      key={spec.key}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => handleSelect(spec)}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm text-zinc-700 hover:bg-zinc-100 cursor-pointer"
-                    >
-                      <span className="text-zinc-500">{spec.icon}</span>
-                      <span className="truncate">{spec.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <BlockPicker
+                  blocks={draggableBlocks}
+                  onSelect={handleSelect}
+                  searchPlaceholder={t.searchBlocks}
+                  emptyLabel={t.noBlocksFound}
+                />
               )}
             </Popover>
           )}

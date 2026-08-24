@@ -44,6 +44,13 @@ const MEDIA_LIBRARY: Record<string, string> = {
 
 /** Async on purpose — exercises the loading state and the stale-response
  *  guard in `useResolvedSrc`. */
+/** The page's image library. Only `id` is required — a missing `url` is
+ *  resolved through `resolveImageSrc`, so a bare ID list works too. */
+const IMAGE_LIBRARY = Object.keys(MEDIA_LIBRARY).map((id) => ({
+  id,
+  title: `Görsel ${id}`,
+}));
+
 const resolveImageSrc: MediaResolver = (id) =>
   new Promise((resolve) =>
     setTimeout(() => resolve(MEDIA_LIBRARY[id] ?? null), 300),
@@ -94,7 +101,7 @@ const resolveImageSrc = async (id: string) => {
 
 export function MyEditor() {
   return (
-    <RichTextEditor resolveImageSrc={resolveImageSrc}>
+    <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
       {/* one array, three surfaces — the lists can't drift apart */}
       <RichTextToolbar insertBlocks={blocks} />
       <RichTextContent draggable floatingToolbar draggableBlocks={blocks} />
@@ -107,7 +114,7 @@ export function MyEditor() {
   },
   render: () => (
     <div className="max-w-5xl">
-      <RichTextEditor resolveImageSrc={resolveImageSrc}>
+      <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
         <RichTextToolbar insertBlocks={CMS_BLOCKS} />
         <RichTextContent
           draggable
@@ -152,7 +159,7 @@ export const ImageById: Story = {
           </code>
         ))}
       </div>
-      <RichTextEditor resolveImageSrc={resolveImageSrc}>
+      <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
         <RichTextToolbar insertBlocks={CMS_BLOCKS} />
         <RichTextContent
           placeholder="+ → Image → sadece “Resim ID” alanını doldur"
@@ -177,7 +184,7 @@ export const NewsMoment: Story = {
   },
   render: () => (
     <div className="max-w-3xl">
-      <RichTextEditor resolveImageSrc={resolveImageSrc}>
+      <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
         <RichTextToolbar insertBlocks={CMS_BLOCKS} />
         <RichTextContent
           placeholder="“/newsmoment” yaz — resimler alanına 345456, 345457 gir"
@@ -320,7 +327,7 @@ function FillButton() {
   );
 }
 
-<RichTextEditor resolveImageSrc={resolveImageSrc}>
+<RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
   <RichTextToolbar />
   <FillButton />
   <RichTextContent draggable floatingToolbar />
@@ -332,7 +339,7 @@ function FillButton() {
   },
   render: () => (
     <div className="max-w-5xl">
-      <RichTextEditor resolveImageSrc={resolveImageSrc}>
+      <RichTextEditor resolveImageSrc={resolveImageSrc} imageLibrary={IMAGE_LIBRARY}>
         <RichTextToolbar insertBlocks={CMS_BLOCKS} />
         <ShowcaseControls />
         <RichTextContent

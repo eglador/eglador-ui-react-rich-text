@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { SplitViewIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -53,6 +54,7 @@ export function ImageComparisonForm({
   onCancel,
   onRemove,
 }: ImageComparisonFormProps) {
+  const t = useMessages();
   const [beforeSrc, setBeforeSrc] = React.useState(initialBeforeSrc);
   const [afterSrc, setAfterSrc] = React.useState(initialAfterSrc);
   const [opts, setOpts] = React.useState<Required<ImageComparisonOptions>>(
@@ -102,7 +104,7 @@ export function ImageComparisonForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Delete
+            {t.delete}
           </button>
         )}
       </div>
@@ -177,7 +179,7 @@ export function ImageComparisonForm({
         </select>
       </Field>
 
-      <Field label="Aspect ratio">
+      <Field label={t.aspectRatio}>
         <select
           value={opts.aspectRatio}
           onChange={(e) =>
@@ -281,7 +283,7 @@ export function ImageComparisonForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -292,7 +294,7 @@ export function ImageComparisonForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Embed" : "Save"}
+          {mode === "insert" ? t.embed : t.save}
         </button>
       </div>
     </form>

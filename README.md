@@ -447,6 +447,36 @@ export function MyEditor() {
 - `editorRef.current?.getLegacyShortcodes()` returns every legacy shortcode line currently in the document as an array of strings, in document order — works regardless of which types use a custom `template`.
 - `editorRef.current?.importLegacyComponents(items, schema)` appends typed `LegacyComponentInput` objects (`{ type, fields }`) programmatically — pass the same `schema` you gave `createLegacyComponentBlocks()` so each item's `template` (if any) is honored; omit it to always use the default layout.
 
+## Language
+
+The editor chrome is **Turkish by default**. Switch it, or override individual strings, on the root:
+
+```tsx
+<RichTextEditor locale="en">                                  {/* English */}
+<RichTextEditor messages={{ cancel: "Vazgeç", save: "Kaydet" }} />  {/* per-string */}
+```
+
+`RichTextMessages` covers every string the chrome renders — form buttons, field labels, the block-picker search box, image-by-ID hints. Labels that come from a schema (`CmsBlockSpec.fields`) travel with the schema instead. Exported for reuse: `trMessages`, `enMessages`, `useMessages()`.
+
+## Picking images from the page
+
+Give the editor a library and the image block turns into a picker: the ID and URL fields become read-only readouts and the author selects a tile instead of typing.
+
+```tsx
+<RichTextEditor
+  resolveImageSrc={(id) => fetchUrl(id)}
+  imageLibrary={[{ id: "345456" }, { id: "345457", title: "Kapak" }]}
+>
+```
+
+Only `id` is required — a missing `url` is resolved through `resolveImageSrc`, so a bare list of IDs renders thumbnails fine. Pass a function (sync or async) instead of an array to load lazily:
+
+```tsx
+imageLibrary={async () => (await fetch("/api/medya")).json()}
+```
+
+Omit the prop entirely and the form keeps its current behaviour: ID and URL stay editable.
+
 ## Inline text styling (`format` bitmask)
 
 Lexical splits inline formatting across two fields on every text node:

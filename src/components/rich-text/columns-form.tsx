@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { Columns3Icon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -37,6 +38,7 @@ export function ColumnsForm({
   onSubmit,
   onCancel,
 }: ColumnsFormProps) {
+  const t = useMessages();
   const [count, setCount] = React.useState(initialOptions.count);
   const [gap, setGap] = React.useState<ColumnsGap>(initialOptions.gap);
   const [mobileStack, setMobileStack] = React.useState(
@@ -110,13 +112,13 @@ export function ColumnsForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
           className="px-3 py-1.5 text-xs rounded text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
         >
-          Insert
+          {t.insert}
         </button>
       </div>
     </form>

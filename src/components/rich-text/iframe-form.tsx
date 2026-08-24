@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMessages } from "./i18n";
 import { cn } from "../../lib/utils";
 import { FrameIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
@@ -39,6 +40,7 @@ export function IframeForm({
   onCancel,
   onRemove,
 }: IframeFormProps) {
+  const t = useMessages();
   const [src, setSrc] = React.useState(initialSrc);
   const [opts, setOpts] = React.useState<Required<IframeOptions>>(
     initialOptions,
@@ -81,12 +83,12 @@ export function IframeForm({
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline cursor-pointer"
           >
             <TrashIcon className="size-3.5" />
-            Delete
+            {t.delete}
           </button>
         )}
       </div>
 
-      <Field label="URL">
+      <Field label={t.url}>
         <input
           type="url"
           // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -175,7 +177,7 @@ export function IframeForm({
           onClick={onCancel}
           className="px-3 py-1.5 text-xs rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-50 cursor-pointer"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
@@ -186,7 +188,7 @@ export function IframeForm({
             "disabled:bg-zinc-300 disabled:cursor-not-allowed",
           )}
         >
-          {mode === "insert" ? "Embed" : "Save"}
+          {mode === "insert" ? t.embed : t.save}
         </button>
       </div>
     </form>

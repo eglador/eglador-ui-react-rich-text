@@ -2,6 +2,8 @@ import type * as React from "react";
 import type { LexicalEditor } from "lexical";
 import type { MediaResolver } from "./media-resolver-context";
 import type { InlineTextStyleOptions } from "./text-styles";
+import type { RichTextLocale, RichTextMessages } from "./i18n";
+import type { MediaLibrary } from "./media-library-context";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -58,6 +60,19 @@ export interface RichTextEditorProps
    * or an options object to tune the `highlight` / `code` colours.
    */
   inlineTextStyles?: boolean | InlineTextStyleOptions;
+  /** UI language for the editor chrome. Default `"tr"`. */
+  locale?: RichTextLocale;
+  /** Override individual strings without switching locale. */
+  messages?: Partial<RichTextMessages>;
+  /**
+   * Images the author can pick from in the image block. Supply an array,
+   * or a function (optionally async) returning one. Each item needs only
+   * an `id`; a missing `url` is resolved through `resolveImageSrc`.
+   *
+   * When set, the image form shows a picker and its ID / URL fields
+   * become read-only — the document stores the chosen ID.
+   */
+  imageLibrary?: MediaLibrary;
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>
