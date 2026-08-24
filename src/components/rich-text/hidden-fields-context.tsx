@@ -81,16 +81,27 @@ const PROTECTED_KEYS = new Set([
  *
  * A name is dropped whether it sits at the node's top level (CMS blocks
  * store fields flat) or inside its `options` object (the built-in media
- * blocks) — callers name the field, not its nesting. Lexical's own keys
- * are never touched.
+ * blocks) — callers name the field, not its nesting. Lexical's own
+ * structural keys are never touched.
  *
- * Mutates and returns the given object; pass a copy to keep the original.
+ * **Pure**: the input is left alone and a stripped deep copy is
+ * returned. That matters because `exportJSON()` can hand out live node
+ * internals (a media node's `options` used to be the very object the
+ * node stores), so deleting in place would erase the field from the
+ * document itself — permanently, and outside an `editor.update()`.
+ *
+ * The clone only happens when there is something to strip, so editors
+ * without `hiddenFields` pay nothing.
  */
 export function stripHiddenFields<T>(
   serialized: T,
   config: HiddenFieldsConfig | null | undefined,
 ): T {
   if (!config || Object.keys(config).length === 0) return serialized;
+
+  // A serialized editor state is plain JSON by definition, so a
+  // round-trip is a complete and dependency-free deep copy.
+  const copy = JSON.parse(JSON.stringify(serialized)) as T;
 
   const visit = (node: unknown): void => {
     if (Array.isArray(node)) {
@@ -117,6 +128,6 @@ export function stripHiddenFields<T>(
     }
   };
 
-  visit(serialized);
-  return serialized;
+  visit(copy);
+  return copy;
 }
