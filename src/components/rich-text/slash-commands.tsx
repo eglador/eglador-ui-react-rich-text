@@ -186,18 +186,12 @@ export function RichTextSlashCommands({
                 closeForm();
               }}
             />
-            <div
-              role="dialog"
-              aria-label={`Insert ${pendingSpec.label}`}
-              className="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-xl overflow-hidden"
-              style={{ top: formAnchor.top, left: formAnchor.left }}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
+            <SlashCommandForm anchor={formAnchor} label={pendingSpec.label}>
               {pendingSpec.renderForm(editor, {
                 onComplete: closeForm,
                 onCancel: closeForm,
               })}
-            </div>
+            </SlashCommandForm>
           </>,
           document.body,
         )}
@@ -206,6 +200,97 @@ export function RichTextSlashCommands({
 }
 
 RichTextSlashCommands.displayName = "RichTextSlashCommands";
+
+const VIEWPORT_PADDING = 8;
+
+/**
+ * Positioned host for a slash-inserted block's form.
+ *
+ * The caret rect only tells us where to *prefer* opening; the box is then
+ * clamped into the viewport and re-clamped on scroll and resize. Without
+ * that, a form opened near the bottom of the window (or left open while
+ * the page scrolls) ended up partly or fully off screen with its inputs
+ * out of reach.
+ */
+function SlashCommandForm({
+  anchor,
+  label,
+  children,
+}: {
+  anchor: FormAnchor;
+  label: string;
+  children: React.ReactNode;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [box, setBox] = React.useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+    scroll: boolean;
+  } | null>(null);
+
+  React.useLayoutEffect(() => {
+    const place = () => {
+      const el = ref.current;
+      if (!el) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const availableHeight = Math.max(0, vh - VIEWPORT_PADDING * 2);
+      const height = Math.min(el.offsetHeight, availableHeight);
+      const width = el.offsetWidth;
+      const clamp = (value: number, size: number, extent: number) => {
+        const max = Math.max(
+          VIEWPORT_PADDING,
+          extent - size - VIEWPORT_PADDING,
+        );
+        return Math.min(Math.max(value, VIEWPORT_PADDING), max);
+      };
+      setBox({
+        top: clamp(anchor.top, height, vh),
+        left: clamp(anchor.left, width, vw),
+        maxHeight: availableHeight,
+        scroll: el.offsetHeight > availableHeight,
+      });
+    };
+
+    place();
+    // The form's own height changes as sub-views swap in.
+    const ro = new ResizeObserver(place);
+    if (ref.current) ro.observe(ref.current);
+    window.addEventListener("resize", place);
+    // capture=true so scrolls in any nested container are seen too
+    window.addEventListener("scroll", place, true);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [anchor.top, anchor.left]);
+
+  return (
+    <div
+      ref={ref}
+      role="dialog"
+      aria-label={label}
+      className="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-xl overflow-hidden"
+      style={
+        box
+          ? {
+              top: box.top,
+              left: box.left,
+              maxHeight: box.maxHeight,
+              overflowY: box.scroll ? "auto" : undefined,
+            }
+          : { top: 0, left: 0, visibility: "hidden" }
+      }
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      {children}
+    </div>
+  );
+}
+
+
 
 /** Read the live caret bounding rect — the form popover anchors below it
  *  so it visually replaces the slash menu in the same spot. Falls back to
