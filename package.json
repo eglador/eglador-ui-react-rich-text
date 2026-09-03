@@ -1,6 +1,6 @@
 {
   "name": "eglador-ui-react-rich-text",
-  "version": "1.0.0-alpha.22",
+  "version": "1.0.0-alpha.23",
   "description": "React Rich Text component for Eglador UI",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -22,7 +22,8 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm run build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "regression": "node scripts/regression.cjs"
   },
   "repository": {
     "type": "git",

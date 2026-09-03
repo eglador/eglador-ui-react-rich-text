@@ -40,8 +40,11 @@ const DEFAULT_VIEWPORT_PADDING = 8;
  * Portal-rendered popover with viewport-aware positioning.
  *
  * Uses `position: fixed` rendered into `document.body`, so it never gets
- * clipped by ancestor `overflow: hidden`. Auto-flips top/bottom and
- * auto-shifts horizontally when the popover would overflow the viewport.
+ * clipped by ancestor `overflow: hidden`. Auto-flips top/bottom, and
+ * clamps both axes so the box always stays fully on screen — including
+ * while the page scrolls, when it parks against the nearest edge rather
+ * than following its trigger out of view. A popover taller than the
+ * window scrolls internally.
  *
  * The trigger is wrapped in a tracking `<div>`; click/keyboard handling
  * (toggle, Escape, outside-click) is handled here.
@@ -63,6 +66,9 @@ export function Popover({
   const [position, setPosition] = React.useState<{
     top: number;
     left: number;
+    /** Room the popover has on screen; it scrolls internally past this. */
+    maxHeight: number;
+    scroll: boolean;
   } | null>(null);
 
   const updatePosition = React.useCallback(() => {
@@ -105,7 +111,13 @@ export function Popover({
       side = "bottom";
     }
 
-    const top = side === "bottom" ? tr.bottom + offset : tr.top - ch - offset;
+    // A popover taller than the window scrolls inside itself rather than
+    // running off both edges.
+    const availableHeight = Math.max(0, vh - viewportPadding * 2);
+    const boxHeight = Math.min(ch, availableHeight);
+
+    let top =
+      side === "bottom" ? tr.bottom + offset : tr.top - boxHeight - offset;
 
     let left: number;
     if (alignRaw === "start") {
@@ -116,14 +128,24 @@ export function Popover({
       left = tr.left + tr.width / 2 - cw / 2;
     }
 
-    if (left + cw > vw - viewportPadding) {
-      left = vw - cw - viewportPadding;
-    }
-    if (left < viewportPadding) {
-      left = viewportPadding;
-    }
+    // Keep the whole box on screen on both axes. This is what makes an
+    // open popover stay usable while the page scrolls: once its trigger
+    // leaves the viewport the popover parks against the nearest edge
+    // instead of travelling off with the anchor, where its inputs and
+    // buttons could not be reached.
+    const clamp = (value: number, size: number, extent: number) => {
+      const max = Math.max(viewportPadding, extent - size - viewportPadding);
+      return Math.min(Math.max(value, viewportPadding), max);
+    };
+    top = clamp(top, boxHeight, vh);
+    left = clamp(left, cw, vw);
 
-    setPosition({ top, left });
+    setPosition({
+      top,
+      left,
+      maxHeight: availableHeight,
+      scroll: ch > availableHeight,
+    });
   }, [placement, offset, viewportPadding]);
 
   React.useLayoutEffect(() => {
@@ -211,7 +233,15 @@ export function Popover({
             className={cn("fixed z-[9999]", contentClassName)}
             style={
               position
-                ? { top: position.top, left: position.left }
+                ? {
+                    top: position.top,
+                    left: position.left,
+                    maxHeight: position.maxHeight,
+                    // Only when it doesn't fit: turning the wrapper into a
+                    // scroll container unconditionally would clip content
+                    // that relies on visible overflow.
+                    overflowY: position.scroll ? "auto" : undefined,
+                  }
                 : { top: 0, left: 0, visibility: "hidden" }
             }
           >
