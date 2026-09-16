@@ -274,6 +274,108 @@ const withDoc = (build, assert) =>
   ck("overrides merge", p.resolveMessages("tr", { cancel: "X" }).cancel === "X");
   ck("unknown locale falls back", p.resolveMessages(undefined).cancel === "Vazgeç");
 
+  section("spell check: Turkish, in-process (server path)");
+  const fs = require("node:fs");
+  const dict = path.join(ROOT, "node_modules/dictionary-tr");
+  const checker = p.createTurkishSpellChecker({
+    worker: false,
+    loadDictionary: () => ({
+      aff: fs.readFileSync(path.join(dict, "index.aff")),
+      dic: fs.readFileSync(path.join(dict, "index.dic")),
+    }),
+  });
+  const spell = await p.checkSpelling(
+    [
+      "Herkez bugün geldi ama yanlız Ahmet gelmedi. Bu doğru değilmi? Belkide yarın.",
+      "istanbul'da Kılıçdaroğlu konuştu, TBMM toplandı. Eglador'un iPhone ve YouTube hesabı.",
+      "Detaylar https://eglador.com/haber adresinde, 2024'te @umut ile #gündem site.com.tr.",
+      "Gazeteci yazarkan herşeyi birşeyler için yanlş yazdı.",
+    ].join("\n"),
+    { checker },
+  );
+  const byWord = Object.fromEntries(spell.issues.map((i) => [i.word, i]));
+  const expect = {
+    Herkez: ["common-mistake", "Herkes"],
+    yanlız: ["common-mistake", "yalnız"],
+    değilmi: ["separate-words", "değil mi"],
+    Belkide: ["separate-words", "Belki de"],
+    "istanbul'da": ["misspelling", "İstanbul'da"],
+    yazarkan: ["misspelling", "yazarken"],
+    herşeyi: ["separate-words", "her şeyi"],
+    birşeyler: ["separate-words", "bir şeyler"],
+    yanlş: ["misspelling", "yanlış"],
+  };
+  ck("status failed / passed false", spell.status === "failed" && spell.passed === false);
+  ck(
+    `exactly the expected ${Object.keys(expect).length} issues`,
+    spell.issueCount === Object.keys(expect).length,
+    spell.issues.map((i) => i.word).join(", "),
+  );
+  for (const [word, [kind, first]] of Object.entries(expect)) {
+    const issue = byWord[word];
+    ck(
+      `${word} → ${first} (${kind})`,
+      issue && issue.kind === kind && issue.suggestions[0] === first,
+      issue ? `${issue.kind} ${JSON.stringify(issue.suggestions)}` : "not flagged",
+    );
+  }
+  ck("no pending suggestions left", spell.issues.every((i) => !i.suggestionsPending));
+
+  const clean = await p.checkSpelling(
+    "Öğretmenlerimizden öğrendiklerimizi İstanbul'da anlattık, değil mi?",
+    { checker },
+  );
+  ck("clean text passes", clean.status === "passed" && clean.passed && clean.issueCount === 0);
+
+  const tuned = await p.checkSpelling("Eglador yanlız değil, malesef.", {
+    checker,
+    ignoreWords: ["YANLIZ"],
+    commonMistakes: { malesef: null },
+    suggestions: false,
+  });
+  ck(
+    "ignoreWords (Turkish case-folded) + disabling a rule",
+    tuned.issues.every((i) => i.word !== "yanlız" && i.kind !== "common-mistake"),
+    JSON.stringify(tuned.issues.map((i) => [i.word, i.kind])),
+  );
+
+  const fromJson = await p.checkSpelling(
+    {
+      root: {
+        type: "root",
+        children: [
+          {
+            type: "paragraph",
+            children: [
+              { type: "text", text: "Herkez ", format: 0 },
+              { type: "text", text: "herkez_kod", format: 16 },
+              { type: "link", children: [{ type: "text", text: " malesef", format: 0 }] },
+            ],
+          },
+          { type: "code", children: [{ type: "text", text: "herkez" }] },
+        ],
+      },
+    },
+    { checker, suggestions: false },
+  );
+  ck(
+    "JSON: inline code + code blocks skipped, link text checked",
+    fromJson.issues.map((i) => i.word).join(",") === "Herkez,malesef",
+    fromJson.issues.map((i) => i.word).join(","),
+  );
+
+  const broken = await p.checkSpelling("metin", {
+    checker: p.createTurkishSpellChecker({
+      worker: false,
+      loadDictionary: () => Promise.reject(new Error("offline")),
+    }),
+  });
+  ck(
+    "engine failure → status error, never passed",
+    broken.status === "error" && broken.passed === false && broken.error === "offline",
+  );
+  checker.dispose();
+
   console.log(
     failures === 0 ? "\nAll checks passed.\n" : `\n${failures} check(s) FAILED.\n`,
   );

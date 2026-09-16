@@ -64,6 +64,26 @@ export interface RichTextMessages {
   noImagesAvailable: string;
   loadingImages: string;
   clearSelection: string;
+
+  // ── spell check ──────────────────────────────
+  spellCheck: string;
+  spellLoading: string;
+  spellChecking: string;
+  spellPassed: string;
+  /** `{count}` is replaced with the number of issues. */
+  spellIssues: string;
+  spellError: string;
+  spellDisabled: string;
+  spellMisspelling: string;
+  spellCommonMistake: string;
+  spellSeparateWords: string;
+  spellSuggestionsLoading: string;
+  spellNoSuggestions: string;
+  spellIgnore: string;
+  spellAddToDictionary: string;
+  spellRecheck: string;
+  spellShowIssues: string;
+  spellHideIssues: string;
 }
 
 export const trMessages: RichTextMessages = {
@@ -118,6 +138,24 @@ export const trMessages: RichTextMessages = {
   noImagesAvailable: "Seçilebilecek görsel yok",
   loadingImages: "Görseller yükleniyor…",
   clearSelection: "Seçimi temizle",
+
+  spellCheck: "Yazım denetimi",
+  spellLoading: "Sözlük yükleniyor…",
+  spellChecking: "Denetleniyor…",
+  spellPassed: "Yazım hatası yok",
+  spellIssues: "{count} yazım hatası",
+  spellError: "Yazım denetimi çalıştırılamadı",
+  spellDisabled: "Yazım denetimi kapalı",
+  spellMisspelling: "Sözlükte bulunamadı",
+  spellCommonMistake: "Yaygın yazım yanlışı",
+  spellSeparateWords: "Ayrı yazılmalı",
+  spellSuggestionsLoading: "Öneriler aranıyor…",
+  spellNoSuggestions: "Öneri bulunamadı",
+  spellIgnore: "Yoksay",
+  spellAddToDictionary: "Sözlüğe ekle",
+  spellRecheck: "Yeniden denetle",
+  spellShowIssues: "Hataları göster",
+  spellHideIssues: "Gizle",
 };
 
 export const enMessages: RichTextMessages = {
@@ -172,6 +210,24 @@ export const enMessages: RichTextMessages = {
   noImagesAvailable: "No images to choose from",
   loadingImages: "Loading images…",
   clearSelection: "Clear selection",
+
+  spellCheck: "Spell check",
+  spellLoading: "Loading dictionary…",
+  spellChecking: "Checking…",
+  spellPassed: "No spelling issues",
+  spellIssues: "{count} spelling issues",
+  spellError: "Spell check could not run",
+  spellDisabled: "Spell check is off",
+  spellMisspelling: "Not in the dictionary",
+  spellCommonMistake: "Common misspelling",
+  spellSeparateWords: "Should be written separately",
+  spellSuggestionsLoading: "Finding suggestions…",
+  spellNoSuggestions: "No suggestions",
+  spellIgnore: "Ignore",
+  spellAddToDictionary: "Add to dictionary",
+  spellRecheck: "Check again",
+  spellShowIssues: "Show issues",
+  spellHideIssues: "Hide",
 };
 
 export type RichTextLocale = "tr" | "en";
