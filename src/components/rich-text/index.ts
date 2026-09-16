@@ -335,3 +335,4 @@ export type {
 } from "./toolbar";
 export type { HeadingMenuItem } from "./heading-menu";
 export type { RichTextEditorApi } from "./hook";
+export * from "./spellcheck";

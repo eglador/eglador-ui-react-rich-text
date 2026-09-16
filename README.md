@@ -26,6 +26,7 @@ A modern, compound-component rich text editor for React — built on top of [Lex
 - **Imperative API** — `useRichTextEditor()` hook + `editorRef` prop
 - **TypeScript-first** — full type safety, exported feature unions
 - **Viewport-aware popovers** — auto-flip / auto-shift, never clipped by ancestor `overflow: hidden`
+- **Turkish spell checking** — Hunspell + Turkish rules in a Web Worker, with a pass/fail result for publish gates and error screens (`<RichTextSpellCheck />`)
 
 ## Installation
 
@@ -94,6 +95,7 @@ export function MyEditor() {
 | `RichTextFloatingToolbar` | Selection-anchored mini formatting bar. |
 | `RichTextLinkEditor` | Auto-opening link edit form when cursor enters a link. |
 | `RichTextTableActions` | Cell-anchored chevron with insert/delete/merge/unmerge actions. |
+| `RichTextSpellCheck` | Turkish spell checking: underlines, suggestions, status bar, pass/fail output. |
 
 ### Hooks
 
@@ -101,6 +103,7 @@ export function MyEditor() {
 |---|---|
 | `useRichTextEditor()` | `{ editor, getJson, setJson, getHtml, setHtml, getMarkdown, setMarkdown, getText, getCursorOffset, setCursorOffset, getLegacyShortcodes, importLegacyComponents, insertAllComponents, clear, focus }` — **must be called inside `<RichTextEditor>`** |
 | `usePageSize()` | `{ size, setSize }` — read/write the active page-size from the context |
+| `useRichTextSpellCheck()` | `{ result, api }` — the surrounding editor's spell-check state; `api` is `null` until `<RichTextSpellCheck>` mounts |
 | `useResolvedSrc(id)` | `{ src, status }` — turn a media ID into a URL via `resolveImageSrc` (`status`: `idle` \| `loading` \| `resolved` \| `missing`) |
 
 ### `RichTextEditor` props
@@ -495,6 +498,125 @@ The key is the block type (`image`, `galeri`, `newsMoment`, …) as it appears i
 Stripping applies to `onChange`, `getJson()` and the output panel. `getRawJson()` stays untouched, and Lexical's own structural keys (`type`, `children`, `format`, …) are never removed even if named.
 
 A hidden field is not validated either, so hiding a required one will not block submission.
+
+## Spell checking (Turkish)
+
+```tsx
+<RichTextEditor>
+  <RichTextToolbar />
+  <RichTextContent />
+  <RichTextSpellCheck onResult={(result) => setCanPublish(result.passed)} />
+</RichTextEditor>
+```
+
+Misspelled words get a wavy red underline. Clicking one (or right-clicking) opens a small menu with suggestions plus **Yoksay** (ignore) and **Sözlüğe ekle** (add to dictionary). A status bar under the editor shows the issue count and a list that jumps to each word. The editor turns off the browser's own spellcheck so you don't get two sets of underlines.
+
+### What it catches
+
+Checking happens in three layers:
+
+| Layer | Catches | `kind` |
+|---|---|---|
+| Hunspell + `dictionary-tr` | Words the dictionary doesn't know, including suffixes (`kitaplarımızdan` passes, `yanlş` → `yanlış`) and casing (`istanbul'da` → `İstanbul'da`) | `misspelling` |
+| Rule list (TDK) | Common wrong forms whose dictionary suggestion is poor: `herkez`, `yanlız`, `şöför`, `orjinal`, `malesef`… | `common-mistake` |
+| Split rules | Words written together that should be apart: `değilmi` → `değil mi`, `belkide` → `belki de`, `herşeyi` → `her şeyi` | `separate-words` |
+
+Suggestions are re-ranked for letters Turkish writers often mix up (`a/e`, `ı/i`, `s/ş`…), so `yazarkan` offers `yazarken` first.
+
+**Skipped on purpose:** capitalised words mid-sentence (names like `Kılıçdaroğlu`, `Eglador'un`), all-caps abbreviations (`TBMM`), `iPhone`-style inner capitals, URLs, e-mail addresses, `@mentions`, `#hashtags`, domain names, numbers with suffixes (`2024'te`), inline code and code blocks. Both name rules can be turned off: `ignoreProperNouns={false}`, `ignoreAllCaps={false}`.
+
+### Getting the result out
+
+Every surface returns the same `SpellCheckResult`:
+
+```ts
+{
+  status: "idle" | "loading" | "checking" | "passed" | "failed" | "error" | "disabled",
+  passed: boolean,        // true ONLY when a check finished and found nothing
+  issueCount: number,
+  issues: SpellIssue[],   // { id, word, kind, message, suggestions, context, blockIndex, … }
+  checkedWordCount: number,
+  checkedAt: number | null,
+  error?: string,
+}
+```
+
+`passed` is `false` while the dictionary is loading, while a check is running, on errors and when the checker is disabled. It never reports "not checked yet" as a pass.
+
+Use whichever of these reaches the code that needs the result:
+
+| Need | Use |
+|---|---|
+| React to every change | `onResult={(result) => …}` |
+| Code outside the editor (publish button, form submit) | `apiRef` → `await api.check({ suggestions: true })` |
+| A component inside `<RichTextEditor>` | `const { result, api } = useRichTextSpellCheck()` |
+| Non-React code | `root.addEventListener("eglador:spellcheck", (e) => e.detail)` |
+| Server / API route / CI (no editor) | `await checkSpelling(json, { checker })` |
+
+A publish gate that checks the text as it is right now (skipping the debounce) and waits for suggestions:
+
+```tsx
+const spell = useRef<RichTextSpellCheckApi>(null);
+
+async function publish() {
+  const result = await spell.current!.check({ suggestions: true });
+  if (!result.passed) return showErrors(result.issues);
+  await save();
+}
+
+<RichTextSpellCheck apiRef={spell} showStatus={false} />
+```
+
+`api` also provides `focusIssue(id)` (select the word, scroll to it and open its menu), `applySuggestion(id, text)`, `ignoreWord(word)` and `addWord(word)`. That's everything a custom error screen needs.
+
+To replace the status bar with your own UI, pass `children` as a function: `<RichTextSpellCheck>{({ result, api }) => …}</RichTextSpellCheck>`. The exported `SpellCheckStatusBar` is the default UI if you want to place it somewhere else.
+
+### Options
+
+| Prop | Default | |
+|---|---|---|
+| `checker` | page-wide Turkish checker | Any `SpellChecker`. Memoise it; a new instance restarts checking. |
+| `enabled` | `true` | Turns checking off without unmounting. Status becomes `disabled`. |
+| `debounceMs` | `500` | Quiet period after typing before a check runs. |
+| `suggestions` | `true` | Look up suggestions in the background so `onResult` carries them. With `false`, suggestions load only when a word is opened. |
+| `ignoreWords` | — | Always accepted (brand names, bylines). Case-insensitive with Turkish rules. |
+| `commonMistakes` | — | `{ wrong: "right" }` added to the rule list; `{ wrong: null }` removes a built-in rule. |
+| `ignoreProperNouns` / `ignoreAllCaps` | `true` | See "Skipped on purpose" above. |
+| `onAddWord` | — | Called on "Sözlüğe ekle". Save the word, then pass it back through `ignoreWords` on the next load. |
+| `underline` / `showStatus` | `true` | Visual parts. |
+
+### The dictionary and the engine
+
+- Hunspell (WASM) runs in a **Web Worker** that ships inside the package. No bundler setup is needed. With ESM it loads as a separate ~750 KB chunk, and only when the spell checker first starts.
+- The dictionary (`dictionary-tr`, ~9 MB) downloads from jsDelivr by default. **Only the dictionary is downloaded — the text being checked never leaves the browser.** Once loaded it uses ~45 MB of memory in the worker. All editors on a page share one worker.
+- To serve the dictionary yourself, copy `index.aff` / `index.dic` from the `dictionary-tr` package and point to them:
+
+  ```ts
+  const checker = createTurkishSpellChecker({
+    dictionaryUrls: { aff: "/dict/tr.aff", dic: "/dict/tr.dic" },
+  });
+  <RichTextSpellCheck checker={checker} />
+  ```
+
+- On a server, run the engine in-process and read the files from disk:
+
+  ```ts
+  const checker = createTurkishSpellChecker({
+    worker: false,
+    loadDictionary: () => ({
+      aff: fs.readFileSync("node_modules/dictionary-tr/index.aff"),
+      dic: fs.readFileSync("node_modules/dictionary-tr/index.dic"),
+    }),
+  });
+  const result = await checkSpelling(editorJson, { checker });
+  if (!result.passed) return Response.json(result.issues, { status: 422 });
+  ```
+
+- **Bring your own engine:** implement `SpellChecker` (`ready`, `check(words) → boolean[]`, `suggest(word) → string[]`) to route checks to an API, for example a Zemberek service. Tokenising, the Turkish rules, underlines and the result format stay the same.
+
+If the dictionary can't load (offline, CDN blocked), status becomes `error` with the reason in `result.error`, and the next check tries again.
+
+**Current limits:** text inside CMS block form fields (a quote's title, a news moment's heading) isn't checked, because those fields are form inputs rather than editor text. Note bodies and column contents are checked. Hunspell only checks individual words, so grammar and context errors (`de`/`da` written attached when the word is also valid, e.g. `bende`) are not flagged.
 
 ## Inline text styling (`format` bitmask)
 

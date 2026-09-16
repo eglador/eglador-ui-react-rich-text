@@ -18,3 +18,5 @@ storybook-static
 
 # env
 .env*
+
+/src/components/rich-text/spellcheck/worker-source.generated.ts

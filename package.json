@@ -1,6 +1,6 @@
 {
   "name": "eglador-ui-react-rich-text",
-  "version": "1.0.0-alpha.23",
+  "version": "1.0.0-alpha.24",
   "description": "React Rich Text component for Eglador UI",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -23,7 +23,13 @@
     "prepublishOnly": "npm run typecheck && npm run build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "regression": "node scripts/regression.cjs"
+    "regression": "node scripts/regression.cjs",
+    "spell-worker": "node scripts/build-spell-worker.mjs",
+    "prebuild": "npm run spell-worker",
+    "pretypecheck": "npm run spell-worker",
+    "prestorybook": "npm run spell-worker",
+    "prebuild-storybook": "npm run spell-worker",
+    "predev": "npm run spell-worker"
   },
   "repository": {
     "type": "git",
@@ -83,6 +89,7 @@
     "@lexical/table": "^0.46.0",
     "@lexical/text": "^0.46.0",
     "@lexical/utils": "^0.46.0",
+    "hunspell-asm": "^4.0.2",
     "lexical": "^0.46.0"
   },
   "peerDependencies": {
@@ -104,6 +111,7 @@
     "@vitest/browser-playwright": "^4.1.7",
     "@vitest/coverage-v8": "^4.1.7",
     "clsx": "^2.1.1",
+    "dictionary-tr": "^2.0.0",
     "playwright": "^1.60.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

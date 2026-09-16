@@ -13,7 +13,12 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
   ],
   framework: "@storybook/react-vite",
-  staticDirs: ["../.github"],
+  staticDirs: [
+    "../.github",
+    // Serve the Turkish Hunspell dictionary locally so the spell-check
+    // stories don't depend on the CDN.
+    { from: "../node_modules/dictionary-tr", to: "/dictionaries/tr" },
+  ],
   viteFinal: async (config) => {
     config.plugins = config.plugins ?? [];
     config.plugins.push(tailwindcss());
