@@ -84,6 +84,10 @@ export interface RichTextMessages {
   spellRecheck: string;
   spellShowIssues: string;
   spellHideIssues: string;
+
+  // ── dynamic select options ───────────────────
+  loadingOptions: string;
+  optionNotInList: string;
 }
 
 export const trMessages: RichTextMessages = {
@@ -156,6 +160,9 @@ export const trMessages: RichTextMessages = {
   spellRecheck: "Yeniden denetle",
   spellShowIssues: "Hataları göster",
   spellHideIssues: "Gizle",
+
+  loadingOptions: "Seçenekler yükleniyor…",
+  optionNotInList: "listede yok",
 };
 
 export const enMessages: RichTextMessages = {
@@ -228,6 +235,9 @@ export const enMessages: RichTextMessages = {
   spellRecheck: "Check again",
   spellShowIssues: "Show issues",
   spellHideIssues: "Hide",
+
+  loadingOptions: "Loading options…",
+  optionNotInList: "not in list",
 };
 
 export type RichTextLocale = "tr" | "en";

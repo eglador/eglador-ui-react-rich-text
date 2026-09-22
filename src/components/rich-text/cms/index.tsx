@@ -80,6 +80,16 @@ export type { CmsFormProps } from "./cms-form";
 export { CmsBlock } from "./cms-block";
 export type { CmsBlockProps } from "./cms-block";
 export { MediaThumb, parseIdList } from "./cms-previews";
+export {
+  CmsFieldOptionsProvider,
+  useCmsFieldOptions,
+} from "./cms-field-options-context";
+export type {
+  CmsFieldOptionsConfig,
+  CmsFieldOptionsSource,
+  CmsFieldOptionsState,
+  CmsFieldOptionsStatus,
+} from "./cms-field-options-context";
 export type {
   CmsBlockSpec,
   CmsFieldSpec,
