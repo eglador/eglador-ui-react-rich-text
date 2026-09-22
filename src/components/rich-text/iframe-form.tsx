@@ -6,6 +6,7 @@ import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { FrameIcon, TrashIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
+import { extractEmbedSrc } from "./embed-src";
 import type { IframeAspectRatio, IframeOptions } from "./iframe-node";
 
 export interface IframeFormSubmit {
@@ -102,7 +103,8 @@ export function IframeForm({
             autoFocus={mode === "insert"}
             value={src}
             onChange={(e) => {
-              setSrc(e.target.value);
+              // Share dialogs hand out a whole `<iframe …>`; keep its src.
+              setSrc(extractEmbedSrc(e.target.value));
               if (error) setError(null);
             }}
             placeholder="https://www.figma.com/embed?... or https://codepen.io/..."

@@ -5,6 +5,8 @@ import type { InlineTextStyleOptions } from "./text-styles";
 import type { RichTextLocale, RichTextMessages } from "./i18n";
 import type { MediaLibrary } from "./media-library-context";
 import type { HiddenFieldsConfig } from "./hidden-fields-context";
+import type { CmsFieldOptionsConfig } from "./cms/cms-field-options-context";
+import type { RichTextBlockEdgesProps } from "./block-edges";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -83,6 +85,35 @@ export interface RichTextEditorProps
    * inside `options` (the built-in media blocks).
    */
   hiddenFields?: HiddenFieldsConfig;
+  /**
+   * Replace a CMS block's dropdown choices, keyed by block type and then
+   * field name — the live-stream channel list, the market widgets, the
+   * link colours. Each entry is a list or a function (optionally async)
+   * returning one, so the values can come from your own API instead of
+   * the built-in defaults.
+   *
+   * ```tsx
+   * cmsFieldOptions={{
+   *   canliyayin: { channel: async () => fetchChannels() },
+   *   "*": { position: [{ value: "left", label: "Sola yaslı" }] },
+   * }}
+   * ```
+   *
+   * A stored value that is missing from the new list is kept and shown
+   * as its own entry rather than being silently replaced.
+   */
+  cmsFieldOptions?: CmsFieldOptionsConfig;
+  /**
+   * Keep an empty paragraph next to a block the caret can't be typed
+   * around — a media embed or CMS block that opens or closes the
+   * document, a table, a columns row. Without it the author has no way
+   * to click above the first block or below the last one.
+   *
+   * **On by default.** Pass `false` to leave documents exactly as they
+   * are (the JSON then never gains these paragraphs), or an object to
+   * control each end: `blockEdges={{ leading: false }}`.
+   */
+  blockEdges?: boolean | RichTextBlockEdgesProps;
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>

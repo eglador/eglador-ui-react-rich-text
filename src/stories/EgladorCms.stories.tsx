@@ -367,3 +367,215 @@ function FillButton() {
   ),
 };
 
+
+// ── host-supplied dropdown choices + pasted embed codes ────────────────
+
+/** Stand-in for the host CMS: the live channels a site actually has. */
+const CHANNELS = [
+  { value: "300", label: "BHT TV" },
+  { value: "55", label: "Eglador TV" },
+  { value: "77", label: "Haber 77" },
+];
+
+/** Async on purpose — exercises the loading state and the cache. */
+const loadMarkets = () =>
+  new Promise<{ value: string; label: string }[]>((resolve) =>
+    setTimeout(
+      () =>
+        resolve([
+          { value: "88", label: "$ - Dolar" },
+          { value: "500", label: "₿ - Bitcoin" },
+          { value: "501", label: "Gram Altın" },
+        ]),
+      600,
+    ),
+  );
+
+/** A saved block whose channel (999) is not in the host's list — the
+ *  edit form must keep it rather than silently switching channels. */
+const STALE_CHANNEL_JSON = JSON.stringify({
+  root: {
+    type: "root",
+    format: "",
+    indent: 0,
+    version: 1,
+    direction: "ltr",
+    children: [
+      {
+        type: "canliyayin",
+        version: 1,
+        format: "",
+        channel: "999",
+        position: "left",
+      },
+      {
+        type: "paragraph",
+        format: "",
+        indent: 0,
+        version: 1,
+        direction: "ltr",
+        textFormat: 0,
+        textStyle: "",
+        children: [],
+      },
+    ],
+  },
+});
+
+export const HostSuppliedOptions: Story = {
+  name: "Dışarıdan seçenek listesi (cmsFieldOptions)",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Canlı yayın kanalları, piyasa widget'ları gibi select listeleri `cmsFieldOptions` ile dışarıdan verilir. Değer bir dizi ya da (async) fonksiyon olabilir. Kayıtlı bir değer listede yoksa silinmez, kendi seçeneği olarak korunur.",
+      },
+    },
+  },
+  render: () => (
+    <div className="max-w-3xl">
+      <RichTextEditor
+        initialJson={STALE_CHANNEL_JSON}
+        cmsFieldOptions={{
+          canliyayin: { channel: CHANNELS },
+          piyasa: { usd_eur: loadMarkets },
+          "*": {
+            position: [
+              { value: "left", label: "Sola yaslı" },
+              { value: "right", label: "Sağa yaslı" },
+            ],
+          },
+        }}
+      >
+        <RichTextToolbar insertBlocks={CMS_BLOCKS} />
+        <RichTextContent minHeight="min-h-40" />
+        <RichTextSlashCommands blocks={CMS_BLOCKS} />
+        <RichTextOutput defaultTab="json" />
+      </RichTextEditor>
+      <p className="mt-2 text-xs text-zinc-500">
+        “+” → Canlı Yayın: kanallar yukarıdaki listeden gelir. Piyasa: seçenekler
+        yüklenene kadar select bekler. Mevcut bloğun dişlisi: kanal 999 “listede
+        yok” olarak korunur.
+      </p>
+    </div>
+  ),
+};
+
+export const PastedEmbedCode: Story = {
+  name: "Iframe kodu yapıştırma (Google Haritalar)",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Google Haritalar'ın Paylaş kutusundan kopyalanan `<iframe …>` kodu URL alanına yapıştırıldığında sadece `src` alınır; `&amp;` gibi kaçışlar çözülür. Aynı davranış YouTube ve iframe bloklarının URL alanlarında da geçerli.",
+      },
+    },
+  },
+  render: () => (
+    <div className="max-w-3xl">
+      <RichTextEditor>
+        <RichTextToolbar insertBlocks={CMS_BLOCKS} />
+        <RichTextContent minHeight="min-h-40" />
+        <RichTextSlashCommands blocks={CMS_BLOCKS} />
+        <RichTextOutput defaultTab="json" />
+      </RichTextEditor>
+      <p className="mt-2 text-xs text-zinc-500">
+        “+” → Google Haritalar → Harita URL alanına iframe kodunu yapıştır.
+      </p>
+    </div>
+  ),
+};
+
+// ── caret access around edge blocks ───────────────────────────────────
+
+const block = (type: string, extra: Record<string, unknown> = {}) => ({
+  type,
+  version: 1,
+  format: "",
+  ...extra,
+});
+
+/** Opens and closes with blocks the caret cannot be typed around. */
+const EDGE_TRAP_JSON = JSON.stringify({
+  root: {
+    type: "root",
+    format: "",
+    indent: 0,
+    version: 1,
+    direction: "ltr",
+    children: [
+      block("galeri", { id: "345456", position: "left" }),
+      {
+        type: "paragraph",
+        format: "",
+        indent: 0,
+        version: 1,
+        direction: "ltr",
+        textFormat: 0,
+        textStyle: "",
+        children: [
+          {
+            type: "text",
+            text: "İki bloğun arasındaki tek paragraf.",
+            format: 0,
+            style: "",
+            detail: 0,
+            mode: "normal",
+            version: 1,
+          },
+        ],
+      },
+      block("canliyayin", { channel: "300", position: "left" }),
+    ],
+  },
+});
+
+export const CaretEdges: Story = {
+  name: "Kenardaki blokların üstü/altı (blockEdges)",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Belgenin başında veya sonunda duran resim/CMS bloğu, tablo ya da sütun bloğunun yanına imleç konamaz — `blockEdges` bu uçlara boş bir paragraf bırakır. Soldaki editörde açık (varsayılan), sağdakinde kapalı: sağda ilk bloğun üstüne tıklayıp yazamazsın.",
+      },
+    },
+  },
+  render: () => (
+    <div className="grid grid-cols-3 gap-4">
+      <div>
+        <p className="mb-1 text-xs font-medium text-emerald-700">
+          blockEdges (varsayılan: açık)
+        </p>
+        <RichTextEditor initialJson={EDGE_TRAP_JSON} resolveImageSrc={resolveImageSrc}>
+          <RichTextToolbar insertBlocks={CMS_BLOCKS} />
+          <RichTextContent minHeight="min-h-40" />
+          <RichTextOutput defaultTab="json" />
+        </RichTextEditor>
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-medium text-zinc-500">
+          blockEdges={"{false}"} — belge hiç değiştirilmez
+        </p>
+        <RichTextEditor
+          initialJson={EDGE_TRAP_JSON}
+          resolveImageSrc={resolveImageSrc}
+          blockEdges={false}
+        >
+          <RichTextToolbar insertBlocks={CMS_BLOCKS} />
+          <RichTextContent minHeight="min-h-40" />
+          <RichTextOutput defaultTab="json" />
+        </RichTextEditor>
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-medium text-zinc-500">
+          sıradan belge — hiç paragraf eklenmez
+        </p>
+        <RichTextEditor initialHtml="<h2>Başlık</h2><p>Sadece metin.</p>">
+          <RichTextToolbar insertBlocks={CMS_BLOCKS} />
+          <RichTextContent minHeight="min-h-40" />
+          <RichTextOutput defaultTab="json" />
+        </RichTextEditor>
+      </div>
+    </div>
+  ),
+};

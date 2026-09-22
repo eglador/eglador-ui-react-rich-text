@@ -7,6 +7,8 @@ import { cn } from "../../../lib/utils";
 import { TrashIcon } from "../../../lib/icons";
 import { Field } from "../form-fields";
 import { MediaThumb, parseIdList } from "./cms-previews";
+import { useCmsFieldOptions } from "./cms-field-options-context";
+import { extractEmbedSrc } from "../embed-src";
 import type { CmsBlockSpec, CmsFieldSpec, CmsFieldValues } from "./cms-types";
 
 const INPUT_CLASS =
@@ -112,6 +114,7 @@ export function CmsForm({
           label={field.optional ? `${field.label} (opsiyonel)` : field.label}
         >
           <CmsFieldInput
+            blockType={spec.type}
             field={field}
             value={values[field.name] ?? ""}
             onChange={(value) => setField(field.name, value)}
@@ -147,6 +150,8 @@ export function CmsForm({
 CmsForm.displayName = "CmsForm";
 
 interface CmsFieldInputProps {
+  /** The owning block's type — the key `cmsFieldOptions` is written against. */
+  blockType: string;
   field: CmsFieldSpec;
   value: string;
   onChange: (value: string) => void;
@@ -154,6 +159,7 @@ interface CmsFieldInputProps {
 }
 
 function CmsFieldInput({
+  blockType,
   field,
   value,
   onChange,
@@ -162,18 +168,12 @@ function CmsFieldInput({
   switch (field.inputType) {
     case "select":
       return (
-        <select
+        <CmsSelectInput
+          blockType={blockType}
+          field={field}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={cn(INPUT_CLASS, "bg-white cursor-pointer")}
-        >
-          {field.optional && <option value="">—</option>}
-          {(field.options ?? []).map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          onChange={onChange}
+        />
       );
 
     case "textarea":
@@ -207,7 +207,14 @@ function CmsFieldInput({
                     : "text"
           }
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) =>
+            onChange(
+              // Paste a share-dialog `<iframe …>` and only its src is kept.
+              field.inputType === "url"
+                ? extractEmbedSrc(e.target.value)
+                : e.target.value,
+            )
+          }
           placeholder={field.placeholder}
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
@@ -217,13 +224,68 @@ function CmsFieldInput({
   }
 }
 
+/**
+ * A dropdown whose choices come from the schema unless the host replaced
+ * them via `cmsFieldOptions` (a list, or a loader for values that live
+ * in the CMS — TV channels, markets).
+ */
+function CmsSelectInput({
+  blockType,
+  field,
+  value,
+  onChange,
+}: Omit<CmsFieldInputProps, "autoFocus">) {
+  const t = useMessages();
+  const { options, status } = useCmsFieldOptions(
+    blockType,
+    field.name,
+    field.options,
+  );
+  const loading = status === "loading";
+
+  // A stored value missing from the list (a channel that was removed, or
+  // a seeded default that a host list doesn't contain) is kept as its own
+  // entry — saving the block must never silently change it.
+  const unknown =
+    value && !loading && !options.some((option) => option.value === value);
+
+  React.useEffect(() => {
+    if (loading || value || field.optional || options.length === 0) return;
+    onChange(options[0].value);
+  }, [loading, value, field.optional, options, onChange]);
+
+  return (
+    <select
+      value={value}
+      disabled={loading}
+      onChange={(e) => onChange(e.target.value)}
+      className={cn(
+        INPUT_CLASS,
+        "bg-white cursor-pointer",
+        loading && "text-zinc-400 cursor-wait",
+      )}
+    >
+      {loading && <option value={value}>{t.loadingOptions}</option>}
+      {field.optional && !loading && <option value="">—</option>}
+      {unknown && (
+        <option value={value}>{`${value} — ${t.optionNotInList}`}</option>
+      )}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 /** Comma-separated media IDs with a live thumbnail strip, so the author
  *  can confirm each ID resolves before saving. */
 function ImageIdsInput({
   field,
   value,
   onChange,
-}: Omit<CmsFieldInputProps, "autoFocus">) {
+}: Omit<CmsFieldInputProps, "autoFocus" | "blockType">) {
   const ids = parseIdList(value);
 
   const removeId = (target: string) =>

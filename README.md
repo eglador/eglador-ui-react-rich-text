@@ -96,6 +96,7 @@ export function MyEditor() {
 | `RichTextLinkEditor` | Auto-opening link edit form when cursor enters a link. |
 | `RichTextTableActions` | Cell-anchored chevron with insert/delete/merge/unmerge actions. |
 | `RichTextSpellCheck` | Turkish spell checking: underlines, suggestions, status bar, pass/fail output. |
+| `RichTextBlockEdges` | Keeps a paragraph next to edge blocks so the caret can reach above/below (auto-mounted). |
 
 ### Hooks
 
@@ -479,6 +480,77 @@ imageLibrary={async () => (await fetch("/api/medya")).json()}
 ```
 
 Omit the prop entirely and the form keeps its current behaviour: ID and URL stay editable.
+
+## Typing above and below edge blocks (`blockEdges`)
+
+An image, a CMS block, a table or a columns row at the very start or end of the document leaves the caret nowhere to go: clicking above the first block just lands in the text below it, and the only way past the last one is the "+" menu. The editor keeps an empty paragraph at those ends so both are reachable.
+
+```
+[galeri]                    →   [paragraph]   ← click here and type
+[paragraph] "metin"             [galeri]
+[canliyayin]                    [paragraph] "metin"
+                                [canliyayin]
+                                [paragraph]   ← and here
+```
+
+- Only blocks the caret can't be typed around count: block decorators (media, CMS blocks, page break, horizontal rule) and containers whose text sits in nested shadow roots (tables, columns, note bodies). A document that begins and ends with a paragraph, heading, quote or list is **left exactly as it is**.
+- The paragraph is added in the same update as the insertion, so one Ctrl+Z undoes both.
+- It becomes part of the document, so it shows up in `onChange` / `getJson()` output as an empty paragraph.
+
+Turn it off if you would rather keep documents untouched, or control each end:
+
+```tsx
+<RichTextEditor blockEdges={false}>            {/* never modify the document */}
+<RichTextEditor blockEdges={{ leading: false }}>  {/* only guarantee the bottom one */}
+```
+
+`registerBlockEdges(editor, options)` is exported for use outside React.
+
+## Dropdown choices from your own CMS (`cmsFieldOptions`)
+
+The CMS blocks ship with built-in lists — live-stream channels, market widgets, link colours, alignment. Replace any of them per project, keyed by block type and then field name:
+
+```tsx
+<RichTextEditor
+  cmsFieldOptions={{
+    canliyayin: { channel: [
+      { value: "300", label: "BHT TV" },
+      { value: "55",  label: "Eglador TV" },
+    ]},
+    piyasa: { usd_eur: async () => (await fetch("/api/piyasa")).json() },
+    "*": { position: [{ value: "left", label: "Sola yaslı" }] },
+  }}
+>
+```
+
+- A value is either a list or a function (sync or async) returning one, so channels can come straight from your API.
+- `"*"` applies to every block — handy for `position`, which many blocks share. A block-specific entry wins over `"*"`.
+- Each loader runs **once per editor** and the result is cached, so reopening a form doesn't refetch. While a loader runs the select is disabled and shows a loading label; if it rejects, the built-in list comes back so the form stays usable (the error is logged).
+- The `value` of each option is exactly what lands in the JSON — these are your CMS IDs, not display text.
+- **A stored value missing from the new list is kept**, shown as its own `123 — listede yok` entry. Editing and saving an old block never silently switches it to another channel.
+
+Both the insert form ("+" / "/" menus) and the block's own gear-icon edit form read the same lists.
+
+## Pasted embed codes
+
+Share dialogs hand out a whole `<iframe …>` tag rather than a URL. Paste one into a URL field and only its `src` is kept, with `&amp;`-style escapes decoded:
+
+```
+<iframe src="https://www.google.com/maps/embed?pb=!1m18…" width="600" …></iframe>
+→ https://www.google.com/maps/embed?pb=!1m18…
+```
+
+This applies to the CMS blocks' URL fields (Google Maps, SoundCloud, X, Instagram, …) and to the built-in YouTube and iframe blocks. The helper is exported as `extractEmbedSrc(text)` if you need it elsewhere.
+
+The YouTube field goes one step further: a pasted `watch?v=`, `youtu.be` or `/shorts/` link becomes its embeddable form, because YouTube refuses to be framed from a watch URL.
+
+| Pasted | Stored |
+|---|---|
+| `https://www.youtube.com/watch?v=DCCN_T_VigY` | `https://www.youtube-nocookie.com/embed/DCCN_T_VigY` |
+| `<iframe … src="https://www.youtube.com/embed/DCCN_T_VigY?si=61Jm…">` | `https://www.youtube.com/embed/DCCN_T_VigY?si=61Jm…` |
+| `https://www.youtube.com/watch?v=DCCN_T_VigY&t=90s` | embed URL, and `90` fills the start-time field |
+
+A URL that is already embeddable is stored exactly as pasted, params and all. Conversion happens on paste and when the field loses focus — never while you are still typing.
 
 ## Hiding fields
 

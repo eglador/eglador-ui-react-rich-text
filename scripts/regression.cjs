@@ -274,6 +274,157 @@ const withDoc = (build, assert) =>
   ck("overrides merge", p.resolveMessages("tr", { cancel: "X" }).cancel === "X");
   ck("unknown locale falls back", p.resolveMessages(undefined).cancel === "Vazgeç");
 
+  section("blocks at the edges keep a paragraph to type in");
+  const edgeCase = (label, build, expected, options) =>
+    new Promise((resolve) => {
+      const e = newEditor();
+      const unregister = p.registerBlockEdges(e, options);
+      e.update(
+        () => {
+          $getRoot().clear();
+          $getRoot().append(...build());
+        },
+        {
+          onUpdate: () => {
+            const types = e
+              .getEditorState()
+              .toJSON()
+              .root.children.map((c) => c.type);
+            ck(`${label}: ${expected}`, types.join(",") === expected, types.join(","));
+            unregister();
+            resolve();
+          },
+        },
+      );
+    });
+
+  const paragraphWith = (text) => {
+    const para = $createParagraphNode();
+    para.append($createTextNode(text));
+    return para;
+  };
+  const columns = () => {
+    const cols = p.$createColumnsNode({ count: 2 });
+    for (let n = 0; n < 2; n++) {
+      const col = p.$createColumnNode();
+      col.append($createParagraphNode());
+      cols.append(col);
+    }
+    return cols;
+  };
+
+  // A decorator holds no text at all.
+  await edgeCase(
+    "image alone",
+    () => [p.$createImageNode("u", {})],
+    "paragraph,image,paragraph",
+  );
+  await edgeCase(
+    "CMS block between paragraphs",
+    () => [paragraphWith("a"), p.$createCmsNode("galeri", { id: "1" }), paragraphWith("b")],
+    "paragraph,galeri,paragraph",
+  );
+  // Containers hold text, but only inside nested shadow roots.
+  await edgeCase("columns alone", () => [columns()], "paragraph,columns,paragraph");
+  await edgeCase(
+    "news moment alone",
+    () => [p.$createNewsMomentNode({ title: "T" })],
+    "paragraph,newsMoment,paragraph",
+  );
+  await edgeCase(
+    "trailing block only",
+    () => [paragraphWith("a"), p.$createYouTubeNode("https://y/embed/x")],
+    "paragraph,youtube,paragraph",
+  );
+  await edgeCase(
+    "leading block only",
+    () => [p.$createVideoNode("v", {}), paragraphWith("a")],
+    "paragraph,video,paragraph",
+  );
+  // Ordinary documents are left exactly as they are.
+  await edgeCase(
+    "text document untouched",
+    () => [paragraphWith("a"), paragraphWith("b")],
+    "paragraph,paragraph",
+  );
+  await edgeCase(
+    "one edge can be switched off",
+    () => [p.$createImageNode("u", {})],
+    "image,paragraph",
+    { leading: false },
+  );
+  await edgeCase(
+    "both can be switched off",
+    () => [p.$createImageNode("u", {})],
+    "image",
+    { leading: false, trailing: false },
+  );
+
+  section("pasted embed codes keep only the src");
+  const MAPS_IFRAME =
+    '<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3015.14!2d29.26!3d40.91!5e0!3m2!1str!2str!4v1790073860694" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+  ck(
+    "Google Maps embed → bare src",
+    p.extractEmbedSrc(MAPS_IFRAME) ===
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3015.14!2d29.26!3d40.91!5e0!3m2!1str!2str!4v1790073860694",
+    p.extractEmbedSrc(MAPS_IFRAME),
+  );
+  ck(
+    "escaped &amp; in the query string is decoded",
+    p.extractEmbedSrc('<iframe src="https://x.com/e?a=1&amp;b=2&#38;c=3"></iframe>') ===
+      "https://x.com/e?a=1&b=2&c=3",
+  );
+  ck(
+    "single quotes and leading whitespace",
+    p.extractEmbedSrc("\n  <iframe width='600' src='https://a.tr/x'></iframe>  ") ===
+      "https://a.tr/x",
+  );
+  ck(
+    "unquoted src",
+    p.extractEmbedSrc("<iframe src=https://a.tr/x width=600></iframe>") ===
+      "https://a.tr/x",
+  );
+  ck(
+    "a width attribute before src is not mistaken for it",
+    p.extractEmbedSrc('<iframe data-src="https://wrong.tr" src="https://right.tr"></iframe>') ===
+      "https://right.tr",
+    p.extractEmbedSrc('<iframe data-src="https://wrong.tr" src="https://right.tr"></iframe>'),
+  );
+  for (const plain of [
+    "https://www.google.com/maps/embed?pb=!1m18",
+    "",
+    "not a url",
+    "<p>no iframe here</p>",
+  ]) {
+    ck(`left untouched: ${JSON.stringify(plain)}`, p.extractEmbedSrc(plain) === plain);
+  }
+
+  section("YouTube: pasted links become embeddable URLs");
+  const YT_IFRAME =
+    '<iframe width="560" height="315" src="https://www.youtube.com/embed/DCCN_T_VigY?si=61JmT_OIPawhB1Np" title="YouTube video player" frameborder="0" allowfullscreen></iframe>';
+  const normalize = (raw) => p.toYouTubeEmbedSrc(p.extractEmbedSrc(raw));
+  ck(
+    "iframe embed code → src, extra params kept",
+    normalize(YT_IFRAME) ===
+      "https://www.youtube.com/embed/DCCN_T_VigY?si=61JmT_OIPawhB1Np",
+    normalize(YT_IFRAME),
+  );
+  for (const [input, expected] of [
+    ["https://www.youtube.com/watch?v=DCCN_T_VigY", "https://www.youtube-nocookie.com/embed/DCCN_T_VigY"],
+    ["https://youtu.be/DCCN_T_VigY", "https://www.youtube-nocookie.com/embed/DCCN_T_VigY"],
+    ["https://www.youtube.com/shorts/DCCN_T_VigY", "https://www.youtube-nocookie.com/embed/DCCN_T_VigY"],
+    ["https://www.youtube.com/watch?v=DCCN_T_VigY&t=90s", "https://www.youtube-nocookie.com/embed/DCCN_T_VigY"],
+    // Already embeddable — left exactly as the author had it.
+    ["https://www.youtube-nocookie.com/embed/DCCN_T_VigY?rel=0", "https://www.youtube-nocookie.com/embed/DCCN_T_VigY?rel=0"],
+    ["https://player.vimeo.com/video/123", "https://player.vimeo.com/video/123"],
+  ]) {
+    ck(`${input} → ${expected}`, normalize(input) === expected, normalize(input));
+  }
+  ck(
+    "the timestamp survives as a start time",
+    p.parseYouTubeUrl("https://www.youtube.com/watch?v=DCCN_T_VigY&t=90s")?.start === 90,
+  );
+
   section("spell check: Turkish, in-process (server path)");
   const fs = require("node:fs");
   const dict = path.join(ROOT, "node_modules/dictionary-tr");

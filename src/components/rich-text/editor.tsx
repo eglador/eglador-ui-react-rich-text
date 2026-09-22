@@ -20,6 +20,7 @@ import { SelectionAlwaysOnDisplay } from "@lexical/react/LexicalSelectionAlwaysO
 import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
+import { RichTextBlockEdges } from "./block-edges";
 import { isLegacyShortcodeLine } from "./legacy-shortcode";
 import { CharacterCount } from "./character-count";
 import {
@@ -53,6 +54,7 @@ import {
   HiddenFieldsProvider,
   stripHiddenFields,
 } from "./hidden-fields-context";
+import { CmsFieldOptionsProvider } from "./cms/cms-field-options-context";
 import type { RichTextEditorProps } from "./types";
 
 function buildInitialState(
@@ -240,6 +242,8 @@ export function RichTextEditor({
   messages,
   imageLibrary,
   hiddenFields,
+  cmsFieldOptions,
+  blockEdges = true,
   editorRef,
   className,
   children,
@@ -309,9 +313,11 @@ export function RichTextEditor({
           <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
             <MediaLibraryProvider library={imageLibrary}>
               <HiddenFieldsProvider hiddenFields={hiddenFields}>
-                <TextStyleProvider value={styleSetting}>
-                  <PageSizeProvider>{children}</PageSizeProvider>
-                </TextStyleProvider>
+                <CmsFieldOptionsProvider cmsFieldOptions={cmsFieldOptions}>
+                  <TextStyleProvider value={styleSetting}>
+                    <PageSizeProvider>{children}</PageSizeProvider>
+                  </TextStyleProvider>
+                </CmsFieldOptionsProvider>
               </HiddenFieldsProvider>
             </MediaLibraryProvider>
           </MediaResolverProvider>
@@ -325,6 +331,11 @@ export function RichTextEditor({
         <HorizontalRulePlugin />
         <TablePlugin hasCellMerge hasCellBackgroundColor hasTabHandler />
         <PageBreakPlugin />
+        {blockEdges !== false && (
+          <RichTextBlockEdges
+            {...(typeof blockEdges === "object" ? blockEdges : {})}
+          />
+        )}
         <LegacySafeHashtagPlugin />
         <TabIndentationPlugin />
         <SelectionAlwaysOnDisplay />

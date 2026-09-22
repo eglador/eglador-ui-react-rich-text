@@ -6,8 +6,10 @@ import { useHiddenFields } from "./hidden-fields-context";
 import { cn } from "../../lib/utils";
 import { TrashIcon, YouTubeIcon } from "../../lib/icons";
 import { Field, Toggle } from "./form-fields";
+import { extractEmbedSrc } from "./embed-src";
 import {
   parseYouTubeUrl,
+  toYouTubeEmbedSrc,
   type YouTubeOptions,
 } from "./youtube-node";
 
@@ -86,6 +88,39 @@ export function YouTubeForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.start, mode]);
 
+  /**
+   * Tidy up what was pasted, without touching what is being typed.
+   *
+   * Two things arrive from YouTube's Share dialog: a whole `<iframe …>`
+   * tag, and a `watch?v=` link that browsers refuse to frame. Both become
+   * the embed URL here, on paste and on blur only — converting inside
+   * `onChange` would rewrite the field mid-keystroke, before a typed URL
+   * is finished.
+   */
+  const normalize = (raw: string) => toYouTubeEmbedSrc(extractEmbedSrc(raw));
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text");
+    if (!pasted) return;
+    const input = e.currentTarget;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const merged =
+      input.value.slice(0, start) + pasted + input.value.slice(end);
+    const normalized = normalize(merged);
+    if (normalized === merged) return;
+
+    e.preventDefault();
+    // `watch?v=…&t=90` loses its timestamp on the way to `/embed/`, so
+    // carry it over to the start field instead of dropping it.
+    const pastedStart = parseYouTubeUrl(merged)?.start;
+    if (mode === "insert" && !userTouchedStart.current && pastedStart) {
+      setOpts((s) => ({ ...s, start: pastedStart }));
+    }
+    setUrl(normalized);
+    if (error) setError(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -136,6 +171,8 @@ export function YouTubeForm({
               setUrl(e.target.value);
               if (error) setError(null);
             }}
+            onPaste={handlePaste}
+            onBlur={(e) => setUrl(normalize(e.target.value))}
             placeholder="https://youtube.com/watch?v=..."
             className={cn(
               "w-full px-2 py-1.5 text-sm border rounded outline-none",

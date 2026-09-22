@@ -292,8 +292,14 @@ export {
   initialCmsValues,
   parseIdList,
   CMS_BLOCK_SCHEMA,
+  CmsFieldOptionsProvider,
+  useCmsFieldOptions,
 } from "./cms";
 export type {
+  CmsFieldOptionsConfig,
+  CmsFieldOptionsSource,
+  CmsFieldOptionsState,
+  CmsFieldOptionsStatus,
   CmsBlockSpec,
   CmsFieldSpec,
   CmsFieldOption,
@@ -335,4 +341,7 @@ export type {
 } from "./toolbar";
 export type { HeadingMenuItem } from "./heading-menu";
 export type { RichTextEditorApi } from "./hook";
+export { RichTextBlockEdges, registerBlockEdges } from "./block-edges";
+export type { RichTextBlockEdgesProps } from "./block-edges";
+export { extractEmbedSrc } from "./embed-src";
 export * from "./spellcheck";
