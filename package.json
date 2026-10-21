@@ -1,6 +1,6 @@
 {
   "name": "eglador-ui-react-rich-text",
-  "version": "1.0.0-alpha.27",
+  "version": "1.0.0-alpha.28",
   "description": "React Rich Text component for Eglador UI",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -30,7 +30,7 @@
     "prestorybook": "npm run spell-worker",
     "prebuild-storybook": "npm run spell-worker",
     "predev": "npm run spell-worker",
-    "browser-test": "node scripts/browser/paste-and-headings.cjs"
+    "browser-test": "node scripts/browser/editor-ui.cjs"
   },
   "repository": {
     "type": "git",

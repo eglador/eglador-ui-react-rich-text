@@ -1,6 +1,7 @@
 /**
- * Browser checks for paste cleanup, the selection toolbar's heading
- * buttons, and the heading character counter.
+ * Browser checks for the editor's UI: paste cleanup, the selection
+ * toolbar (headings, letter case, placement), the heading character
+ * counter and the image block's alt row.
  *
  * Needs Storybook running:  npm run storybook -- -p 6017
  * Then:                     npm run browser-test
@@ -417,6 +418,82 @@ const selectBlock = async (page, locator) => {
     !exported.includes("tracking-wide") && !exported.includes(">alt<"),
     exported.slice(0, 200),
   );
+
+  // ── 6. the selection toolbar stays on screen ───────────────────────
+  section("seçim çubuğu ekran dışına taşmıyor");
+  const barRect = () =>
+    page.evaluate(() => {
+      const bar = document.querySelector(
+        '[role="toolbar"][aria-label="Selection formatting"]',
+      );
+      if (!bar) return null;
+      const r = bar.getBoundingClientRect();
+      const sel = window.getSelection();
+      const s = sel && sel.rangeCount ? sel.getRangeAt(0).getBoundingClientRect() : null;
+      return {
+        left: Math.round(r.left),
+        right: Math.round(r.right),
+        top: Math.round(r.top),
+        bottom: Math.round(r.bottom),
+        selTop: s ? Math.round(s.top) : null,
+        selBottom: s ? Math.round(s.bottom) : null,
+        portalledToBody: bar.parentElement === document.body,
+        inside:
+          r.left >= 0 &&
+          r.top >= 0 &&
+          r.right <= window.innerWidth &&
+          r.bottom <= window.innerHeight,
+      };
+    });
+
+  await page.setViewportSize({ width: 820, height: 760 });
+  await page.goto(
+    "http://localhost:6017/iframe.html?viewMode=story&id=rich-text-editor--heading-tools",
+    { waitUntil: "networkidle" },
+  );
+  await page.waitForTimeout(700);
+  const edge = page.locator('[contenteditable="true"]').first();
+
+  // A short selection hard against the left edge — this used to put half
+  // the toolbar outside the editor, where `overflow: hidden` cut it off.
+  await edge.locator("p").first().click({ clickCount: 3 });
+  await page.keyboard.type("kısa");
+  await page.keyboard.press("Home");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("Shift+ArrowRight");
+  await page.waitForTimeout(400);
+  let r = await barRect();
+  console.log("       sol kenar:", JSON.stringify(r));
+  ck("sol kenarda tamamen görünür", r && r.inside && r.left >= 0, JSON.stringify(r));
+  ck("gövdeye portal ediliyor (kırpılmaz)", r && r.portalledToBody === true);
+
+  // Still usable where it was clipped before.
+  await page.locator('[role="toolbar"][aria-label="Selection formatting"] button[aria-label="Bold"]').click();
+  await page.waitForTimeout(300);
+  ck(
+    "kırpılan konumda düğmeler çalışıyor",
+    (await edge.locator("strong, b").count()) > 0,
+  );
+
+  await edge.locator("p").first().click({ clickCount: 3 });
+  await page.keyboard.type("x".repeat(90));
+  await page.keyboard.press("End");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("Shift+ArrowLeft");
+  await page.waitForTimeout(400);
+  r = await barRect();
+  console.log("       sağ kenar:", JSON.stringify(r));
+  ck("sağ kenarda tamamen görünür", r && r.inside, JSON.stringify(r));
+
+  // No room above the selection → it flips underneath.
+  await page.setViewportSize({ width: 800, height: 260 });
+  await page.waitForTimeout(300);
+  await page.evaluate(() => window.scrollTo(0, 70));
+  await edge.locator("h2").first().click({ clickCount: 3 });
+  await page.waitForTimeout(400);
+  r = await barRect();
+  console.log("       üstte yer yok:", JSON.stringify(r));
+  ck("yukarı sığmayınca altına geçiyor", r && r.top > r.selBottom, JSON.stringify(r));
+  ck("alta geçince de ekran içinde", r && r.inside, JSON.stringify(r));
+  await page.setViewportSize({ width: 1200, height: 950 });
 
   ck("sayfa hatası yok", errors.length === 0, errors.join(" | "));
   await browser.close();
