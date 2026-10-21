@@ -45,8 +45,12 @@ import { LinkEditPopover } from "./link-edit-popover";
 import { TextCaseMenu } from "./text-case-menu";
 
 interface RichTextFloatingToolbarProps {
-  /** Element used as positioning anchor (typically the editor's content wrapper) */
-  anchorElem: HTMLElement;
+  /**
+   * Kept for API compatibility. The toolbar now portals to the body and
+   * positions itself from the selection's viewport rect, so it is not
+   * used — passing it is harmless.
+   */
+  anchorElem?: HTMLElement;
   /**
    * Heading buttons offered next to the inline formats. Each one turns
    * the selected block into that heading, or back into a paragraph when
@@ -55,10 +59,13 @@ interface RichTextFloatingToolbarProps {
   headings?: HeadingTagType[];
 }
 
+/** The selection's viewport rect — the toolbar is placed from it in a
+ *  layout effect, once its own size is known. */
+type SelectionRect = { top: number; bottom: number; left: number; width: number };
+
 type FloatingState = {
   visible: boolean;
-  top: number;
-  left: number;
+  rect: SelectionRect | null;
   bold: boolean;
   italic: boolean;
   underline: boolean;
@@ -69,10 +76,19 @@ type FloatingState = {
   blockType: string;
 };
 
+const sameRect = (a: SelectionRect | null, b: SelectionRect) =>
+  a !== null &&
+  a.top === b.top &&
+  a.bottom === b.bottom &&
+  a.left === b.left &&
+  a.width === b.width;
+
+const GAP = 8;
+const VIEWPORT_PADDING = 8;
+
 const initialState: FloatingState = {
   visible: false,
-  top: 0,
-  left: 0,
+  rect: null,
   bold: false,
   italic: false,
   underline: false,
@@ -87,9 +103,8 @@ const initialState: FloatingState = {
  * buttons (bold, italic, underline, strikethrough, code, link).
  */
 export function RichTextFloatingToolbar({
-  anchorElem,
   headings = ["h2", "h3"],
-}: RichTextFloatingToolbarProps) {
+}: RichTextFloatingToolbarProps = {}) {
   const [editor] = useLexicalComposerContext();
   const [state, setState] = React.useState<FloatingState>(initialState);
   const [linkOpen, setLinkOpen] = React.useState(false);
@@ -141,21 +156,23 @@ export function RichTextFloatingToolbar({
       const rangeRect = domSelection.getRangeAt(0).getBoundingClientRect();
       if (rangeRect.width === 0 && rangeRect.height === 0) return;
 
-      const anchorRect = anchorElem.getBoundingClientRect();
-      const toolbarHeight = toolbarRef.current?.offsetHeight ?? 36;
+      const rect: SelectionRect = {
+        top: rangeRect.top,
+        bottom: rangeRect.bottom,
+        left: rangeRect.left,
+        width: rangeRect.width,
+      };
 
-      const top = rangeRect.top - anchorRect.top - toolbarHeight - 8;
-      const left =
-        rangeRect.left - anchorRect.left + rangeRect.width / 2;
-
-      setState({
+      setState((current) => ({
         visible: true,
-        top,
-        left,
+        // Reuse the previous object when nothing moved: scrolling fires
+        // this constantly, and a fresh rect would re-run the placement
+        // effect (and its ResizeObserver) every time.
+        rect: sameRect(current.rect, rect) ? current.rect : rect,
         ...next,
-      });
+      }));
     });
-  }, [editor, anchorElem]);
+  }, [editor]);
 
   React.useEffect(() => {
     return mergeRegister(
@@ -190,6 +207,48 @@ export function RichTextFloatingToolbar({
     });
   };
 
+  // Positioned from the selection rect once the toolbar's own size is
+  // known, and clamped to the viewport: a selection near the left edge
+  // used to push half the bar outside the editor, where the editor's
+  // `overflow: hidden` cut it off.
+  React.useLayoutEffect(() => {
+    const element = toolbarRef.current;
+    const rect = state.rect;
+    if (!element || !rect) return;
+
+    const place = () => {
+      const { offsetWidth: width, offsetHeight: height } = element;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      let top = rect.top - height - GAP;
+      // No room above the selection — sit under it instead.
+      if (top < VIEWPORT_PADDING) top = rect.bottom + GAP;
+      top = Math.min(
+        Math.max(top, VIEWPORT_PADDING),
+        Math.max(VIEWPORT_PADDING, vh - height - VIEWPORT_PADDING),
+      );
+
+      const left = Math.min(
+        Math.max(rect.left + rect.width / 2 - width / 2, VIEWPORT_PADDING),
+        Math.max(VIEWPORT_PADDING, vw - width - VIEWPORT_PADDING),
+      );
+
+      element.style.top = `${Math.round(top)}px`;
+      element.style.left = `${Math.round(left)}px`;
+    };
+
+    place();
+    // The bar's width changes as buttons come and go (link state, headings).
+    const observer = new ResizeObserver(place);
+    observer.observe(element);
+    window.addEventListener("resize", place);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", place);
+    };
+  }, [state.rect]);
+
   const dispatchFormat = (
     format: "bold" | "italic" | "underline" | "strikethrough" | "code",
   ) => {
@@ -203,8 +262,8 @@ export function RichTextFloatingToolbar({
       ref={toolbarRef}
       role="toolbar"
       aria-label="Selection formatting"
-      className="absolute z-50 flex items-center gap-0.5 px-1 py-1 rounded-lg border border-zinc-200 bg-white shadow-lg -translate-x-1/2"
-      style={{ top: state.top, left: state.left }}
+      className="fixed z-[9999] flex items-center gap-0.5 px-1 py-1 rounded-lg border border-zinc-200 bg-white shadow-lg"
+      style={{ top: 0, left: 0 }}
     >
       <FloatingButton
         label="Bold"
@@ -280,7 +339,9 @@ export function RichTextFloatingToolbar({
         }
       />
     </div>,
-    anchorElem,
+    // The body, not the editor: an ancestor's `overflow: hidden` would
+    // clip the bar wherever the selection sits near an edge.
+    document.body,
   );
 }
 
