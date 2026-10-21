@@ -13,6 +13,8 @@ const {
   $getRoot,
   $createParagraphNode,
   $createTextNode,
+  $createRangeSelection,
+  $setSelection,
   $insertNodes,
 } = require(path.join(ROOT, "node_modules/lexical"));
 const p = require(path.join(ROOT, "dist/index.js"));
@@ -273,6 +275,134 @@ const withDoc = (build, assert) =>
   ck("en cancel", p.enMessages.cancel === "Cancel");
   ck("overrides merge", p.resolveMessages("tr", { cancel: "X" }).cancel === "X");
   ck("unknown locale falls back", p.resolveMessages(undefined).cancel === "Vazgeç");
+
+  section("letter case follows the editor's language");
+  for (const [input, upper, lower, title] of [
+    // The Turkish dotted/dotless i is what plain toUpperCase gets wrong.
+    ["ilgi", "İLGİ", "ilgi", "İlgi"],
+    ["IRMAK", "IRMAK", "ırmak", "Irmak"],
+    ["İstanbul", "İSTANBUL", "istanbul", "İstanbul"],
+    ["çocuk şarkısı", "ÇOCUK ŞARKISI", "çocuk şarkısı", "Çocuk Şarkısı"],
+    ["ĞÜŞÖÇ", "ĞÜŞÖÇ", "ğüşöç", "Ğüşöç"],
+  ]) {
+    ck(`tr: ${input} → ${upper} / ${lower} / ${title}`,
+      p.toUpperCaseText(input, "tr") === upper &&
+        p.toLowerCaseText(input, "tr") === lower &&
+        p.toTitleCaseText(input, "tr") === title,
+      `${p.toUpperCaseText(input, "tr")} / ${p.toLowerCaseText(input, "tr")} / ${p.toTitleCaseText(input, "tr")}`,
+    );
+  }
+  ck(
+    "en: title case stays English",
+    p.toTitleCaseText("istanbul in winter", "en") === "Istanbul In Winter",
+    p.toTitleCaseText("istanbul in winter", "en"),
+  );
+  for (const [label, input, expected] of [
+    ["apostrophe suffixes stay lowercase", "istanbul'da ali'nin", "İstanbul'da Ali'nin"],
+    ["numbers keep their suffix", "2024'te 3 kişi", "2024'te 3 Kişi"],
+    ["punctuation starts a new word", "bir-iki (üç)", "Bir-İki (Üç)"],
+    ["already shouting gets normalised", "SON DAKİKA HABERİ", "Son Dakika Haberi"],
+  ]) {
+    ck(`title: ${label}`, p.toTitleCaseText(input, "tr") === expected, p.toTitleCaseText(input, "tr"));
+  }
+  ck(
+    "a word split by formatting is not capitalised mid-word",
+    // "kita" + bold "plar" — the second chunk continues the first.
+    p.toTitleCaseText("plar", "tr", "a") === "plar",
+    p.toTitleCaseText("plar", "tr", "a"),
+  );
+  ck(
+    "a chunk that starts a word is capitalised",
+    p.toTitleCaseText("plar", "tr", " ") === "Plar",
+  );
+
+  await new Promise((resolve) => {
+    const e = newEditor();
+    e.update(
+      () => {
+        $getRoot().clear();
+        const para = $createParagraphNode();
+        const plain = $createTextNode("son dakika ");
+        const bold = $createTextNode("ilgi çekici");
+        bold.setFormat(1);
+        para.append(plain, bold);
+        $getRoot().append(para);
+        // Across both runs: `select()` on an element counts children, not
+        // characters, so build the range by hand.
+        const selection = $createRangeSelection();
+        selection.anchor.set(plain.getKey(), 0, "text");
+        selection.focus.set(bold.getKey(), bold.getTextContentSize(), "text");
+        $setSelection(selection);
+      },
+      {
+        onUpdate: () => {
+          p.transformSelectionCase(e, "upper", "tr");
+          e.update(() => {}, {
+            onUpdate: () => {
+              const json = e.getEditorState().toJSON().root.children[0];
+              const runs = json.children.map((c) => `${c.text}|${c.format}`);
+              ck(
+                "selection transform keeps each run's formatting",
+                runs.join(" ") === "SON DAKİKA |0 İLGİ ÇEKİCİ|1",
+                runs.join(" "),
+              );
+              resolve();
+            },
+          });
+        },
+      },
+    );
+  });
+
+  section("pasted content loses only its blank spacer blocks");
+  const { JSDOM } = (() => {
+    try {
+      return require(path.join(ROOT, "node_modules/jsdom"));
+    } catch {
+      return {};
+    }
+  })();
+  if (JSDOM) {
+    const dom = new JSDOM("");
+    global.DOMParser = dom.window.DOMParser;
+    for (const [label, input, expected] of [
+      [
+        "Word spacer paragraph",
+        '<p class="MsoNormal">Bir.<o:p></o:p></p><p class="MsoNormal"><o:p>&nbsp;</o:p></p><p class="MsoNormal">İki.</p>',
+        '<p class="MsoNormal">Bir.<o:p></o:p></p><p class="MsoNormal">İki.</p>',
+      ],
+      [
+        "Google Docs <br> between paragraphs",
+        "<p>Bir.</p><br><p>İki.</p>",
+        "<p>Bir.</p><p>İki.</p>",
+      ],
+      ["empty div spacer", "<div>Bir.</div><div><br></div><div>İki.</div>", "<div>Bir.</div><div>İki.</div>"],
+      ["nested blank blocks", "<div><p>&nbsp;</p></div><p>Bir.</p>", "<p>Bir.</p>"],
+      // Everything that carries meaning stays.
+      ["a line break inside a paragraph", "<p>Bir.<br>İki.</p>", "<p>Bir.<br>İki.</p>"],
+      ["an image in an otherwise empty block", '<p><img src="x.png"></p>', '<p><img src="x.png"></p>'],
+      ["formatting", "<p><strong>Kalın</strong> ve <em>italik</em>.</p>", "<p><strong>Kalın</strong> ve <em>italik</em>.</p>"],
+      ["lists", "<ul><li>a</li><li>b</li></ul>", "<ul><li>a</li><li>b</li></ul>"],
+      ["headings", "<h2>Başlık</h2><p>Gövde.</p>", "<h2>Başlık</h2><p>Gövde.</p>"],
+      ["an empty table cell", "<table><tr><td></td><td>a</td></tr></table>", "<table><tbody><tr><td></td><td>a</td></tr></tbody></table>"],
+    ]) {
+      const got = p.cleanPastedHtml(input);
+      ck(`html: ${label}`, got === expected, got);
+    }
+    delete global.DOMParser;
+  } else {
+    console.log("  skip jsdom not installed — HTML cleanup covered by the browser suite");
+  }
+  for (const [label, input, expected] of [
+    ["blank lines collapse", "Bir.\n\n\nİki.", "Bir.\nİki."],
+    ["single breaks survive", "Bir.\nİki.", "Bir.\nİki."],
+    ["CRLF", "Bir.\r\n\r\nİki.", "Bir.\nİki."],
+    ["whitespace-only lines", "Bir.\n   \nİki.", "Bir.\nİki."],
+    ["leading and trailing blank lines", "\n\nBir.\n\n", "Bir."],
+    ["plain text untouched", "Bir iki üç.", "Bir iki üç."],
+  ]) {
+    ck(`text: ${label}`, p.collapsePastedText(input) === expected, JSON.stringify(p.collapsePastedText(input)));
+  }
 
   section("blocks at the edges keep a paragraph to type in");
   const edgeCase = (label, build, expected, options) =>

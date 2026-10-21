@@ -342,6 +342,32 @@ export type {
 export type { HeadingMenuItem } from "./heading-menu";
 export type { RichTextEditorApi } from "./hook";
 export { RichTextBlockEdges, registerBlockEdges } from "./block-edges";
+export {
+  RichTextHeadingLimit,
+  registerHeadingLimit,
+  DEFAULT_HEADING_LIMIT,
+} from "./heading-limit";
+export type {
+  RichTextHeadingLimitProps,
+  HeadingLimitConfig,
+  HeadingLimitOptions,
+} from "./heading-limit";
+export {
+  RichTextPasteCleanup,
+  registerPasteCleanup,
+  cleanPastedHtml,
+  collapsePastedText,
+} from "./paste-cleanup";
 export type { RichTextBlockEdgesProps } from "./block-edges";
+export { TextCaseMenu } from "./text-case-menu";
+export type { TextCaseMenuProps } from "./text-case-menu";
+export {
+  transformSelectionCase,
+  applyTextCase,
+  toUpperCaseText,
+  toLowerCaseText,
+  toTitleCaseText,
+} from "./text-case";
+export type { TextCaseMode } from "./text-case";
 export { extractEmbedSrc } from "./embed-src";
 export * from "./spellcheck";

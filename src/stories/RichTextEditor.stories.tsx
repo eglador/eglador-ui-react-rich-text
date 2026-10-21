@@ -489,3 +489,31 @@ export function MyEditor() {
     </div>
   ),
 };
+
+export const HeadingTools: Story = {
+  name: "Başlık araçları (seçim çubuğu + karakter sayacı)",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Metni seç → çıkan çubuktaki H2/H3 düğmeleri seçili bloğu başlık yapar (tekrar basınca paragrafa döner). Başlıklarda `245/300` sayacı görünür, limit aşılınca kırmızıya döner ama yazmaya engel olmaz. Sayaç CSS ile çizilir; JSON/HTML çıktısına girmez. Limit: `headingLimit={300}` veya `headingLimit={{ limit: { h2: 300, h3: 120 } }}`.",
+      },
+    },
+  },
+  render: () => (
+    <div className="max-w-3xl">
+      <RichTextEditor
+        initialHtml="<h2>Kısa bir başlık</h2><p>Bu paragrafı seçip çıkan çubuktan H2'ye basabilirsin.</p>"
+        headingLimit={{ limit: { h2: 60, h3: 40 } }}
+      >
+        <RichTextToolbar />
+        <RichTextContent floatingToolbar minHeight="min-h-48" />
+        <RichTextOutput defaultTab="json" />
+      </RichTextEditor>
+      <p className="mt-2 text-xs text-zinc-500">
+        Bu örnekte limit bilerek düşük tutuldu (h2 için 60) — aşınca sayaç
+        kırmızıya döner.
+      </p>
+    </div>
+  ),
+};
