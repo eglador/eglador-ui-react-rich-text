@@ -88,6 +88,12 @@ export interface RichTextMessages {
   // ── dynamic select options ───────────────────
   loadingOptions: string;
   optionNotInList: string;
+
+  // ── text case ────────────────────────────────
+  textCase: string;
+  upperCase: string;
+  lowerCase: string;
+  titleCase: string;
 }
 
 export const trMessages: RichTextMessages = {
@@ -163,6 +169,11 @@ export const trMessages: RichTextMessages = {
 
   loadingOptions: "Seçenekler yükleniyor…",
   optionNotInList: "listede yok",
+
+  textCase: "Harf düzeni",
+  upperCase: "BÜYÜK HARF",
+  lowerCase: "küçük harf",
+  titleCase: "Baş Harfler Büyük",
 };
 
 export const enMessages: RichTextMessages = {
@@ -238,6 +249,11 @@ export const enMessages: RichTextMessages = {
 
   loadingOptions: "Loading options…",
   optionNotInList: "not in list",
+
+  textCase: "Letter case",
+  upperCase: "UPPERCASE",
+  lowerCase: "lowercase",
+  titleCase: "Capitalize Each Word",
 };
 
 export type RichTextLocale = "tr" | "en";
@@ -251,6 +267,7 @@ export const LOCALE_MESSAGES: Record<RichTextLocale, RichTextMessages> = {
 export const DEFAULT_LOCALE: RichTextLocale = "tr";
 
 const MessagesContext = React.createContext<RichTextMessages | null>(null);
+const LocaleContext = React.createContext<RichTextLocale>(DEFAULT_LOCALE);
 
 /** Resolve the `locale` / `messages` props into one catalog. */
 export function resolveMessages(
@@ -264,14 +281,20 @@ export function resolveMessages(
 export function RichTextI18nProvider({
   children,
   messages,
+  locale = DEFAULT_LOCALE,
 }: {
   children: React.ReactNode;
   messages: RichTextMessages;
+  /** Needed on its own by anything that has to case text correctly —
+   *  Turkish `i`/`İ` differs from the browser default. */
+  locale?: RichTextLocale;
 }) {
   return (
-    <MessagesContext.Provider value={messages}>
-      {children}
-    </MessagesContext.Provider>
+    <LocaleContext.Provider value={locale}>
+      <MessagesContext.Provider value={messages}>
+        {children}
+      </MessagesContext.Provider>
+    </LocaleContext.Provider>
   );
 }
 
@@ -281,4 +304,9 @@ export function RichTextI18nProvider({
  */
 export function useMessages(): RichTextMessages {
   return React.useContext(MessagesContext) ?? trMessages;
+}
+
+/** The editor's language — Turkish unless the host says otherwise. */
+export function useLocale(): RichTextLocale {
+  return React.useContext(LocaleContext);
 }

@@ -13,6 +13,7 @@ import { RichTextLinkEditor } from "./link-editor";
 import { RichTextColumnsToolbar } from "./columns-toolbar";
 import { RichTextNoteChrome } from "./note-chrome";
 import { usePageSize } from "./page-size-context";
+import type { HeadingTagType } from "@lexical/rich-text";
 import type { BlockSpec } from "./blocks-registry";
 
 export interface RichTextContentProps {
@@ -31,6 +32,8 @@ export interface RichTextContentProps {
   draggableBlocks?: BlockSpec[];
   /** Enable floating format toolbar that appears on text selection (default `false`) */
   floatingToolbar?: boolean;
+  /** Heading buttons in the floating toolbar (default `["h2", "h3"]`). */
+  floatingHeadings?: HeadingTagType[];
   /** Editor mode (default `"rich"`). `"plain"` swaps RichTextPlugin for
    *  PlainTextPlugin — text only, no inline/block formatting commands. */
   mode?: "rich" | "plain";
@@ -45,6 +48,7 @@ export function RichTextContent({
   draggable = false,
   draggableBlocks,
   floatingToolbar = false,
+  floatingHeadings,
   mode = "rich",
 }: RichTextContentProps) {
   const [anchorElem, setAnchorElem] = React.useState<HTMLDivElement | null>(
@@ -105,7 +109,10 @@ export function RichTextContent({
         />
       )}
       {anchorElem !== null && floatingToolbar && (
-        <RichTextFloatingToolbar anchorElem={anchorElem} />
+        <RichTextFloatingToolbar
+          anchorElem={anchorElem}
+          {...(floatingHeadings ? { headings: floatingHeadings } : {})}
+        />
       )}
       {anchorElem !== null && (
         <RichTextTableActions anchorElem={anchorElem} />

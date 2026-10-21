@@ -20,6 +20,7 @@ import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import { ImageIcon, SettingsIcon } from "../../lib/icons";
 import { useResolvedSrc } from "./media-resolver-context";
+import { useMessages } from "./i18n";
 import { ImageForm } from "./image-form";
 
 export interface ImageOptions {
@@ -168,6 +169,7 @@ interface ImageBlockProps {
 
 function ImageBlock({ src, options, nodeKey }: ImageBlockProps) {
   const [editor] = useLexicalComposerContext();
+  const t = useMessages();
   const [open, setOpen] = React.useState(false);
 
   const handleSave = React.useCallback(
@@ -264,6 +266,22 @@ function ImageBlock({ src, options, nodeKey }: ImageBlockProps) {
         <figcaption className="mt-2 text-xs text-zinc-500 italic">
           {options.caption}
         </figcaption>
+      )}
+      {options.alt && (
+        // Editor-only: `decorate()` draws the in-editor view, so this
+        // never reaches the JSON or the exported HTML — there the alt
+        // text stays where it belongs, in the <img alt> attribute.
+        // A <figure> may hold only one <figcaption>, which the caption
+        // above already uses.
+        <div
+          title={t.altText}
+          className="mt-1 inline-flex items-center gap-1.5 max-w-full text-[11px] text-zinc-500"
+        >
+          <span className="shrink-0 px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-100 text-[9px] font-medium uppercase tracking-wide text-zinc-600">
+            alt
+          </span>
+          <span className="truncate italic">{options.alt}</span>
+        </div>
       )}
     </figure>
   );

@@ -27,6 +27,7 @@ A modern, compound-component rich text editor for React — built on top of [Lex
 - **TypeScript-first** — full type safety, exported feature unions
 - **Viewport-aware popovers** — auto-flip / auto-shift, never clipped by ancestor `overflow: hidden`
 - **Turkish spell checking** — Hunspell + Turkish rules in a Web Worker, with a pass/fail result for publish gates and error screens (`<RichTextSpellCheck />`)
+- **Clean paste** — text from Word / Google Docs / the web arrives without the blank spacer paragraphs
 
 ## Installation
 
@@ -97,6 +98,9 @@ export function MyEditor() {
 | `RichTextTableActions` | Cell-anchored chevron with insert/delete/merge/unmerge actions. |
 | `RichTextSpellCheck` | Turkish spell checking: underlines, suggestions, status bar, pass/fail output. |
 | `RichTextBlockEdges` | Keeps a paragraph next to edge blocks so the caret can reach above/below (auto-mounted). |
+| `RichTextPasteCleanup` | Strips the blank spacer blocks out of pasted content (auto-mounted). |
+| `RichTextHeadingLimit` | Advisory character counter on headings, editor-only (auto-mounted). |
+| `TextCaseMenu` | `Aa` dropdown that re-cases the selection, with Turkish-correct `i`/`İ`. |
 
 ### Hooks
 
@@ -480,6 +484,65 @@ imageLibrary={async () => (await fetch("/api/medya")).json()}
 ```
 
 Omit the prop entirely and the form keeps its current behaviour: ID and URL stay editable.
+
+## Pasting from Word, Google Docs and the web (`pasteCleanup`)
+
+Word writes `<p class=MsoNormal><o:p>&nbsp;</o:p></p>` between paragraphs, Google Docs puts a bare `<br>` between them, and plain text carries blank lines. Each one imports as an empty paragraph, so pasted text used to arrive double-spaced. Those blank spacer blocks are now dropped — paragraph spacing is the stylesheet's job.
+
+What is kept: a `<br>` inside a paragraph, an empty table cell, a block holding only an image, and all formatting, headings and lists. Code blocks are left alone entirely, because blank lines are content there.
+
+```tsx
+<RichTextEditor pasteCleanup={false}>   {/* paste verbatim instead */}
+```
+
+`cleanPastedHtml(html)` and `collapsePastedText(text)` are exported if you want to run the same tidy-up elsewhere.
+
+## Heading length counter (`headingLimit`)
+
+Headings show a `62/70` counter while they are being edited, turning red once they are over. It is **advisory** — nothing is blocked or truncated, and the author can keep typing.
+
+```tsx
+<RichTextEditor headingLimit={120} />                               {/* all levels */}
+<RichTextEditor headingLimit={{ limit: { h2: 70, h3: 60 } }} />     {/* per level */}
+<RichTextEditor headingLimit={{ limit: 70, always: true }} />       {/* show on every heading */}
+<RichTextEditor headingLimit={false} />                             {/* off */}
+```
+
+- Default: 70 characters for every heading level. With an object, a level left out is not counted at all.
+- The counter appears on the heading the caret is in, and stays visible on any heading that is over — so a too-long heading further up the article keeps warning you. `always: true` shows it on all of them.
+- **It never reaches the document.** The counter is drawn in CSS from a `data-` attribute on the heading element, so `onChange`, `getJson()`, `getHtml()`, `getText()` and the output panel are all untouched, and the author cannot select, copy or delete it.
+
+`registerHeadingLimit(editor, options)` is exported for use outside React.
+
+## Alt text under the image
+
+The image block shows its alt text under the image, tagged `ALT`, below the caption. It is an authoring aid only: `decorate()` draws the in-editor view, so the alt text stays out of the JSON's shape and out of the exported HTML — there it remains where it belongs, in the `<img alt>` attribute. Nothing is shown when the field is empty.
+
+## Letter case from the selection toolbar
+
+Select some text and the formatting bar's **Aa** button re-cases it: UPPERCASE, lowercase, or Capitalize Each Word. Only the selection changes, and each run keeps its own formatting — bold stays bold.
+
+Casing follows the editor's `locale`, which matters in Turkish:
+
+| | `locale="tr"` (default) | plain `toUpperCase()` |
+|---|---|---|
+| `ilgi` → upper | `İLGİ` | `ILGI` ✗ |
+| `IRMAK` → lower | `ırmak` | `irmak` ✗ |
+| `çocuk şarkısı` → title | `Çocuk Şarkısı` | `çocuk şarkısı` ✗ |
+
+Capitalize keeps apostrophe suffixes down (`istanbul'da` → `İstanbul'da`, `2024'te` → `2024'te`) and does not break a word that formatting split in two.
+
+The same three entries sit in the toolbar's own `Aa` menu. `transformSelectionCase(editor, mode, locale)` and the pure helpers `toUpperCaseText` / `toLowerCaseText` / `toTitleCaseText` are exported.
+
+## Headings from the selection toolbar
+
+Selecting text pops up the formatting bar; alongside bold/italic it has **H2** and **H3** buttons that turn the selected block into that heading. Pressing the same one again turns it back into a paragraph, and the button shows as pressed while the caret is inside a heading of that level.
+
+```tsx
+<RichTextContent floatingToolbar />                          {/* H2 + H3 (default) */}
+<RichTextContent floatingToolbar floatingHeadings={["h2", "h3", "h4"]} />
+<RichTextContent floatingToolbar floatingHeadings={[]} />    {/* none */}
+```
 
 ## Typing above and below edge blocks (`blockEdges`)
 

@@ -21,6 +21,8 @@ import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin
 import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
 import { RichTextBlockEdges } from "./block-edges";
+import { RichTextPasteCleanup } from "./paste-cleanup";
+import { RichTextHeadingLimit } from "./heading-limit";
 import { isLegacyShortcodeLine } from "./legacy-shortcode";
 import { CharacterCount } from "./character-count";
 import {
@@ -244,6 +246,8 @@ export function RichTextEditor({
   hiddenFields,
   cmsFieldOptions,
   blockEdges = true,
+  pasteCleanup = true,
+  headingLimit,
   editorRef,
   className,
   children,
@@ -309,7 +313,7 @@ export function RichTextEditor({
             Lexical renders them via createPortal from inside
             RichTextPlugin, and portals inherit context from the
             component tree rather than the DOM tree. */}
-        <RichTextI18nProvider messages={strings}>
+        <RichTextI18nProvider messages={strings} locale={locale}>
           <MediaResolverProvider resolveImageSrc={resolveImageSrc}>
             <MediaLibraryProvider library={imageLibrary}>
               <HiddenFieldsProvider hiddenFields={hiddenFields}>
@@ -331,6 +335,17 @@ export function RichTextEditor({
         <HorizontalRulePlugin />
         <TablePlugin hasCellMerge hasCellBackgroundColor hasTabHandler />
         <PageBreakPlugin />
+        {pasteCleanup && <RichTextPasteCleanup />}
+        {headingLimit !== false && (
+          <RichTextHeadingLimit
+            {...(typeof headingLimit === "object" &&
+            !Array.isArray(headingLimit)
+              ? headingLimit
+              : typeof headingLimit === "number"
+                ? { limit: headingLimit }
+                : {})}
+          />
+        )}
         {blockEdges !== false && (
           <RichTextBlockEdges
             {...(typeof blockEdges === "object" ? blockEdges : {})}

@@ -4,6 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
+  $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
@@ -12,9 +13,21 @@ import {
 } from "lexical";
 import { mergeRegister } from "@lexical/utils";
 import { $isLinkNode } from "@lexical/link";
+import {
+  $createHeadingNode,
+  $isHeadingNode,
+  type HeadingTagType,
+} from "@lexical/rich-text";
+import { $setBlocksType } from "@lexical/selection";
 import { cn } from "../../lib/utils";
 import {
   BoldIcon,
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon,
   ItalicIcon,
   UnderlineIcon,
   StrikethroughIcon,
@@ -29,10 +42,17 @@ import {
   BG_COLOR_PRESETS,
 } from "./color-picker";
 import { LinkEditPopover } from "./link-edit-popover";
+import { TextCaseMenu } from "./text-case-menu";
 
 interface RichTextFloatingToolbarProps {
   /** Element used as positioning anchor (typically the editor's content wrapper) */
   anchorElem: HTMLElement;
+  /**
+   * Heading buttons offered next to the inline formats. Each one turns
+   * the selected block into that heading, or back into a paragraph when
+   * it already is one. Pass `[]` to leave them out.
+   */
+  headings?: HeadingTagType[];
 }
 
 type FloatingState = {
@@ -45,6 +65,8 @@ type FloatingState = {
   strikethrough: boolean;
   code: boolean;
   link: boolean;
+  /** `"paragraph"`, a heading tag, or whatever else the block is. */
+  blockType: string;
 };
 
 const initialState: FloatingState = {
@@ -57,6 +79,7 @@ const initialState: FloatingState = {
   strikethrough: false,
   code: false,
   link: false,
+  blockType: "paragraph",
 };
 
 /**
@@ -65,6 +88,7 @@ const initialState: FloatingState = {
  */
 export function RichTextFloatingToolbar({
   anchorElem,
+  headings = ["h2", "h3"],
 }: RichTextFloatingToolbarProps) {
   const [editor] = useLexicalComposerContext();
   const [state, setState] = React.useState<FloatingState>(initialState);
@@ -97,7 +121,13 @@ export function RichTextFloatingToolbar({
       const parent = node.getParent();
       const isLink = $isLinkNode(node) || $isLinkNode(parent);
 
+      const block = node.getTopLevelElement();
+      const blockType = $isHeadingNode(block)
+        ? block.getTag()
+        : (block?.getType() ?? "paragraph");
+
       const next = {
+        blockType,
         bold: selection.hasFormat("bold"),
         italic: selection.hasFormat("italic"),
         underline: selection.hasFormat("underline"),
@@ -149,6 +179,17 @@ export function RichTextFloatingToolbar({
     return () => document.removeEventListener("scroll", onScroll, true);
   }, [updatePosition]);
 
+  /** Toggle the selected block between a heading and a paragraph. */
+  const toggleHeading = (tag: HeadingTagType) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) return;
+      $setBlocksType(selection, () =>
+        state.blockType === tag ? $createParagraphNode() : $createHeadingNode(tag),
+      );
+    });
+  };
+
   const dispatchFormat = (
     format: "bold" | "italic" | "underline" | "strikethrough" | "code",
   ) => {
@@ -195,6 +236,21 @@ export function RichTextFloatingToolbar({
         active={state.code}
         onClick={() => dispatchFormat("code")}
       />
+      <TextCaseMenu />
+      {headings.length > 0 && (
+        <>
+          <div className="w-px h-5 bg-zinc-200 mx-0.5" aria-hidden="true" />
+          {headings.map((tag) => (
+            <FloatingButton
+              key={tag}
+              label={`Heading ${tag.slice(1)}`}
+              icon={HEADING_ICONS[tag] ?? <Heading2Icon className="size-4" />}
+              active={state.blockType === tag}
+              onClick={() => toggleHeading(tag)}
+            />
+          ))}
+        </>
+      )}
       <div className="w-px h-5 bg-zinc-200 mx-0.5" aria-hidden="true" />
       <ColorPicker
         label="Text color"
@@ -229,6 +285,15 @@ export function RichTextFloatingToolbar({
 }
 
 RichTextFloatingToolbar.displayName = "RichTextFloatingToolbar";
+
+const HEADING_ICONS: Partial<Record<HeadingTagType, React.ReactNode>> = {
+  h1: <Heading1Icon className="size-4" />,
+  h2: <Heading2Icon className="size-4" />,
+  h3: <Heading3Icon className="size-4" />,
+  h4: <Heading4Icon className="size-4" />,
+  h5: <Heading5Icon className="size-4" />,
+  h6: <Heading6Icon className="size-4" />,
+};
 
 interface FloatingButtonProps {
   label: string;

@@ -2,12 +2,7 @@
 
 import * as React from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  FORMAT_TEXT_COMMAND,
-} from "lexical";
+import { FORMAT_TEXT_COMMAND } from "lexical";
 import { cn } from "../../lib/utils";
 import { Popover } from "../../lib/popover";
 import {
@@ -20,6 +15,8 @@ import {
   SuperscriptIcon,
   HighlighterIcon,
 } from "../../lib/icons";
+import { useLocale, useMessages } from "./i18n";
+import { transformSelectionCase, type TextCaseMode } from "./text-case";
 
 interface TextTransformMenuProps {
   /** Tailwind size class for the trigger button (default `size-8`) */
@@ -45,26 +42,16 @@ export function TextTransformMenu({
   active = {},
 }: TextTransformMenuProps) {
   const [editor] = useLexicalComposerContext();
+  const t = useMessages();
+  const locale = useLocale();
   const [open, setOpen] = React.useState(false);
 
   const transformCase = React.useCallback(
-    (fn: (s: string) => string) => {
-      editor.update(() => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection) || selection.isCollapsed()) return;
-        // extract() splits text nodes at selection boundaries and returns
-        // only the nodes inside the selection — preserves inline formatting
-        // of un-selected portions.
-        const nodes = selection.extract();
-        for (const node of nodes) {
-          if ($isTextNode(node)) {
-            node.setTextContent(fn(node.getTextContent()));
-          }
-        }
-      });
+    (mode: TextCaseMode) => {
+      transformSelectionCase(editor, mode, locale);
       setOpen(false);
     },
-    [editor],
+    [editor, locale],
   );
 
   const dispatchFormat = React.useCallback(
@@ -92,7 +79,7 @@ export function TextTransformMenu({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setOpen((o) => !o)}
-          title="Text transform"
+          title={t.textCase}
           aria-label="Text transform"
           aria-haspopup="menu"
           aria-expanded={open}
@@ -109,23 +96,19 @@ export function TextTransformMenu({
       contentClassName="w-52 rounded-lg border border-zinc-200 bg-white shadow-lg p-1"
     >
       <MenuItem
-        label="Lowercase"
+        label={t.lowerCase}
         icon={<CaseLowerIcon className="size-4" />}
-        onClick={() => transformCase((s) => s.toLowerCase())}
+        onClick={() => transformCase("lower")}
       />
       <MenuItem
-        label="Uppercase"
+        label={t.upperCase}
         icon={<CaseUpperIcon className="size-4" />}
-        onClick={() => transformCase((s) => s.toUpperCase())}
+        onClick={() => transformCase("upper")}
       />
       <MenuItem
-        label="Capitalize"
+        label={t.titleCase}
         icon={<CaseCapitalizeIcon className="size-4" />}
-        onClick={() =>
-          transformCase((s) =>
-            s.toLowerCase().replace(/\b\p{L}/gu, (c) => c.toUpperCase()),
-          )
-        }
+        onClick={() => transformCase("title")}
       />
       <Divider />
       <MenuItem

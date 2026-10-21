@@ -7,6 +7,10 @@ import type { MediaLibrary } from "./media-library-context";
 import type { HiddenFieldsConfig } from "./hidden-fields-context";
 import type { CmsFieldOptionsConfig } from "./cms/cms-field-options-context";
 import type { RichTextBlockEdgesProps } from "./block-edges";
+import type {
+  HeadingLimitConfig,
+  HeadingLimitOptions,
+} from "./heading-limit";
 
 export type RichTextValue = {
   /** Lexical editor state JSON */
@@ -114,6 +118,27 @@ export interface RichTextEditorProps
    * control each end: `blockEdges={{ leading: false }}`.
    */
   blockEdges?: boolean | RichTextBlockEdgesProps;
+  /**
+   * Drop the blank spacer blocks word processors put between paragraphs,
+   * so text pasted from Word, Google Docs or a web page doesn't arrive
+   * double-spaced. **On by default**; `false` pastes verbatim.
+   */
+  pasteCleanup?: boolean;
+  /**
+   * Advisory character limit for headings, shown as a `62/70` counter
+   * next to the heading being edited and turning red once it is over.
+   * Nothing is blocked or truncated — the author can keep typing.
+   *
+   * Defaults to 70 for every heading level. Pass a number to change
+   * it, an object to vary it per level
+   * (`{ limit: { h2: 70, h3: 60 } }` — a level left out is not
+   * counted), `{ always: true }` to show every heading's counter, or
+   * `false` to turn the counter off.
+   *
+   * The counter is drawn in CSS from a data attribute, so it never
+   * reaches `onChange`, `getJson()`, the HTML export or `getText()`.
+   */
+  headingLimit?: number | false | (HeadingLimitOptions & { limit?: HeadingLimitConfig });
   /** Receive the LexicalEditor instance once initialized (escape hatch) */
   editorRef?:
     | React.MutableRefObject<LexicalEditor | null>
