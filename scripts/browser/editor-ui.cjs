@@ -495,6 +495,95 @@ const selectBlock = async (page, locator) => {
   ck("alta geçince de ekran içinde", r && r.inside, JSON.stringify(r));
   await page.setViewportSize({ width: 1200, height: 950 });
 
+  // ── 7. the bar follows a re-selected word ──────────────────────────
+  section("çift tıklama ile tekrar seçmek çubuğu sol üste yapıştırmıyor");
+  await page.goto(
+    "http://localhost:6017/iframe.html?viewMode=story&id=rich-text-editor--heading-tools",
+    { waitUntil: "networkidle" },
+  );
+  await page.waitForTimeout(700);
+  const reEd = page.locator('[contenteditable="true"]').first();
+  await reEd.locator("p").first().click({ clickCount: 3 });
+  await page.keyboard.type("Deneme baslik metni burada duruyor");
+  await page.waitForTimeout(300);
+
+  /** Centre of a word in the editor, by its text. */
+  const wordPoint = (word) =>
+    page.evaluate((word) => {
+      const root = document.querySelector('[contenteditable="true"]');
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const i = n.data.indexOf(word);
+        if (i === -1) continue;
+        const range = document.createRange();
+        range.setStart(n, i);
+        range.setEnd(n, i + word.length);
+        const b = range.getBoundingClientRect();
+        return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+      }
+      return null;
+    }, word);
+
+  /** Where the bar sits relative to the current selection. */
+  const placement = () =>
+    page.evaluate(() => {
+      const bar = document.querySelector(
+        '[role="toolbar"][aria-label="Selection formatting"]',
+      );
+      if (!bar) return { bar: "yok" };
+      const r = bar.getBoundingClientRect();
+      const sel = window.getSelection();
+      const s =
+        sel && sel.rangeCount && !sel.isCollapsed
+          ? sel.getRangeAt(0).getBoundingClientRect()
+          : null;
+      return {
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        visible: getComputedStyle(bar).visibility,
+        selTop: s ? Math.round(s.top) : null,
+        // The old bug: a remounted bar left at its initial 0,0.
+        stuckTopLeft: Math.round(r.left) <= 1 && Math.round(r.top) <= 1,
+        nearSelection: s
+          ? Math.abs(r.bottom - s.top) < 40 || Math.abs(r.top - s.bottom) < 40
+          : false,
+      };
+    });
+
+  const word = await wordPoint("baslik");
+  await page.mouse.dblclick(word.x, word.y);
+  await page.waitForTimeout(400);
+  let place = await placement();
+  console.log("       ilk çift tık:", JSON.stringify(place));
+  ck("çift tıkta çubuk seçimin yanında", place.nearSelection && !place.stuckTopLeft, JSON.stringify(place));
+
+  // Collapse, then select the very same word again — identical rect.
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(300);
+  ck("daralınca çubuk kayboluyor", (await placement()).bar === "yok");
+  await page.mouse.dblclick(word.x, word.y);
+  await page.waitForTimeout(400);
+  place = await placement();
+  console.log("       aynı kelime :", JSON.stringify(place));
+  ck("aynı kelime tekrar seçilince de yerinde", place.nearSelection && !place.stuckTopLeft, JSON.stringify(place));
+  ck("görünürlüğü açık", place.visible === "visible", place.visible);
+
+  // The user's exact route: H2 from the bar, then double-click the text.
+  await reEd.locator("p").first().click({ clickCount: 3 });
+  await page.waitForTimeout(300);
+  await page
+    .locator('[role="toolbar"][aria-label="Selection formatting"] button[aria-label="Heading 2"]')
+    .click();
+  await page.waitForTimeout(400);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(300);
+  const headingWord = await wordPoint("baslik");
+  await page.mouse.dblclick(headingWord.x, headingWord.y);
+  await page.waitForTimeout(400);
+  place = await placement();
+  console.log("       H2 sonrası  :", JSON.stringify(place));
+  ck("H2'ye çevirip çift tıklayınca da yerinde", place.nearSelection && !place.stuckTopLeft, JSON.stringify(place));
+
   ck("sayfa hatası yok", errors.length === 0, errors.join(" | "));
   await browser.close();
   console.log(failures === 0 ? "\nAll checks passed.\n" : `\n${failures} FAILED.\n`);
