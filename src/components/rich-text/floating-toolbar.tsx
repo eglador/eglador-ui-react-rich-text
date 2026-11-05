@@ -108,7 +108,12 @@ export function RichTextFloatingToolbar({
   const [editor] = useLexicalComposerContext();
   const [state, setState] = React.useState<FloatingState>(initialState);
   const [linkOpen, setLinkOpen] = React.useState(false);
-  const toolbarRef = React.useRef<HTMLDivElement>(null);
+  // Held in state, not a ref: the toolbar unmounts whenever the
+  // selection collapses, and the placement effect below has to run again
+  // for each new element — a ref would not tell it a remount happened.
+  const [toolbarEl, setToolbarEl] = React.useState<HTMLDivElement | null>(
+    null,
+  );
 
   // While the link editor popover is open, the input takes DOM focus and
   // window selection collapses. We must keep the toolbar mounted so the
@@ -212,7 +217,7 @@ export function RichTextFloatingToolbar({
   // used to push half the bar outside the editor, where the editor's
   // `overflow: hidden` cut it off.
   React.useLayoutEffect(() => {
-    const element = toolbarRef.current;
+    const element = toolbarEl;
     const rect = state.rect;
     if (!element || !rect) return;
 
@@ -236,6 +241,9 @@ export function RichTextFloatingToolbar({
 
       element.style.top = `${Math.round(top)}px`;
       element.style.left = `${Math.round(left)}px`;
+      // Revealed only once placed, so a fresh mount is never painted in
+      // the top-left corner on its way to the selection.
+      element.style.visibility = "visible";
     };
 
     place();
@@ -247,7 +255,7 @@ export function RichTextFloatingToolbar({
       observer.disconnect();
       window.removeEventListener("resize", place);
     };
-  }, [state.rect]);
+  }, [toolbarEl, state.rect]);
 
   const dispatchFormat = (
     format: "bold" | "italic" | "underline" | "strikethrough" | "code",
@@ -259,11 +267,11 @@ export function RichTextFloatingToolbar({
 
   return createPortal(
     <div
-      ref={toolbarRef}
+      ref={setToolbarEl}
       role="toolbar"
       aria-label="Selection formatting"
       className="fixed z-[9999] flex items-center gap-0.5 px-1 py-1 rounded-lg border border-zinc-200 bg-white shadow-lg"
-      style={{ top: 0, left: 0 }}
+      style={{ top: 0, left: 0, visibility: "hidden" }}
     >
       <FloatingButton
         label="Bold"
