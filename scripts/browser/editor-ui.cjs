@@ -584,6 +584,163 @@ const selectBlock = async (page, locator) => {
   console.log("       H2 sonrası  :", JSON.stringify(place));
   ck("H2'ye çevirip çift tıklayınca da yerinde", place.nearSelection && !place.stuckTopLeft, JSON.stringify(place));
 
+  // ── 8. cut / copy / paste a selected block ─────────────────────────
+  section("blok kes-kopyala-yapıştır");
+  await page.goto(
+    "http://localhost:6017/iframe.html?viewMode=story&id=rich-text-eglador-cms--pasted-embed-code",
+    { waitUntil: "networkidle" },
+  );
+  await page.waitForTimeout(500);
+  const clipEd = page.locator('[contenteditable="true"]').first();
+  await clipEd.click();
+
+  // An image carrying every option, so the round-trip can be compared.
+  await page.locator('button[aria-label="Bileşen ekle"]').first().click();
+  await page.waitForTimeout(300);
+  await page
+    .locator('div[role="presentation"]')
+    .last()
+    .locator("button", { hasText: "Resim" })
+    .first()
+    .click();
+  await page.waitForTimeout(400);
+  const clipForm = page.locator("form").first();
+  await clipForm.locator('input[type="url"]').first().fill("https://picsum.photos/id/1015/300/160");
+  await clipForm.locator('input[type="text"]').nth(1).fill("alt metni");
+  await clipForm.locator('input[type="text"]').nth(2).fill("resim açıklaması");
+  await clipForm.locator('input[type="number"]').first().fill("420");
+  await clipForm.locator('button[type="submit"]').click();
+  await page.waitForTimeout(600);
+
+  await clipEd.locator("p").last().click();
+  await page.keyboard.type("birinci");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("ikinci");
+  await page.waitForTimeout(300);
+
+  /** Every image node in the document, as JSON. */
+  const imageNodes = () =>
+    page.evaluate(() => {
+      for (const el of document.querySelectorAll("pre")) {
+        try {
+          const json = JSON.parse(el.textContent);
+          if (!json?.root?.children) continue;
+          return json.root.children.filter((c) => c.type === "image");
+        } catch {
+          /* not a JSON panel */
+        }
+      }
+      return [];
+    });
+
+  const kinds = () =>
+    page.evaluate(() => {
+      for (const el of document.querySelectorAll("pre")) {
+        try {
+          const json = JSON.parse(el.textContent);
+          if (!json?.root?.children) continue;
+          return json.root.children.map((c) => c.type);
+        } catch {
+          /* not a JSON panel */
+        }
+      }
+      return ["<missing>"];
+    });
+
+  const original = (await imageNodes())[0];
+  ck("resim eklendi", Boolean(original), JSON.stringify(original));
+
+  // Click the picture itself — this is what used to leave a plain caret.
+  await clipEd.locator("figure img").first().click();
+  await page.waitForTimeout(300);
+  ck(
+    "resme tıklayınca blok seçiliyor",
+    await page.evaluate(() =>
+      Boolean(document.querySelector('[contenteditable="true"] figure')?.closest("[class*='outline']")),
+    ),
+  );
+
+  await page.keyboard.press("Control+c");
+  await page.waitForTimeout(600);
+  ck("kopyalamak resmi silmiyor", (await imageNodes()).length === 1);
+
+  await clipEd.locator("p").last().click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Control+v");
+  await page.waitForTimeout(800);
+  const copies = await imageNodes();
+  ck("yapıştırınca ikinci kopya oluştu", copies.length === 2, String(copies.length));
+  ck(
+    "tüm seçenekler birebir korundu",
+    copies.length === 2 && JSON.stringify(copies[0]) === JSON.stringify(copies[1]),
+    JSON.stringify(copies[1]),
+  );
+
+  // Cut the first one and drop it at the end.
+  await clipEd.locator("figure img").first().click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Control+x");
+  await page.waitForTimeout(800);
+  ck("kesince resim belgeden çıktı", (await imageNodes()).length === 1);
+
+  await clipEd.locator("p").last().click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Control+v");
+  await page.waitForTimeout(800);
+  const afterCut = await imageNodes();
+  ck("kesileni yapıştırınca geri geldi", afterCut.length === 2, String(afterCut.length));
+  ck(
+    "kesilen resmin seçenekleri bozulmadı",
+    afterCut.length === 2 && JSON.stringify(afterCut[0]) === JSON.stringify(original),
+    JSON.stringify(afterCut[0]),
+  );
+
+  section("aynısı CMS bloğunda da çalışıyor");
+  await page.locator('button[aria-label="Bileşen ekle"]').first().click();
+  await page.waitForTimeout(300);
+  await page
+    .locator('div[role="presentation"]')
+    .last()
+    .locator("button", { hasText: "Galeri" })
+    .first()
+    .click();
+  await page.waitForTimeout(400);
+  await page.locator("form input").first().fill("777");
+  await page.locator('form button[type="submit"]').click();
+  await page.waitForTimeout(600);
+  ck("galeri eklendi", (await kinds()).includes("galeri"));
+
+  await page.locator('[contenteditable="true"] [data-lexical-decorator]').filter({ hasText: "777" }).first().click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Control+x");
+  await page.waitForTimeout(800);
+  ck("galeri kesildi", !(await kinds()).includes("galeri"), (await kinds()).join(","));
+  await clipEd.locator("p").first().click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Control+v");
+  await page.waitForTimeout(800);
+  ck("galeri geri yapıştırıldı", (await kinds()).includes("galeri"), (await kinds()).join(","));
+
+  section("metin kes-kopyala bozulmadı");
+  await clipEd.locator("p").filter({ hasText: "ikinci" }).first().click({ clickCount: 3 });
+  await page.waitForTimeout(250);
+  await page.keyboard.press("Control+c");
+  await page.waitForTimeout(400);
+  await page.keyboard.press("End");
+  await page.keyboard.press("Control+v");
+  await page.waitForTimeout(600);
+  ck(
+    "metin kopyala-yapıştır çalışıyor",
+    ((await clipEd.textContent()) ?? "").includes("ikinciikinci"),
+    ((await clipEd.textContent()) ?? "").slice(-40),
+  );
+
+  section("dişli düğmesi hâlâ formu açıyor");
+  await page.locator('button[aria-label="Edit image embed"]').first().click({ force: true });
+  await page.waitForTimeout(500);
+  ck("resim formu açıldı", await page.locator("form input[type=url]").first().isVisible());
+  await page.keyboard.press("Escape");
+
   ck("sayfa hatası yok", errors.length === 0, errors.join(" | "));
   await browser.close();
   console.log(failures === 0 ? "\nAll checks passed.\n" : `\n${failures} FAILED.\n`);

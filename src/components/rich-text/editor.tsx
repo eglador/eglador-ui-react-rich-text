@@ -22,6 +22,7 @@ import { registerDragonSupport } from "@lexical/dragon";
 import { PageBreakPlugin } from "./page-break";
 import { RichTextBlockEdges } from "./block-edges";
 import { RichTextPasteCleanup } from "./paste-cleanup";
+import { RichTextBlockClipboard } from "./block-clipboard";
 import { RichTextHeadingLimit } from "./heading-limit";
 import { isLegacyShortcodeLine } from "./legacy-shortcode";
 import { CharacterCount } from "./character-count";
@@ -336,6 +337,7 @@ export function RichTextEditor({
         <TablePlugin hasCellMerge hasCellBackgroundColor hasTabHandler />
         <PageBreakPlugin />
         {pasteCleanup && <RichTextPasteCleanup />}
+        <RichTextBlockClipboard />
         {headingLimit !== false && (
           <RichTextHeadingLimit
             {...(typeof headingLimit === "object" &&
