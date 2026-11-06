@@ -359,6 +359,10 @@ export {
   collapsePastedText,
 } from "./paste-cleanup";
 export type { RichTextBlockEdgesProps } from "./block-edges";
+export {
+  RichTextBlockClipboard,
+  registerBlockClipboard,
+} from "./block-clipboard";
 export { TextCaseMenu } from "./text-case-menu";
 export type { TextCaseMenuProps } from "./text-case-menu";
 export {

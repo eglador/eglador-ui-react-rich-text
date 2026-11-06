@@ -101,6 +101,7 @@ export function MyEditor() {
 | `RichTextPasteCleanup` | Strips the blank spacer blocks out of pasted content (auto-mounted). |
 | `RichTextHeadingLimit` | Advisory character counter on headings, editor-only (auto-mounted). |
 | `TextCaseMenu` | `Aa` dropdown that re-cases the selection, with Turkish-correct `i`/`İ`. |
+| `RichTextBlockClipboard` | Click-to-select plus cut/copy for blocks (auto-mounted). |
 
 ### Hooks
 
@@ -513,6 +514,19 @@ Headings show a `62/70` counter while they are being edited, turning red once th
 - **It never reaches the document.** The counter is drawn in CSS from a `data-` attribute on the heading element, so `onChange`, `getJson()`, `getHtml()`, `getText()` and the output panel are all untouched, and the author cannot select, copy or delete it.
 
 `registerHeadingLimit(editor, options)` is exported for use outside React.
+
+## Moving a block with cut, copy and paste
+
+Click an image, a video or a CMS block and it is selected as a block; `Ctrl/Cmd+X` or `Ctrl/Cmd+C` then puts it on the clipboard, and `Ctrl/Cmd+V` drops it wherever the caret is. The block comes back whole — an image keeps its alt text, caption, max width and, for an ID-addressed one, its media ID (no URL is introduced).
+
+Two details make this work, and both are easy to trip over if you write your own blocks:
+
+- Lexical's decorator wrapper only selects when the click lands on the wrapper itself, so clicking the picture inside an image block used to leave an ordinary caret. Clicks anywhere in a block now select it, except on its own controls (`button`, `a`, `input`, `select`, `textarea`, `label`, `video`, `audio`) — a video's play button stays a play button, and the gear still opens the block's form.
+- A selected block has no DOM range behind it, so the browser never fires `cut` or `copy` for it. Those keystrokes are handled directly and the clipboard is filled through Lexical's own writer, which is why the pasted block is identical rather than re-imported from HTML.
+
+Pasting needs no help: `paste` fires on the editable whatever is selected.
+
+`registerBlockClipboard(editor)` is exported for use outside React.
 
 ## Alt text under the image
 
